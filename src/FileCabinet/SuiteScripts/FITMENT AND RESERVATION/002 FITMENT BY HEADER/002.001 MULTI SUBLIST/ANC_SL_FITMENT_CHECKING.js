@@ -145,7 +145,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         id : "custpage_tranlineseq",
                         container: "custpage_flgroup_source"
                     }).updateDisplayType({
-                        displayType : "inline"
+                        // displayType: "inline",
+                        displayType: "hidden"
                     })
                     // tranlineseqField.defaultValue = scriptContext.request.parameters["tranlinesequence"]
                     globalrefs["tranlineseqField"] = tranlineseqField;
@@ -156,7 +157,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         id : "custpage_tranlinenum",
                         container: "custpage_flgroup_source"
                     }).updateDisplayType({
-                        displayType : "inline"
+                        // displayType: "inline",
+                        displayType: "hidden"
                     })
                     tranlinenumField.defaultValue = scriptContext.request.parameters["tranlinenum"]
                     globalrefs["tranlinenumField"] = tranlinenumField;
@@ -170,10 +172,27 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             source : "item",
                             container: "custpage_flgroup_source"
                         }).updateDisplayType({
-                            displayType : "inline"
+                            // displayType: "inline",
+                            displayType: "hidden"
                         })
                         tranlineitemField.defaultValue = globalrefs.tranItemVals.itemid;
                         globalrefs["tranlineitemField"] = tranlineitemField;
+                    }
+
+
+                    var equipmentField = form.addField({
+                        label : "Equipment",
+                        type : "text",
+                        id : "custpage_equipment",
+                        container: "custpage_flgroup_source"
+                    }).updateDisplayType({
+                        // displayType : "inline"
+                        displayType : "hidden"
+                    })
+                    globalrefs["equipmentField"] = equipmentField;
+                    if(globalrefs.tranBodyVals.equipment)
+                    {
+                        equipmentField.defaultValue = globalrefs.tranBodyVals.equipment
                     }
 
                     if(globalrefs.tranBodyVals.location)
@@ -190,19 +209,6 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         globalrefs["tranlinelocField"] = tranlinelocField;
                     }
 
-                    var equipmentField = form.addField({
-                        label : "Equipment",
-                        type : "text",
-                        id : "custpage_equipment",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        displayType : "inline"
-                    })
-                    globalrefs["equipmentField"] = equipmentField;
-                    if(globalrefs.tranBodyVals.equipment)
-                    {
-                        equipmentField.defaultValue = globalrefs.tranBodyVals.equipment
-                    }
 
                     var tranlineqtyField = form.addField({
                         label : "LINE ITEM GRADE ORDER QUANTITY",
@@ -210,22 +216,22 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         id : "custpage_tranlineqty",
                         container: "custpage_flgroup_source"
                     }).updateDisplayType({
-                        displayType : "inline"
+                        displayType : "hidden"
                     }).defaultValue = globalrefs.tranItemVals.quantity
                     globalrefs["tranlineqtyField"] = tranlineqtyField;
 
-                    if(globalrefs.tranItemVals.deliverydate)
-                    {
-                        var tranlinedeldateField = form.addField({
-                            label : "Delivery Date",
-                            type : "date",
-                            id : "custpage_tranlinedeldate",
-                            container: "custpage_flgroup_source"
-                        }).updateDisplayType({
-                            displayType : "inline"
-                        }).defaultValue = globalrefs.tranItemVals.deliverydate
-                        globalrefs["tranlinedeldateField"] = tranlinedeldateField;
-                    }
+                    // if(globalrefs.tranItemVals.deliverydate)
+                    // {
+                    //     var tranlinedeldateField = form.addField({
+                    //         label : "Delivery Date",
+                    //         type : "date",
+                    //         id : "custpage_tranlinedeldate",
+                    //         container: "custpage_flgroup_source"
+                    //     }).updateDisplayType({
+                    //         displayType : "inline"
+                    //     }).defaultValue = globalrefs.tranItemVals.deliverydate
+                    //     globalrefs["tranlinedeldateField"] = tranlinedeldateField;
+                    // }
 
                     if(globalrefs.tranBodyVals.location)
                     {
@@ -241,8 +247,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         globalrefs["tranlineoriginField"] = tranlineoriginField;
                     }
 
-                    if(globalrefs.tranItemVals.destination)
-                    {
+                    // if(globalrefs.tranItemVals.destination)
+                    // {
                         var tranlinedestField = form.addField({
                             label : "DESTINATION",
                             type : "text",
@@ -252,7 +258,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             displayType : "inline"
                         }).defaultValue = globalrefs.tranItemVals.destination
                         globalrefs["tranlinedestField"] = tranlinedestField;
-                    }
+                    // }
 
 
 
@@ -529,6 +535,25 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     globalrefs["fitmentcbField"] = fitmentcbField;
 
 
+                    var fitmentlinerefField = fitmentReservationSublist.addField({
+                        label : "Line Ref",
+                        type : "text",
+                        id : "custpage_ifr_lineref",
+                    }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.INLINE
+                    })
+                    globalrefs["fitmentlinerefField"] = fitmentlinerefField;
+
+                    var fitmentitemField = fitmentReservationSublist.addField({
+                        label : "Grade / Item",
+                        type : "select",
+                        id : "custpage_ifr_item",
+                        source : "item",
+                    }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.INLINE
+                    })
+                    globalrefs["fitmentitemField"] = fitmentitemField;
+
                     var fitmentlinedeliverydaeField = fitmentReservationSublist.addField({
                         label : "Line Delivery Date",
                         type : "date",
@@ -552,7 +577,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "integer",
                         id : "custpage_col_ifr_reservedqty",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
+                        // displayType : uiSw.FieldDisplayType.ENTRY
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     // fitmentinputqtyField.defaultValue = globalrefs.tranItemVals.quantity
                     globalrefs["fitmentreservedqtyField"] = fitmentreservedqtyField;
@@ -561,7 +587,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "float",
                         id : "custpage_col_ifr_inputqty",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.ENTRY
+                        // displayType : uiSw.FieldDisplayType.ENTRY
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     // fitmentinputqtyField.defaultValue = globalrefs.tranItemVals.quantity
                     globalrefs["fitmentorderqtyField"] = fitmentinputqtyField;
@@ -581,7 +608,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "float",
                         id : "custpage_col_ifr_reservedweight",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
+                        // displayType : uiSw.FieldDisplayType.ENTRY
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     // fitmentorderqtyField.defaultValue = globalrefs.tranItemVals.weight
                     globalrefs["fitmentreservedweightField"] = fitmentreservedweightField;
@@ -590,7 +618,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "float",
                         id : "custpage_col_ifr_inputweight",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.ENTRY
+                        // displayType : uiSw.FieldDisplayType.ENTRY
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     // fitmentinputqtyField.defaultValue = globalrefs.tranItemVals.weight
                     globalrefs["fitmentinputweightField"] = fitmentinputweightField;
@@ -618,27 +647,10 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         id : "custpage_ifr_so",
                         source : "salesorder"
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
+                        // displayType : uiSw.FieldDisplayType.INLINE
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     })
                     globalrefs["fitmentsoField"] = fitmentsoField;
-                    var fitmentlinerefField = fitmentReservationSublist.addField({
-                        label : "Line Ref",
-                        type : "text",
-                        id : "custpage_ifr_lineref",
-                    }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
-                    })
-                    globalrefs["fitmentlinerefField"] = fitmentlinerefField;
-
-                    var fitmentitemField = fitmentReservationSublist.addField({
-                        label : "Grade / Item",
-                        type : "select",
-                        id : "custpage_ifr_item",
-                        source : "item",
-                    }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
-                    })
-                    globalrefs["fitmentitemField"] = fitmentitemField;
 
                     var fitmentequipmentField = fitmentReservationSublist.addField({
                         label : "Equipment",

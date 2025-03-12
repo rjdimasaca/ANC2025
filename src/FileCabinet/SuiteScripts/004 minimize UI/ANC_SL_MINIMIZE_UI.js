@@ -122,7 +122,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transittime",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
@@ -257,7 +257,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_expectedtonnage",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
@@ -267,7 +267,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_totalrolls",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
@@ -615,7 +615,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 source : "customrecord_anc_customeragreement",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
@@ -624,11 +624,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 id : "custpage_tranlineshipdate",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
-                                label : "Press Run Date(Production Print Date)",
+                                label : "Press Run Date",
                                 type : "date",
                                 id : "custpage_tranlinepressrundate",
                                 //container: "custpage_flgroup_input",
@@ -642,7 +642,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 id : "custpage_tranlineproductiondate",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
 

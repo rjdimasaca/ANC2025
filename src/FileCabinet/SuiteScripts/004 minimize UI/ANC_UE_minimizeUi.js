@@ -35,6 +35,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
         const beforeLoad = (scriptContext) => {
             try
             {
+                hideColumns(scriptContext);
                 addElements(scriptContext);
             }
             catch(e)
@@ -43,25 +44,63 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             }
         }
 
+        function hideColumns(scriptContext)
+        {
+            try
+            {
+                if(scriptContext.type == "view")
+                {
+                    var columnsToHide = ["options","taxrate1","taxrate2","taxrate2", "shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
+                    // var columnsToHide = ["options"];
 
+                    for(var a = 0 ; a < columnsToHide.length ; a++)
+                    {
+                        try
+                        {
+                            var targetFieldObj = scriptContext.form.getSublist({id: 'item'}).getField({id: columnsToHide[a]});
+
+                            if(targetFieldObj)
+                            {
+                                targetFieldObj.updateDisplayType({
+                                    displayType : "hidden"
+                                })
+
+                                log.debug("targetFieldObj to hide" + columnsToHide[a], targetFieldObj)
+                            }
+                        }
+                        catch(e_hidecol)
+                        {
+                            log.error("CANNOT HIDE COLUMN " + columnsToHide[a], e_hidecol)
+                        }
+                    }
+
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function hideColumns", e)
+            }
+        }
+
+        //TODO MOVE TO LIBRARY
         var elemList = [
             {
                 name : "warehouse_and_logistics",
                 list : [],
-                title : "W&L",
+                title : "Logistics",
                 icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG",
                 properties : [
 
                 ],
                 tdElemHtml : [
-                    `<td align="center"><p>W&L<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                    `<td align="center"><p>Logistics<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
                     ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
                 ],
                 targetScriptId : "customscript_anc_sl_minimize_ui",
                 targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Warehouse <br/> & <br/> Logistics",
-                rowTitle : "W&L",
+                headerTitle : "Logistics",
+                rowTitle : "Logistics",
                 iconWidth : "50px",
                 iconHeight : "50px",
                 position : 10,
@@ -70,7 +109,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             {
                 name : "orderquantity_and_inventorystatus",
                 list : [],
-                title : "Order Qty & Inventory Status",
+                title : "Inventory",
                 icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203538&c=1116623_SB2&h=GBFNo186_VXtycKD8lQ8h1BqLzd9c6FG3wq_rEZNvsLpQU9N",
                 properties : [
 
@@ -82,7 +121,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 ],
                 targetScriptId : "customscript_anc_sl_minimize_ui",
                 targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Order Qty <br/> & <br/> Inv. Status",
+                headerTitle : "Inventory",
                 rowTitle : "Qty<br/>Status",
                 iconWidth : "50px",
                 iconHeight : "50px",
@@ -92,7 +131,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             {
                 name : "product_and_packaging",
                 list : [],
-                title : "Product & Packaging",
+                title : "Packaging",
                 icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203539&c=1116623_SB2&h=Al2AWzDaC39Xoch4LmAX2-WdvZ-DGfERnRBArgrJctLb72QV",
                 properties : [
 
@@ -104,8 +143,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 ],
                 targetScriptId : "customscript_anc_sl_minimize_ui",
                 targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Product<br/>&<br/>Packaging",
-                rowTitle : "Product<br/>Packaging",
+                headerTitle : "Packaging",
+                rowTitle : "Packaging",
                 iconWidth : "50px",
                 iconHeight : "50px",
                 position : 10,
@@ -126,8 +165,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 ],
                 targetScriptId : "customscript_anc_sl_minimize_ui",
                 targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Customer<br/>&<br/>Shipping",
-                rowTitle : "Customer<br/>Shipping",
+                headerTitle : "Shipping",
+                rowTitle : "Shipping",
                 iconWidth : "50px",
                 iconHeight : "50px",
                 position : 10,
@@ -163,7 +202,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             {
                 name : "scheduling_and_keydates",
                 list : [],
-                title : "Scheduling and Key Dates",
+                title : "Key Dates",
                 icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
                 // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
                 // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
@@ -179,7 +218,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 ],
                 targetScriptId : "customscript_anc_sl_minimize_ui",
                 targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Scheduling<br/>Key Dates",
+                headerTitle : "Key Dates",
                 rowTitle : "",
                 iconWidth : "50px",
                 iconHeight : "50px",
@@ -377,7 +416,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                                             
                                             newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
                                     
-                                            newTdHtml += (index-1) + ', \\'popupWindow\\', \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
+                                            // newTdHtml += (index-1) + ',' + "'" + (index-1) + 'popupWindow${groupElem.name},' + ' \\'popupWindow${groupElem.name}\\', \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
+                                            newTdHtml += (index-1) + ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
                                 
                                         }
                                         
