@@ -157,7 +157,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 0,
                 addtlParams : "&processid=grreservation"
             },
             {
@@ -242,6 +242,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                     //         }
                     //     }
                     // ]
+
+                    elemList = elemList.sort(function(a,b){
+                        return b.position - a.position
+                    })
 
 
                     for(var j = 0 ; j < elemList.length; j++)

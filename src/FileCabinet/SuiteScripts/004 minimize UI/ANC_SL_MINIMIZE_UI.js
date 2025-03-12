@@ -55,7 +55,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_traninternalid",
                                 source : "salesorder",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tran_internalid",
                                 displayType : {
                                     displayType: "inline"
@@ -66,7 +66,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineitem",
                                 source : "item",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_item",
                                 displayType : {
                                     displayType: "inline"
@@ -76,7 +76,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Sequence",
                                 type : "integer",
                                 id : "custpage_tranlinesequence",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linesequence",
                                 displayType : {
                                     displayType: "inline"
@@ -86,10 +86,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Num",
                                 type : "integer",
                                 id : "custpage_tranlinenum",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linenum",
                                 displayType : {
-                                    displayType: "inline"
+                                    // displayType: "inline",
+                                    displayType: "hidden"
                                 }
                             },
                             {
@@ -97,7 +98,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineoriginwhse",
                                 source : "location",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_location",
                                 displayType : {
                                     displayType: "entry"
@@ -108,7 +109,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinetransitwhse",
                                 source : "location",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transitlocation",
                                 displayType : {
                                     displayType: "entry"
@@ -118,7 +119,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Transit Time",
                                 type : "integer",
                                 id : "custpage_tranlinetransittime",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transittime",
                                 displayType : {
                                     displayType: "entry"
@@ -129,7 +130,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinetransittom",
                                 source : "customlist_anc_transitoptmethods",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -211,7 +212,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_traninternalid",
                                 source : "salesorder",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tran_internalid",
                                 displayType : {
                                     displayType: "inline"
@@ -222,7 +223,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineitem",
                                 source : "item",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_item",
                                 displayType : {
                                     displayType: "inline"
@@ -232,7 +233,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Sequence",
                                 type : "integer",
                                 id : "custpage_tranlinesequence",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linesequence",
                                 displayType : {
                                     displayType: "inline"
@@ -242,17 +243,18 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Num",
                                 type : "integer",
                                 id : "custpage_tranlinenum",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linenum",
                                 displayType : {
-                                    displayType: "inline"
+                                    // displayType: "inline",
+                                    displayType: "hidden"
                                 }
                             },
                             {
                                 label : "Expected Tonnage",
                                 type : "float",
                                 id : "custpage_tranlineexpectedtonnage",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_expectedtonnage",
                                 displayType : {
                                     displayType: "entry"
@@ -262,7 +264,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Total Rolls",
                                 type : "integer",
                                 id : "custpage_tranlinetotalrolls",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_totalrolls",
                                 displayType : {
                                     displayType: "entry"
@@ -272,7 +274,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Rolls Onhand",
                                 type : "integer",
                                 id : "custpage_tranlinerollsonhand",
-                                container: "custpage_flgroup_details",
+                                //container: "custpage_flgroup_details",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -281,7 +283,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Reserved Rolls(Commit)",
                                 type : "integer",
                                 id : "custpage_tranlinereservedrolls",
-                                container: "custpage_flgroup_details",
+                                //container: "custpage_flgroup_details",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -290,7 +292,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Backorder Rolls(Commit)",
                                 type : "integer",
                                 id : "custpage_tranlinebackorderrolls",
-                                container: "custpage_flgroup_details",
+                                //container: "custpage_flgroup_details",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -340,7 +342,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_traninternalid",
                                 source : "salesorder",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tran_internalid",
                                 displayType : {
                                     displayType: "inline"
@@ -351,7 +353,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineitem",
                                 source : "item",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_item",
                                 displayType : {
                                     displayType: "inline"
@@ -361,7 +363,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Sequence",
                                 type : "integer",
                                 id : "custpage_tranlinesequence",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linesequence",
                                 displayType : {
                                     displayType: "inline"
@@ -371,17 +373,18 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Num",
                                 type : "integer",
                                 id : "custpage_tranlinenum",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linenum",
                                 displayType : {
-                                    displayType: "inline"
+                                    // displayType: "inline",
+                                    displayType: "hidden"
                                 }
                             },
                             {
                                 label : "Rolls Per Pack",
                                 type : "integer",
                                 id : "custpage_tranlinerollsperpack",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_rollsperpack",
                                 displayType : {
                                     displayType: "entry"
@@ -392,7 +395,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinewraptype",
                                 source : "customlist_anc_wraptypes",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_wraptype",
                                 displayType : {
                                     displayType: "entry"
@@ -443,7 +446,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_traninternalid",
                                 source : "salesorder",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tran_internalid",
                                 displayType : {
                                     displayType: "inline"
@@ -454,7 +457,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineitem",
                                 source : "item",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_item",
                                 displayType : {
                                     displayType: "inline"
@@ -464,7 +467,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Sequence",
                                 type : "integer",
                                 id : "custpage_tranlinesequence",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linesequence",
                                 displayType : {
                                     displayType: "inline"
@@ -474,10 +477,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Num",
                                 type : "integer",
                                 id : "custpage_tranlinenum",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linenum",
                                 displayType : {
-                                    displayType: "inline"
+                                    // displayType: "inline",
+                                    displayType: "hidden"
                                 }
                             },
                             // {
@@ -485,7 +489,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             //     type : "select",
                             //     id : "custpage_tranlinecustomeraddress",
                             //     source : "addressbook",
-                            //     container: "custpage_flgroup_input",
+                            //     //container: "custpage_flgroup_input",
                             //     displayType : {
                             //         displayType: "entry"
                             //     }
@@ -495,7 +499,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinecustomeragreement",
                                 source : "customrecord_anc_customeragreement",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -505,7 +509,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinelaneid",
                                 source : "customrecord_anc_shippinglanes",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -556,7 +560,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_traninternalid",
                                 source : "salesorder",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tran_internalid",
                                 displayType : {
                                     displayType: "inline"
@@ -567,7 +571,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlineitem",
                                 source : "item",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_item",
                                 displayType : {
                                     displayType: "inline"
@@ -577,7 +581,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Sequence",
                                 type : "integer",
                                 id : "custpage_tranlinesequence",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linesequence",
                                 displayType : {
                                     displayType: "inline"
@@ -587,10 +591,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Line Num",
                                 type : "integer",
                                 id : "custpage_tranlinenum",
-                                container: "custpage_flgroup_source",
+                                //container: "custpage_flgroup_source",
                                 sourceSearchKey:"tranline_linenum",
                                 displayType : {
-                                    displayType: "inline"
+                                    // displayType: "inline",
+                                    displayType: "hidden"
                                 }
                             },
                             // {
@@ -598,7 +603,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             //     type : "select",
                             //     id : "custpage_tranlinecustomeraddress",
                             //     source : "addressbook",
-                            //     container: "custpage_flgroup_input",
+                            //     //container: "custpage_flgroup_input",
                             //     displayType : {
                             //         displayType: "entry"
                             //     }
@@ -608,7 +613,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "date",
                                 id : "custpage_tranlinecustomeragreement",
                                 source : "customrecord_anc_customeragreement",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -617,7 +622,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Ship Date",
                                 type : "date",
                                 id : "custpage_tranlineshipdate",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -626,7 +631,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Press Run Date(Production Print Date)",
                                 type : "date",
                                 id : "custpage_tranlinepressrundate",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
@@ -635,7 +640,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label : "Production Date",
                                 type : "date",
                                 id : "custpage_tranlineproductiondate",
-                                container: "custpage_flgroup_input",
+                                //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
                                 }
