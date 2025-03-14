@@ -12,13 +12,13 @@
  * API Version  :       2.1
  * version      :       1.0.0
  */
-define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
+define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/redirect'],
     /**
      * @param{runtime} runtime
      * @param{search} search
      * @param{url} url
      */
-    (record, runtime, search, url, uiSw) => {
+    (record, runtime, search, url, uiSw, redirect) => {
 
         var globalrefs = {};
         var fitmentLineLimit = 2;
@@ -185,7 +185,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
@@ -369,7 +369,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
@@ -520,7 +520,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
@@ -682,7 +682,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
@@ -864,7 +864,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
@@ -1148,8 +1148,19 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     updateRecord(scriptContext)
 
 
+                    var currScript = runtime.getCurrentScript()
+                    redirect.toSuitelet({
+                        scriptId : currScript.id,
+                        deploymentId : currScript.deploymentId,
+                        parameters : {
+                            minimizeui : scriptContext.request.parameters.custpage_minimizeui,
+                            traninternalid : scriptContext.request.parameters.custpage_traninternalid,
+                            tranlinenum : scriptContext.request.parameters.custpage_tranlinenum,
+                            tranlinesequence : scriptContext.request.parameters.custpage_tranlinesequence,
+                            sl_posted : "T",
+                        }
+                    })
 
-                    generateForm(scriptContext)
 
                 }
             }

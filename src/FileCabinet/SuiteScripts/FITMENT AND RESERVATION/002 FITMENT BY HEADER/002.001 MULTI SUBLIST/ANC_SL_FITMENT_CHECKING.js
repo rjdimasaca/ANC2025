@@ -255,7 +255,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             id : "custpage_tranlinedest",
                             container: "custpage_flgroup_source"
                         }).updateDisplayType({
-                            displayType : "inline"
+                            displayType : "hidden"
                         }).defaultValue = globalrefs.tranItemVals.destination
                         globalrefs["tranlinedestField"] = tranlinedestField;
                     // }
@@ -477,6 +477,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
 
                 var sr = getResults(salesorderSearchObj.run());
 
+                var firstLocationId = "";
+                var firstLocationText = "";
                 var srToObjects = sr.map(function(res){
                     // var res = sr[a];
 
@@ -494,9 +496,20 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
 
                         resObjByColumnKey[label] = value;
 
+
                         if(label == "line_location")
                         {
-                            resObjByColumnKey.line_locationtext = res.getText(column);
+                            if(!firstLocationId)
+                            {
+                                firstLocationId = res.getValue(column);
+                            }
+                            if(!firstLocationText)
+                            {
+                                firstLocationText = res.getText(column);
+                            }
+
+                            resObjByColumnKey.line_location = firstLocationId;
+                            resObjByColumnKey.line_locationtext = firstLocationText;
                         }
                         if(label == "line_consignee")
                         {

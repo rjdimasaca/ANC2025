@@ -51,7 +51,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                     {
                         name : "custpage_soprocesses_fitcheck",
                         id : "custpage_soprocesses_fitcheck",
-                        label : "SO:Fitment Check",
+                        label : "Fitment Check",
                         functionName : "alert('Fitment Check')",
                         targetScript : "customscript_anc_sl_fitmentchecking",
                         targetDeployment : "customdeploy_anc_sl_fitmentchecking",
@@ -60,7 +60,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                     {
                         name : "custpage_soprocesses_invcheck",
                         id : "custpage_soprocesses_invcheck",
-                        label : "SO:Inventory Check",
+                        label : "Inventory Check",
                         functionName : "alert('Inventory Check')",
                         targetScript : "customscript_anc_sl_salesprocesses",
                         targetDeployment : "customdeploy_anc_sl_salesprocesses",
@@ -97,7 +97,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             }
 
             // nsObj.functionName = `alert('completeFunction${nsObj.label}')`
-            nsObj.functionName = `window.open('${targetUrl}', 'popupWindow', 'width=700,height=700,scrollbars=yes')`
+            nsObj.functionName = `window.open('${targetUrl}', 'popupWindow', 'width=1440,height=700,scrollbars=yes')`
 
 
 
@@ -277,9 +277,9 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                         `
 
                             var inlineHtmlField = scriptContext.form.addField({
-                                id: "custpage_anc_minimize_ui_html" + j,
+                                id: "custpage_anc_salesprocesses_html" + j,
                                 type: "inlinehtml",
-                                label: "ANC Minimize UI HTML" + j
+                                label: "ANC SALES PROCESSES" + j
                             });
 
                             inlineHtmlField.defaultValue = inlineHtmlFieldValue;

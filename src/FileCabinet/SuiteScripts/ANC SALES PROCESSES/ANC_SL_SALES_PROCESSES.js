@@ -926,6 +926,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
 
                 var sr = getResults(salesorderSearchObj.run());
 
+                var firstLocationId = "";
+                var firstLocationText = "";
                 var srToObjects = sr.map(function(res){
                     // var res = sr[a];
 
@@ -941,7 +943,24 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         //     resObjByColumnKey.line_deliverydatetext = res.getText(column);
                         // }
 
+
+
                         resObjByColumnKey[label] = value;
+
+                        if(label == "line_location")
+                        {
+                            if(!firstLocationId)
+                            {
+                                firstLocationId = res.getValue(column);
+                            }
+                            if(!firstLocationText)
+                            {
+                                firstLocationText = res.getText(column);
+                            }
+
+                            resObjByColumnKey.line_location = firstLocationId;
+                            resObjByColumnKey.line_locationtext = firstLocationText;
+                        }
                     });
 
                     resObjByColumnKey.id = res.id
@@ -1002,11 +1021,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
                                 })
                             }
-                            targetSublist.setSublistValue({
-                                id : "custpage_col_ifr_availableqty",
-                                line : multiGradeIndex || b,
-                                value : /*"03/03/2025"*/resObjByColumnKey.line_availablequantity || 0
-                            })
+                            if(resObjByColumnKey.line_availablequantity)
+                            {
+                                targetSublist.setSublistValue({
+                                    id : "custpage_col_ifr_availableqty",
+                                    line : multiGradeIndex || b,
+                                    value : /*"03/03/2025"*/resObjByColumnKey.line_availablequantity
+                                })
+                            }
 
                             //FILL BY ORDER QTY
                             if(resObjByColumnKey.line_quantity)
