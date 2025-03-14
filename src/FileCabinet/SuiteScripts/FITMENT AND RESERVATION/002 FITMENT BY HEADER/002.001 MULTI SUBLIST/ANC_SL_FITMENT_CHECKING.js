@@ -204,7 +204,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             source : "location",
                             container: "custpage_flgroup_source"
                         }).updateDisplayType({
-                            displayType : "inline"
+                            displayType : "hidden"
                         }).defaultValue = globalrefs.tranBodyVals.location
                         globalrefs["tranlinelocField"] = tranlinelocField;
                     }
@@ -452,11 +452,6 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 join: "item",
                                 label: "line_item_parent"
                             }),
-                            search.createColumn({
-                                name: "cseg1",
-                                join: "item",
-                                label: "line_item_grade"
-                            }),
                             search.createColumn({name: "quantity", label: "line_quantity"}),
                             search.createColumn({name: "location", label: "line_location"}),
                             search.createColumn({name: "line", label: "line_id"}),
@@ -469,6 +464,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
                             search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
                             search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
+                            search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
+                            search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
                         ]
                 });
                 var searchResultCount = salesorderSearchObj.runPaged().count;
@@ -496,15 +493,27 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         // }
 
                         resObjByColumnKey[label] = value;
+
+                        if(label == "line_location")
+                        {
+                            resObjByColumnKey.line_locationtext = res.getText(column);
+                        }
+                        if(label == "line_consignee")
+                        {
+                            resObjByColumnKey.line_consigneetext = res.getText(column);
+                        }
                     });
 
                     resObjByColumnKey.id = res.id
+
+
 
                     return resObjByColumnKey;
                 })
                 log.debug("srToObjects", srToObjects)
 
-                var srGroupedByDeliveryDate = groupBy(srToObjects, "line_deliverydate")
+                // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
+                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext"])
                 log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
 
@@ -514,7 +523,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     var multiGradeIndex = 0;
 
                     var uiSublistId = "custpage_sublist_fitmentcheck" + a;
-                    var fitmentCheckSublistLabel = "Fitment Check:" + toMDY_text(date);
+                    // var fitmentCheckSublistLabel = "Fitment Check:" + toMDY_text(date);
+                    var fitmentCheckSublistLabel = "Fitment Check " + (date);
 
 
                     var fitmentReservationSublist = form.addSublist({
@@ -554,14 +564,22 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     })
                     globalrefs["fitmentitemField"] = fitmentitemField;
 
-                    var fitmentlinedeliverydaeField = fitmentReservationSublist.addField({
-                        label : "Line Delivery Date",
+                    var fitmentlinedeliverydateField = fitmentReservationSublist.addField({
+                        label : "Delivery Date",
                         type : "date",
                         id : "custpage_col_ifr_line_deliverydate",
                     }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.HIDDEN
+                    });
+                    globalrefs["fitmentlinedeliverydateField"] = fitmentlinedeliverydateField;
+                    var fitmentlineshipdateField = fitmentReservationSublist.addField({
+                        label : "Ship Date",
+                        type : "date",
+                        id : "custpage_col_ifr_line_shipdate",
+                    }).updateDisplayType({
                         displayType : uiSw.FieldDisplayType.INLINE
                     });
-                    globalrefs["fitmentlinedeliverydaeField"] = fitmentlinedeliverydaeField;
+                    globalrefs["fitmentlineshipdateField"] = fitmentlineshipdateField;
 
                     //RESERVE BY QUANTITY
                     var fitmentorderqtyField = fitmentReservationSublist.addField({
@@ -569,7 +587,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "float",
                         id : "custpage_col_ifr_orderqty",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     globalrefs["fitmentorderqtyField"] = fitmentorderqtyField;
                     var fitmentreservedqtyField = fitmentReservationSublist.addField({
@@ -599,7 +617,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         type : "float",
                         id : "custpage_col_ifr_orderweight",
                     }).updateDisplayType({
-                        displayType : uiSw.FieldDisplayType.INLINE
+                        displayType : uiSw.FieldDisplayType.HIDDEN
                     });
                     // fitmentorderqtyField.defaultValue = globalrefs.tranItemVals.weight
                     globalrefs["fitmentorderweightField"] = fitmentorderweightField;
@@ -662,7 +680,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     globalrefs["fitmentequipmentField"] = fitmentequipmentField;
 
                     var fitmentlocationField = fitmentReservationSublist.addField({
-                        label : "Origin",
+                        label : "Location",
                         type : "select",
                         id : "custpage_ifr_location",
                         source : "location"
@@ -671,42 +689,108 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     })
                     globalrefs["fitmentlocationField"] = fitmentlocationField;
 
-                    var fitmentloadidField = fitmentReservationSublist.addField({
-                        label : "Load Id",
-                        type : "text",
-                        id : "custpage_ifr_loadid",
+                    // var fitmentloadidField = fitmentReservationSublist.addField({
+                    //     label : "Load Id",
+                    //     type : "text",
+                    //     id : "custpage_ifr_loadid",
+                    // }).updateDisplayType({
+                    //     displayType : uiSw.FieldDisplayType.INLINE
+                    // })
+                    // globalrefs["fitmentloadidField"] = fitmentloadidField;
+                    //
+                    // var fitmentloadnumField = fitmentReservationSublist.addField({
+                    //     label : "Load#",
+                    //     type : "text",
+                    //     id : "custpage_ifr_loadnum",
+                    // }).updateDisplayType({
+                    //     displayType : uiSw.FieldDisplayType.INLINE
+                    // })
+                    // globalrefs["fitmentloadnumField"] = fitmentloadnumField;
+                    //
+                    // var fitmentweightplanned = fitmentReservationSublist.addField({
+                    //     label : "Weight Planned",
+                    //     type : "text",
+                    //     id : "custpage_ifr_weightplanned",
+                    // }).updateDisplayType({
+                    //     displayType : uiSw.FieldDisplayType.INLINE
+                    // })
+                    // globalrefs["fitmentweightplanned"] = fitmentweightplanned;
+                    //
+                    // var fitmentpercentageField = fitmentReservationSublist.addField({
+                    //     label : "Percentage",
+                    //     type : "percent",
+                    //     id : "custpage_ifr_percentage",
+                    // }).updateDisplayType({
+                    //     displayType : uiSw.FieldDisplayType.INLINE
+                    // })
+                    // globalrefs["fitmentpercentageField"] = fitmentpercentageField;
+
+                    //START new specs based on ERD provided 03/12/2025
+                    var ftlCountField = fitmentReservationSublist.addField({
+                        label : "FTL Count",
+                        type : "integer",
+                        id : "custpage_ifr_ftlcount",
                     }).updateDisplayType({
                         displayType : uiSw.FieldDisplayType.INLINE
                     })
-                    globalrefs["fitmentloadidField"] = fitmentloadidField;
+                    globalrefs["ftlCountField"] = ftlCountField;
 
-                    var fitmentloadnumField = fitmentReservationSublist.addField({
-                        label : "Load#",
-                        type : "text",
-                        id : "custpage_ifr_loadnum",
+                    var ftlAveTonnageField = fitmentReservationSublist.addField({
+                        label : "FTL Ave Tonnage",
+                        type : "float",
+                        id : "custpage_ifr_ftlavetonnage",
                     }).updateDisplayType({
                         displayType : uiSw.FieldDisplayType.INLINE
                     })
-                    globalrefs["fitmentloadnumField"] = fitmentloadnumField;
+                    globalrefs["ftlAveTonnageField"] = ftlAveTonnageField;
 
-                    var fitmentweightplanned = fitmentReservationSublist.addField({
-                        label : "Weight Planned",
-                        type : "text",
-                        id : "custpage_ifr_weightplanned",
+
+                    var ftlAveCostPerTonField = fitmentReservationSublist.addField({
+                        label : "FTL Ave Cost Per Ton",
+                        type : "float",
+                        id : "custpage_ifr_ftlavecostperton",
                     }).updateDisplayType({
                         displayType : uiSw.FieldDisplayType.INLINE
                     })
-                    globalrefs["fitmentweightplanned"] = fitmentweightplanned;
+                    globalrefs["ftlAveCostPerTonField"] = ftlAveCostPerTonField;
 
-                    var fitmentpercentageField = fitmentReservationSublist.addField({
-                        label : "Percentage",
-                        type : "percent",
-                        id : "custpage_ifr_percentage",
+                    var ftlAvePercentUtilizationField = fitmentReservationSublist.addField({
+                        label : "FTL Ave % Utilization",
+                        type : "float",
+                        id : "custpage_ifr_ftlavepercentutil",
                     }).updateDisplayType({
                         displayType : uiSw.FieldDisplayType.INLINE
                     })
-                    globalrefs["fitmentpercentageField"] = fitmentpercentageField;
+                    globalrefs["ftlAvePercentUtilizationField"] = ftlAvePercentUtilizationField;
 
+                    var ltlTonnageField = fitmentReservationSublist.addField({
+                        label : "LTL Tonnage",
+                        type : "float",
+                        id : "custpage_ifr_ltltonnage",
+                    }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.INLINE
+                    })
+                    globalrefs["ltlTonnageField"] = ltlTonnageField;
+
+                    var ltlPercentUtilizationField = fitmentReservationSublist.addField({
+                        label : "LTL % Utilization",
+                        type : "float",
+                        id : "custpage_ifr_ltlpercentutil",
+                    }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.INLINE
+                    })
+                    globalrefs["ltlPercentUtilizationField"] = ltlPercentUtilizationField;
+
+                    var ltlRollsField = fitmentReservationSublist.addField({
+                        label : "LTL Rolls",
+                        type : "integer",
+                        id : "custpage_ifr_ltlrolls",
+                    }).updateDisplayType({
+                        displayType : uiSw.FieldDisplayType.INLINE
+                    })
+                    globalrefs["ltlRollsField"] = ltlRollsField;
+
+                    //END new specs based on ERD provided 03/12/2025
 
                     var deliveryDateGroup = srGroupedByDeliveryDate[date];
                     for(var c = 0 ; c < deliveryDateGroup.length ; c++)
@@ -742,13 +826,22 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 })
                             }
 
-                            log.debug("resObjByColumnKey.line_deliverydate", resObjByColumnKey.line_deliverydate);
+                            // log.debug("resObjByColumnKey.line_deliverydate", resObjByColumnKey.line_deliverydate);
+                            log.debug("resObjByColumnKey.line_shipdate", resObjByColumnKey.line_shipdate);
                             if(resObjByColumnKey.line_deliverydate)
                             {
                                 fitmentReservationSublist.setSublistValue({
                                     id : "custpage_col_ifr_line_deliverydate",
                                     line : multiGradeIndex || b,
                                     value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
+                                })
+                            }
+                            if(resObjByColumnKey.line_shipdate)
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_col_ifr_line_shipdate",
+                                    line : multiGradeIndex || b,
+                                    value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
                                 })
                             }
 
@@ -896,6 +989,24 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
         function groupBy(objectArray, property) {
             return objectArray.reduce(function (acc, obj) {
                 var key = obj[property];
+                if (!acc[key]) {
+                    acc[key] = [];
+                }
+                acc[key].push(obj);
+                return acc;
+            }, {});
+        }
+
+        function groupByKeys(objectArray, property) {
+            return objectArray.reduce(function (acc, obj) {
+
+                var key = "";
+                for(var a = 0 ; a < property.length; a++)
+                {
+                    key +=  " | " + (obj[property[a]] || "");
+                }
+                // key += "|"
+
                 if (!acc[key]) {
                     acc[key] = [];
                 }

@@ -10,3 +10,17 @@ CASE
     WHEN TO_NUMBER(TO_CHAR({trandate}, 'DD')) BETWEEN 15 AND 21 THEN 3
     WHEN TO_NUMBER(TO_CHAR({trandate}, 'DD')) BETWEEN 22 AND 31 THEN 4
 END
+
+
+
+
+
+
+
+
+
+
+---set form of the sales order to CUSTOM MINIMIZED, ORDER ENTRY, ORDER MANAGEMENT
+nlapiSubmitField("salesorder", nlapiGetRecordId(), "customform", 206)
+---set form of the sales order to STANDARD
+nlapiSubmitField("salesorder", nlapiGetRecordId(), "customform", 68)

@@ -50,8 +50,9 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
             {
                 if(scriptContext.type == "view")
                 {
-                    var columnsToHide = ["options","taxrate1","taxrate2","taxrate2", "shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
+                    var columnsToHide = ["options","rate","amount","taxrate1","taxrate2","shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
                     // var columnsToHide = ["options"];
+                    // var columnsToHide = ["options","rate","amount","taxrate1","taxrate2"];
 
                     for(var a = 0 ; a < columnsToHide.length ; a++)
                     {
@@ -103,7 +104,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "Logistics",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 9,
                 addtlParams : "&minimizeui=warehouse_and_logistics"
             },
             {
@@ -125,7 +126,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "Qty<br/>Status",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 9,
                 addtlParams : "&minimizeui=orderquantity_and_inventorystatus"
             },
             {
@@ -147,7 +148,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "Packaging",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 9,
                 addtlParams : "&minimizeui=product_and_packaging"
             },
             {
@@ -169,7 +170,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "Shipping",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 9,
                 addtlParams : "&minimizeui=customer_and_shipping"
             },
             {
@@ -222,7 +223,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                 rowTitle : "",
                 iconWidth : "50px",
                 iconHeight : "50px",
-                position : 10,
+                position : 9,
                 addtlParams : "&minimizeui=scheduling_and_keydates"
             },
             // {

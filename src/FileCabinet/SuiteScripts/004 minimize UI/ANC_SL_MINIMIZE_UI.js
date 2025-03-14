@@ -30,12 +30,13 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
 
         var elements = {};
         var globalrefs = {};
+        var minimize_ui_processid = "";
 
 
-        const addElements = (scriptContext, form) => {
+        const getElements = (scriptContext) => {
             elements = {
                 "warehouse_and_logistics" : {
-                    title : "Warehouse and Logistics",
+                    title : "Logistics",
                     bodyfieldgroups : {
                         list : [
                             {
@@ -50,6 +51,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     },
                     bodyfields : {
                         list : [
+                            {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
                             {
                                 label : "Source",
                                 type : "select",
@@ -93,6 +104,21 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     displayType: "hidden"
                                 }
                             },
+
+                            {
+                                label : "Shipping Lane",
+                                type : "select",
+                                id : "custpage_tranlinelaneid",
+                                source : "customrecord_anc_shippinglanes",
+                                sourceSearchKey : "tranline_shippinglane",
+                                //container: "custpage_flgroup_input",
+                                displayType : {
+                                    displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
+                                }
+                            },
                             {
                                 label : "Origin Warehouse",
                                 type : "select",
@@ -100,9 +126,10 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 source : "location",
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_location",
+                                targetColumnId : "location",
                                 displayType : {
-                                    displayType: "entry"
-                                }
+                                    displayType: "inline"
+                                },
                             },
                             {
                                 label : "Transit Warehouse",
@@ -111,8 +138,9 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 source : "location",
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transitlocation",
+                                targetColumnId : "custcol_anc_transitlocation",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                             {
@@ -121,6 +149,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 id : "custpage_tranlinetransittime",
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transittime",
+                                targetColumnId : "custcol_anc_transittime",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -130,6 +159,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinetransittom",
                                 source : "customlist_anc_transitoptmethods",
+                                sourceSearchKey:"tranline_transitoptmethod",
+                                targetColumnId : "custcol_anc_transitoptmethod",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
@@ -155,40 +186,46 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
                         search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
+                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{shipdate}",
-                            label: "tranline_ldc_date"
-                        }),
-                        search.createColumn({
-                            name: "formuladate",
-                            formula: "{trandate}",
-                            label: "tranline_pressrun_date"
-                        }),
-                        search.createColumn({
-                            name: "formuladate",
-                            formula: "{shipdate}",
+                            formula: "{custcol_anc_shipdate}",
                             label: "tranline_ship_date"
                         }),
-                        search.createColumn({
-                            name: "formuladate",
-                            formula: "{shipdate}",
-                            label: "tranline_production_date"
-                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
                             formula: "{custcol_anc_deliverydate}",
                             label: "tranline_delivery_date"
-                        })
+                        }),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
+                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
+                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
+                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
+                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
+                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
+                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
                     ]
                 },
                 "orderquantity_and_inventorystatus" : {
-                    title : "Order Quantity and Inventory Status",
+                    title : "Inventory",
                     bodyfieldgroups : {
                         list : [
                             {
@@ -208,6 +245,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     bodyfields : {
                         list : [
                             {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
+                            {
                                 label : "Source",
                                 type : "select",
                                 id : "custpage_traninternalid",
@@ -248,7 +295,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 displayType : {
                                     // displayType: "inline",
                                     displayType: "hidden"
-                                }
+                                },
                             },
                             {
                                 label : "Expected Tonnage",
@@ -258,6 +305,9 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 sourceSearchKey:"tranline_expectedtonnage",
                                 displayType : {
                                     displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
                                 }
                             },
                             {
@@ -275,6 +325,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "integer",
                                 id : "custpage_tranlinerollsonhand",
                                 //container: "custpage_flgroup_details",
+                                sourceSearchKey:"tranline_rollsonhand",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -284,6 +335,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "integer",
                                 id : "custpage_tranlinereservedrolls",
                                 //container: "custpage_flgroup_details",
+                                sourceSearchKey:"tranline_reservedrolls",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -293,6 +345,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "integer",
                                 id : "custpage_tranlinebackorderrolls",
                                 //container: "custpage_flgroup_details",
+                                sourceSearchKey:"tranline_backorderrolls",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -317,12 +370,46 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
                         search.createColumn({name: "location", label: "tranline_transitlocation"}),
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "600",
+                            label: "tranline_transittime"
+                        }),
+                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_shipdate}",
+                            label: "tranline_ship_date"
+                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_deliverydate}",
+                            label: "tranline_delivery_date"
+                        }),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
                         search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
                         search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
+                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
+                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
+                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
+                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
+                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
                     ]
                 },
                 "product_and_packaging" : {
-                    title : "Product and Packaging",
+                    title : "Packaging",
                     bodyfieldgroups : {
                         list : [
                             {
@@ -337,6 +424,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     },
                     bodyfields : {
                         list : [
+                            {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
                             {
                                 label : "Source",
                                 type : "select",
@@ -388,6 +485,9 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 sourceSearchKey:"tranline_rollsperpack",
                                 displayType : {
                                     displayType: "entry"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
                                 }
                             },
                             {
@@ -421,12 +521,46 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
                         search.createColumn({name: "location", label: "tranline_transitlocation"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}), //TODO there is custcol_wm_rollsperpack
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"})
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "600",
+                            label: "tranline_transittime"
+                        }),
+                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_shipdate}",
+                            label: "tranline_ship_date"
+                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_deliverydate}",
+                            label: "tranline_delivery_date"
+                        }),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
+                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
+                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
+                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
+                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
+                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
+                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
                     ]
                 },
                 "customer_and_shipping" : {
-                    title : "Customer and Shipping",
+                    title : "Shipping",
                     bodyfieldgroups : {
                         list : [
                             {
@@ -441,6 +575,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     },
                     bodyfields : {
                         list : [
+                            {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
                             {
                                 label : "Source",
                                 type : "select",
@@ -495,13 +639,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             //     }
                             // },
                             {
-                                label : "Customer Agreement",
+                                label : "Customer Agreement?",
                                 type : "select",
                                 id : "custpage_tranlinecustomeragreement",
                                 source : "customrecord_anc_customeragreement",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
                                 }
                             },
                             {
@@ -509,9 +656,10 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "select",
                                 id : "custpage_tranlinelaneid",
                                 source : "customrecord_anc_shippinglanes",
+                                sourceSearchKey : "tranline_shippinglane",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
 
@@ -535,12 +683,46 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
                         search.createColumn({name: "location", label: "tranline_transitlocation"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}), //TODO there is custcol_wm_rollsperpack
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"})
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "600",
+                            label: "tranline_transittime"
+                        }),
+                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_shipdate}",
+                            label: "tranline_ship_date"
+                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_deliverydate}",
+                            label: "tranline_delivery_date"
+                        }),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
+                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
+                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
+                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
+                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
+                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
+                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
                     ]
                 },
                 "scheduling_and_keydates" : {
-                    title : "Scheduling and Key Dates",
+                    title : "Key Dates",
                     bodyfieldgroups : {
                         list : [
                             {
@@ -555,6 +737,16 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     },
                     bodyfields : {
                         list : [
+                            {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
                             {
                                 label : "Source",
                                 type : "select",
@@ -614,8 +806,12 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 id : "custpage_tranlinecustomeragreement",
                                 source : "customrecord_anc_customeragreement",
                                 //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_ldc_date",
                                 displayType : {
                                     displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
                                 }
                             },
                             {
@@ -623,6 +819,17 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "date",
                                 id : "custpage_tranlineshipdate",
                                 //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_ship_date",
+                                displayType : {
+                                    displayType: "inline"
+                                }
+                            },
+                            {
+                                label : "Production Date",
+                                type : "date",
+                                id : "custpage_tranlineproductiondate",
+                                //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_production_date",
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -632,17 +839,9 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 type : "date",
                                 id : "custpage_tranlinepressrundate",
                                 //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_pressrundate",
                                 displayType : {
                                     displayType: "entry"
-                                }
-                            },
-                            {
-                                label : "Production Date",
-                                type : "date",
-                                id : "custpage_tranlineproductiondate",
-                                //container: "custpage_flgroup_input",
-                                displayType : {
-                                    displayType: "inline"
                                 }
                             },
 
@@ -666,15 +865,258 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
                         search.createColumn({name: "location", label: "tranline_transitlocation"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}), //TODO there is custcol_wm_rollsperpack
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"})
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "600",
+                            label: "tranline_transittime"
+                        }),
+                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_shipdate}",
+                            label: "tranline_ship_date"
+                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: "{custcol_anc_deliverydate}",
+                            label: "tranline_delivery_date"
+                        }),
+                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
+                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
+                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
+                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
+                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
+                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
+                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
                     ]
                 }
             }
         }
 
+        function generateForm(scriptContext, form)
+        {
+            try
+            {
+                log.debug("generateForm scriptContext.request.method", scriptContext.request.method);
+
+                log.debug("elements[minimize_ui_processid]", elements[minimize_ui_processid]);
+
+                var form = uiSw.createForm({
+                    title: elements[minimize_ui_processid].title,
+                    hideNavBar: true
+                })
+
+
+                form.clientScriptModulePath = './ANC_CS_MINIMIZE_UI.js'
+
+
+                var sourceValSearchObj = null;
+                var firstResult = {};
+                //search and source the values
+                if(scriptContext.request.parameters.traninternalid && scriptContext.request.parameters.tranlinenum)
+                {
+                    var searchFilters = [];
+                    if(elements[minimize_ui_processid] &&
+                        elements[minimize_ui_processid].searchFilters &&
+                        elements[minimize_ui_processid].searchFilters.length > 0)
+                    {
+                        searchFilters = elements[minimize_ui_processid].searchFilters;
+                    }
+
+                    searchFilters.push("AND")
+                    searchFilters.push(["internalid", "anyof", scriptContext.request.parameters.traninternalid])
+                    searchFilters.push("AND")
+                    searchFilters.push(["line", "equalto", scriptContext.request.parameters.tranlinenum])
+
+                    log.debug("searchFilters", searchFilters);
+
+                    sourceValSearchObj = search.create({
+                        type: "salesorder",
+                        settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
+                        filters : searchFilters,
+                        columns : elements[minimize_ui_processid].searchColumns,
+                    })
+
+                    var sr = getResults(sourceValSearchObj.run())
+
+                    for(var a = 0 ; a < sr.length ; a++)
+                    {
+                        var res = sr[a];
+
+                        var columns = res.columns;
+
+                        var resObjByColumnKey = {}
+                        columns.forEach(function(column) {
+                            var label = column.label || column.name; // Fallback to name if label is unavailable
+                            var value = res.getValue(column);
+                            var text = res.getText(column);
+                            resObjByColumnKey[label] = {value, text};
+                        });
+
+                        resObjByColumnKey.id = {value:res.id, text : res.id};
+                        log.debug("resObjByColumnKey", resObjByColumnKey);
+                        firstResult = resObjByColumnKey;
+                        break;
+                    }
+
+
+                }
+
+                for(var a = 0 ; a < elements[minimize_ui_processid].bodyfieldgroups.list.length ; a++)
+                {
+                    var widgetObj = elements[minimize_ui_processid].bodyfieldgroups.list[a];
+                    var uiWidgetObj = form.addFieldGroup(widgetObj);
+
+                    globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
+                }
+                for(var a = 0 ; a < elements[minimize_ui_processid].bodyfields.list.length ; a++)
+                {
+                    var widgetObj = elements[minimize_ui_processid].bodyfields.list[a];
+                    var uiWidgetObj = form.addField(widgetObj);
+                    if(widgetObj.displayType)
+                    {
+                        uiWidgetObj.updateDisplayType(widgetObj.displayType)
+                    }
+                    if(widgetObj.updateBreakType)
+                    {
+                        uiWidgetObj.updateBreakType(widgetObj.updateBreakType)
+                    }
+                    if(widgetObj.defaultValue || widgetObj.defaultValue == "0" || widgetObj.defaultValue === false)
+                    {
+                        uiWidgetObj.defaultValue = widgetObj.defaultValue
+                    }
+
+                    if(firstResult && widgetObj.sourceSearchKey || widgetObj.sourceSearchKey == "0" || widgetObj.sourceSearchKey === false)
+                    {
+                        // uiWidgetObj.defaultValue = widgetObj.defaultValue
+                        log.debug("firstResult[widgetObj.sourceSearchKey]", firstResult[widgetObj.sourceSearchKey]);
+                        uiWidgetObj.defaultValue = firstResult[widgetObj.sourceSearchKey].value;
+                        log.debug("set value firstResult[widgetObj.sourceSearchKey]", firstResult[widgetObj.sourceSearchKey])
+                    }
+
+
+
+                    globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
+                }
+
+
+                form.addSubmitButton({
+                    label : "Submit Line"
+                })
+
+                scriptContext.response.writePage(form);
+            }
+            catch(e)
+            {
+                log.error("ERROR in function generateForm", e);
+            }
+        }
+
+        function updateRecord(scriptContext)
+        {
+            try
+            {
+                var custpage_minimizeui = scriptContext.request.parameters.custpage_minimizeui;
+                var custpage_traninternalid = scriptContext.request.parameters.custpage_traninternalid;
+                var custpage_tranlinenum = scriptContext.request.parameters.custpage_tranlinenum;
+                if(custpage_minimizeui)
+                {
+                    getElements(scriptContext);
+                    if(elements[custpage_minimizeui])
+                    {
+                        var bodyFieldsList = elements[custpage_minimizeui].bodyfields.list;
+
+                        var colsToUpdateCount = 0;
+                        if(bodyFieldsList && bodyFieldsList.length > 0)
+                        {
+                            var soRecObj = record.load({
+                                type : "salesorder",
+                                id : custpage_traninternalid
+                            });
+
+                            var targetIndex = soRecObj.findSublistLineWithValue({
+                                sublistId : "item",
+                                fieldId : "line",
+                                value : custpage_tranlinenum
+                            });
+
+                            if(targetIndex != -1)
+                            {
+                                for(var a = 0 ; a < bodyFieldsList.length; a++)
+                                {
+
+                                    if(bodyFieldsList[a].targetColumnId)
+                                    {
+                                        var oldValue = soRecObj.getSublistValue({
+                                            sublistId : "item",
+                                            fieldId : bodyFieldsList[a].targetColumnId,
+                                            line : targetIndex,
+                                            value : targetColumnValue
+                                        })
+
+                                        var targetColumnValue = scriptContext.request.parameters[bodyFieldsList[a].id];
+
+
+                                        if(oldValue != targetColumnValue)
+                                        {
+                                            soRecObj.setSublistValue({
+                                                sublistId : "item",
+                                                fieldId : bodyFieldsList[a].targetColumnId,
+                                                line : targetIndex,
+                                                value : targetColumnValue
+                                            })
+                                            colsToUpdateCount++;
+                                        }
+                                    }
+
+                                    log.debug("bodyFieldsList[a].targetColumnId", {colId : bodyFieldsList[a].targetColumnId, colVal : targetColumnValue})
+
+                                }
+
+                                if(colsToUpdateCount > 0)
+                                {
+                                    var submittedSoRecId = soRecObj.save({
+                                        ignoreMandatoryFields : true,
+                                        enableSourcing : true
+                                    });
+
+                                    log.debug("submittedSoRecId", submittedSoRecId);
+                                }
+                            }
+                            else
+                            {
+                                log.error("CANNOT FIND SUBLIST LINE", {targetIndex, custpage_tranlinenum})
+                            }
+
+                        }
+                    }
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function updateRecord", e);
+            }
+        }
+
         const onRequest = (scriptContext) =>
         {
+            minimize_ui_processid = scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.custpage_minimizeui
+
+            log.debug("minimize_ui_processid", minimize_ui_processid);
+
             accountId = runtime.accountId;
             try
             {
@@ -690,120 +1132,24 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                 if(scriptContext.request.method == "GET") {
 
 
-                    addElements(scriptContext, form);
+                    getElements(scriptContext);
 
                     // log.debug("scriptContext.request.parameters.minimizeui", scriptContext.request.parameters.minimizeui);
                     //
                     // log.debug("elements", elements);
 
-                    log.debug("elements[scriptContext.request.parameters.minimizeui]", elements[scriptContext.request.parameters.minimizeui]);
-
-                    var form = uiSw.createForm({
-                        title: elements[scriptContext.request.parameters.minimizeui].title,
-                        hideNavBar: true
-                    })
-
-
-                    form.clientScriptModulePath = './ANC_CS_MINIMIZE_UI.js'
-
-
-                    var sourceValSearchObj = null;
-                    var firstResult = {};
-                    //search and source the values
-                    if(scriptContext.request.parameters.traninternalid && scriptContext.request.parameters.tranlinenum)
-                    {
-                        var searchFilters = [];
-                        if(elements[scriptContext.request.parameters.minimizeui] &&
-                            elements[scriptContext.request.parameters.minimizeui].searchFilters &&
-                            elements[scriptContext.request.parameters.minimizeui].searchFilters.length > 0)
-                        {
-                            searchFilters = elements[scriptContext.request.parameters.minimizeui].searchFilters;
-                        }
-
-                        searchFilters.push("AND")
-                        searchFilters.push(["internalid", "anyof", scriptContext.request.parameters.traninternalid])
-                        searchFilters.push("AND")
-                        searchFilters.push(["line", "equalto", scriptContext.request.parameters.tranlinenum])
-
-                        log.debug("searchFilters", searchFilters);
-
-                        sourceValSearchObj = search.create({
-                            type: "salesorder",
-                            settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
-                            filters : searchFilters,
-                            columns : elements[scriptContext.request.parameters.minimizeui].searchColumns,
-                        })
-
-                        var sr = getResults(sourceValSearchObj.run())
-
-                        for(var a = 0 ; a < sr.length ; a++)
-                        {
-                            var res = sr[a];
-
-                            var columns = res.columns;
-
-                            var resObjByColumnKey = {}
-                            columns.forEach(function(column) {
-                                var label = column.label || column.name; // Fallback to name if label is unavailable
-                                var value = res.getValue(column);
-                                var text = res.getText(column);
-                                resObjByColumnKey[label] = {value, text};
-                            });
-
-                            resObjByColumnKey.id = {value:res.id, text : res.id};
-                            log.debug("resObjByColumnKey", resObjByColumnKey);
-                            firstResult = resObjByColumnKey;
-                            break;
-                        }
-
-
-                    }
-
-
-
-
-                    for(var a = 0 ; a < elements[scriptContext.request.parameters.minimizeui].bodyfieldgroups.list.length ; a++)
-                    {
-                        var widgetObj = elements[scriptContext.request.parameters.minimizeui].bodyfieldgroups.list[a];
-                        var uiWidgetObj = form.addFieldGroup(widgetObj);
-
-                        globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
-                    }
-                    for(var a = 0 ; a < elements[scriptContext.request.parameters.minimizeui].bodyfields.list.length ; a++)
-                    {
-                        var widgetObj = elements[scriptContext.request.parameters.minimizeui].bodyfields.list[a];
-                        var uiWidgetObj = form.addField(widgetObj);
-                        if(widgetObj.displayType)
-                        {
-                            uiWidgetObj.updateDisplayType(widgetObj.displayType)
-                        }
-                        if(widgetObj.defaultValue || widgetObj.defaultValue == "0" || widgetObj.defaultValue === false)
-                        {
-                            uiWidgetObj.defaultValue = widgetObj.defaultValue
-                        }
-
-                        if(firstResult && widgetObj.sourceSearchKey || widgetObj.sourceSearchKey == "0" || widgetObj.sourceSearchKey === false)
-                        {
-                            // uiWidgetObj.defaultValue = widgetObj.defaultValue
-                            uiWidgetObj.defaultValue = firstResult[widgetObj.sourceSearchKey].value;
-                            log.debug("set value firstResult[widgetObj.sourceSearchKey]", firstResult[widgetObj.sourceSearchKey])
-                        }
-
-
-
-                        globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
-                    }
-
-
-                    form.addSubmitButton({
-                        label : "Submit Line"
-                    })
-
-                    scriptContext.response.writePage(form);
+                    generateForm(scriptContext)
                 }
                 else
                 {
                     log.debug("POST, Submitted", scriptContext);
+
+
+                    updateRecord(scriptContext)
+
+
+
+                    generateForm(scriptContext)
 
                 }
             }
@@ -851,11 +1197,6 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 name: "parent",
                                 join: "item",
                                 label: "line_item_parent"
-                            }),
-                            search.createColumn({
-                                name: "cseg1",
-                                join: "item",
-                                label: "line_item_grade"
                             }),
                             search.createColumn({name: "quantity", label: "line_quantity"}),
                             search.createColumn({name: "location", label: "line_location"}),

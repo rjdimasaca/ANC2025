@@ -26,6 +26,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
         var DEBUGMODE = false;
         var accountId = "";
 
+        var processids = {};
+
         var uiSublistId = "custpage_itemfitmentandreservation";
 
         const onRequest = (scriptContext) =>
@@ -104,11 +106,13 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
 
 
 
-                    var processids = {
+                    processids = {
                         "fitmentcheck" : {
+                            apiEndPoint : true,
                             title : "Fitment Check",
                         },
                         "inventorycheck" : {
+                            apiEndPoint : false,
                             title : "Inventory Check",
                             buttons : [
                                 // {
@@ -157,32 +161,32 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     type : "integer",
                                     id : "custpage_tranlineseq",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline"
+                                    displayType : "hidden"
                                 },
                                 {
                                     label : "LINE#",
                                     type : "integer",
                                     id : "custpage_tranlinenum",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs["tranlinenumField"] || scriptContext.request.parameters["tranlinenum"]
                                 },
                                 {
-                                    label : "LINE ITEM",
+                                    label : "GRADE/ITEM",
                                     type : "select",
                                     id : "custpage_tranlineitem",
                                     source : "item",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.itemid
                                 },
                                 {
-                                    label : "LINE GRADE",
+                                    label : "GRADE",
                                     type : "select",
                                     id : "custpage_tranlinegrade",
                                     source : "item",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.line_item_parent
                                 },
                                 {
@@ -195,19 +199,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     defaultValue : globalrefs.tranBodyVals.location
                                 },
                                 {
-                                    label : "Equipment",
-                                    type : "text",
-                                    id : "custpage_equipment",
-                                    container: "custpage_flgroup_source",
-                                    displayType : "inline",
-                                    defaultValue : globalrefs.tranBodyVals.equipment
-                                },
-                                {
                                     label : "LINE ITEM GRADE ORDER QUANTITY",
                                     type : "float",
                                     id : "custpage_tranlineqty",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.quantity
                                 },
                                 {
@@ -215,7 +211,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     type : "date",
                                     id : "custpage_tranlinedeldate",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.deliverydate
                                 },
                                 {
@@ -224,7 +220,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     id : "custpage_tranlineorigin",
                                     source : "location",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.location || globalrefs.tranBodyVals.location
                                 },
                                 {
@@ -232,7 +228,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     type : "text",
                                     id : "custpage_tranlinedest",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.destination
                                 }
                             ],
@@ -241,19 +237,31 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     id : "custpage_inventorycheck",
                                     sublistFields : [
                                         {
-                                            label : "SELECT",
+                                            label : "Reserve",
                                             type : "checkbox",
                                             id : "custpage_col_ifr_cb",
                                             displayType : uiSw.FieldDisplayType.ENTRY,
                                             defaultValue : "T",
                                         },
                                         {
-                                            label : "Grade",
-                                            type : "select",
-                                            id : "custpage_ifr_itemgrade",
-                                            source : "item",
+                                            label : "Line Sequence",
+                                            type : "text",
+                                            id : "custpage_ifr_linesequence",
                                             displayType : uiSw.FieldDisplayType.INLINE,
                                         },
+                                        {
+                                            label : "Line Ref",
+                                            type : "text",
+                                            id : "custpage_ifr_lineref",
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
+                                        },
+                                        // {
+                                        //     label : "Grade",
+                                        //     type : "select",
+                                        //     id : "custpage_ifr_itemgrade",
+                                        //     source : "item",
+                                        //     displayType : uiSw.FieldDisplayType.INLINE,
+                                        // },
                                         {
                                             label : "Grade / Item",
                                             type : "select",
@@ -262,14 +270,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             displayType : uiSw.FieldDisplayType.INLINE,
                                         },
                                         {
-                                            label : "Origin",
+                                            label : "Warehouse",
                                             type : "select",
                                             id : "custpage_ifr_location",
                                             source : "location",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.ENTRY,
                                         },
                                         {
-                                            label : "Line Delivery Date",
+                                            label : "Delivery Date",
                                             type : "date",
                                             id : "custpage_col_ifr_line_deliverydate",
                                             displayType : uiSw.FieldDisplayType.INLINE,
@@ -280,6 +288,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             type : "integer",
                                             id : "custpage_col_ifr_availableqty",
                                             displayType : uiSw.FieldDisplayType.INLINE,
+                                            sourceSearchKey : "tranline_availableqty"
                                         },
                                         {
                                             label : "Order Qty",
@@ -303,7 +312,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             label : "Order Weight",
                                             type : "float",
                                             id : "custpage_col_ifr_orderweight",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Reserved Weight",
@@ -334,49 +343,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             type : "select",
                                             id : "custpage_ifr_so",
                                             source : "salesorder",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
-                                        {
-                                            label : "Line Ref",
-                                            type : "text",
-                                            id : "custpage_ifr_lineref",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Equipment",
-                                            type : "text",
-                                            id : "custpage_col_ifr_equipment",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Load Id",
-                                            type : "text",
-                                            id : "custpage_ifr_loadid",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Load#",
-                                            type : "text",
-                                            id : "custpage_ifr_loadnum",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Weight Planned",
-                                            type : "text",
-                                            id : "custpage_ifr_weightplanned",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Percentage",
-                                            type : "percent",
-                                            id : "custpage_ifr_percentage",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        }
                                     ]
                                 }
                             ]
                         },
                         "grreservation" : {
+                            apiEndPoint : true,
                             title : "Grade Run Reservation",
                             buttons : [
                                 {
@@ -413,7 +387,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     displayType : "inline"
                                 },
                                 {
-                                    label : "Date",
+                                    label : "Tran Date",
                                     type : "date",
                                     id : "custpage_trandate",
                                     container: "custpage_flgroup_source",
@@ -426,7 +400,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     id : "custpage_tranlineseq",
                                     container: "custpage_flgroup_source",
                                     defaultValue : scriptContext.request.parameters["tranlinesequence"],
-                                    displayType : "inline"
+                                    displayType : "inline",
+                                    updateBreakType : uiSw.FieldBreakType.STARTCOL
                                 },
                                 {
                                     label : "LINE#",
@@ -437,7 +412,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     defaultValue : globalrefs["tranlinenumField"] || scriptContext.request.parameters["tranlinenum"]
                                 },
                                 {
-                                    label : "LINE ITEM",
+                                    label : "GRADE/ITEM",
                                     type : "select",
                                     id : "custpage_tranlineitem",
                                     source : "item",
@@ -451,33 +426,25 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     id : "custpage_tranlinegrade",
                                     source : "item",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.line_item_parent
-                                },
-                                {
-                                    label : "LOCATION",
-                                    type : "select",
-                                    id : "custpage_tranlineloc",
-                                    source : "location",
-                                    container: "custpage_flgroup_source",
-                                    displayType : "inline",
-                                    defaultValue : globalrefs.tranBodyVals.location
                                 },
                                 {
                                     label : "Equipment",
                                     type : "text",
                                     id : "custpage_equipment",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranBodyVals.equipment
                                 },
                                 {
-                                    label : "LINE ITEM GRADE ORDER QUANTITY",
+                                    label : "Order Qty",
                                     type : "float",
                                     id : "custpage_tranlineqty",
                                     container: "custpage_flgroup_source",
                                     displayType : "inline",
-                                    defaultValue : globalrefs.tranItemVals.quantity
+                                    defaultValue : globalrefs.tranItemVals.quantity,
+                                    updateBreakType : uiSw.FieldBreakType.STARTCOL
                                 },
                                 {
                                     label : "Ship Date(?)",
@@ -488,20 +455,29 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     defaultValue : globalrefs.tranItemVals.deliverydate
                                 },
                                 {
-                                    label : "ORIGIN",
+                                    label : "LOCATION",
                                     type : "select",
-                                    id : "custpage_tranlineorigin",
+                                    id : "custpage_tranlineloc",
                                     source : "location",
                                     container: "custpage_flgroup_source",
                                     displayType : "inline",
-                                    defaultValue : globalrefs.tranItemVals.location || globalrefs.tranBodyVals.location
+                                    defaultValue : globalrefs.tranBodyVals.location
                                 },
+                                // {
+                                //     label : "ORIGIN",
+                                //     type : "select",
+                                //     id : "custpage_tranlineorigin",
+                                //     source : "location",
+                                //     container: "custpage_flgroup_source",
+                                //     displayType : "inline",
+                                //     defaultValue : globalrefs.tranItemVals.location || globalrefs.tranBodyVals.location
+                                // },
                                 {
                                     label : "DESTINATION",
                                     type : "text",
                                     id : "custpage_tranlinedest",
                                     container: "custpage_flgroup_source",
-                                    displayType : "inline",
+                                    displayType : "hidden",
                                     defaultValue : globalrefs.tranItemVals.destination
                                 }
                             ],
@@ -517,18 +493,24 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             defaultValue : "T",
                                         },
                                         {
+                                            label : "Line Ref",
+                                            type : "text",
+                                            id : "custpage_ifr_lineref",
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
+                                        },
+                                        {
                                             label : "Grade",
                                             type : "select",
                                             id : "custpage_ifr_itemgrade",
                                             source : "item",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Grade / Item",
                                             type : "select",
                                             id : "custpage_ifr_item",
                                             source : "item",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
 
                                         {
@@ -550,23 +532,23 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             displayType : uiSw.FieldDisplayType.INLINE,
                                         },
                                         {
-                                            label : "Line Delivery Date",
+                                            label : "Delivery Date",
                                             type : "date",
                                             id : "custpage_col_ifr_line_deliverydate",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                             defaultValue : "T",
                                         },
                                         {
                                             label : "Order Qty",
                                             type : "integer",
                                             id : "custpage_col_ifr_orderqty",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Reserved Qty",
                                             type : "integer",
                                             id : "custpage_col_ifr_reservedqty",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Reservation Qty",
@@ -578,19 +560,19 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             label : "Order Weight",
                                             type : "float",
                                             id : "custpage_col_ifr_orderweight",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Reserved Weight",
                                             type : "float",
                                             id : "custpage_col_ifr_reservedweight",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Reservation Weight",
                                             type : "float",
                                             id : "custpage_col_ifr_inputweight",
-                                            displayType : uiSw.FieldDisplayType.ENTRY,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Tied to Line",
@@ -609,19 +591,13 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                             type : "select",
                                             id : "custpage_ifr_so",
                                             source : "salesorder",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
-                                        },
-                                        {
-                                            label : "Line Ref",
-                                            type : "text",
-                                            id : "custpage_ifr_lineref",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Equipment",
                                             type : "text",
                                             id : "custpage_col_ifr_equipment",
-                                            displayType : uiSw.FieldDisplayType.INLINE,
+                                            displayType : uiSw.FieldDisplayType.HIDDEN,
                                         },
                                         {
                                             label : "Origin",
@@ -685,6 +661,15 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 displayType: field.displayType
                             });
                         }
+
+                        if(field.updateBreakType)
+                        {
+                            nsFieldObj.updateBreakType({
+                                breakType : field.updateBreakType
+                            });
+                        }
+
+
                         globalrefs[field.id] = nsFieldObj;
 
                     }
@@ -914,14 +899,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                 label: "line_item_parent"
                             }),
                             search.createColumn({
-                                name: "cseg1",
-                                join: "item",
-                                label: "line_item_grade"
-                            }),
+                                     name: "locationquantityavailable",
+                                     join: "item",
+                                     label: "line_availablequantity"
+                                  }),
                             search.createColumn({name: "quantity", label: "line_quantity"}),
                             search.createColumn({name: "location", label: "line_location"}),
                             search.createColumn({name: "line", label: "line_id"}),
-                            search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
+                            search.createColumn({name: "linesequencenumber", label: "line_sequencenumber", sort: search.Sort.ASC}),
                             search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
                             search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
                             search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
@@ -977,7 +962,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                     for(var c = 0 ; c < deliveryDateGroup.length ; c++)
                     {
                         var resObjByColumnKey = deliveryDateGroup[c]
-                        var fitmentResponse = get_responseObjs(scriptContext);
+                        var fitmentResponse = processids[scriptContext.request.parameters.processid].apiEndPoint ? get_responseObjs(scriptContext) : {list:[0]};
 
                         var firstSoRefLineIndex = (multiGradeIndex || 0);
                         for(var b = 0; b < fitmentResponse.list.length; b++)
@@ -1017,6 +1002,11 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                                     value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
                                 })
                             }
+                            targetSublist.setSublistValue({
+                                id : "custpage_col_ifr_availableqty",
+                                line : multiGradeIndex || b,
+                                value : /*"03/03/2025"*/resObjByColumnKey.line_availablequantity || 0
+                            })
 
                             //FILL BY ORDER QTY
                             if(resObjByColumnKey.line_quantity)
@@ -1071,8 +1061,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             }
 
 
-
-
+                            if(resObjByColumnKey.line_id)
+                            {
+                                targetSublist.setSublistValue({
+                                    id : "custpage_ifr_linesequence",
+                                    line : multiGradeIndex || b,
+                                    value : resObjByColumnKey.line_sequencenumber
+                                })
+                            }
                             if(resObjByColumnKey.line_id)
                             {
                                 targetSublist.setSublistValue({
@@ -1118,63 +1114,67 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
                             //     loadnumber: "4",
                             // weightplanned: "weight planned",
                             // percentage: "34.567"
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].loadid)
+                            if(processids[scriptContext.request.parameters.processid].apiEndPoint)
                             {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_loadid",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].loadid
-                                })
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].loadid)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_loadid",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].loadid
+                                    })
+                                }
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].loadnumber)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_loadnum",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].loadnumber
+                                    })
+                                }
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].weightplanned)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_weightplanned",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].weightplanned
+                                    })
+                                }
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].percentage)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_percentage",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].percentage
+                                    })
+                                }
+                                //GRADERESPONSE
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunstartdate)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_graderunstart",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].graderunstartdate
+                                    })
+                                }
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunenddate)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_graderunend",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].graderunenddate
+                                    })
+                                }
+                                if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunavailablecapacity)
+                                {
+                                    targetSublist.setSublistValue({
+                                        id : "custpage_ifr_availablecapacity",
+                                        line : multiGradeIndex || b,
+                                        value : fitmentResponse.list[b].graderunavailablecapacity
+                                    })
+                                }
                             }
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].loadnumber)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_loadnum",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].loadnumber
-                                })
-                            }
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].weightplanned)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_weightplanned",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].weightplanned
-                                })
-                            }
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].percentage)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_percentage",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].percentage
-                                })
-                            }
-                            //GRADERESPONSE
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunstartdate)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_graderunstart",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].graderunstartdate
-                                })
-                            }
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunenddate)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_graderunend",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].graderunenddate
-                                })
-                            }
-                            if(fitmentResponse.list[b] && fitmentResponse.list[b].graderunavailablecapacity)
-                            {
-                                targetSublist.setSublistValue({
-                                    id : "custpage_ifr_availablecapacity",
-                                    line : multiGradeIndex || b,
-                                    value : fitmentResponse.list[b].graderunavailablecapacity
-                                })
-                            }
+
                             if(allowMultiGrade)
                             {
                                 multiGradeIndex++;
