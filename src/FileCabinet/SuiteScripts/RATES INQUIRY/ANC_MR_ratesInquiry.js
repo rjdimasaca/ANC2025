@@ -325,18 +325,32 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 var rawResp = "";
                 try
                 {
+                    // var rawResp = https.post({
+                    //     // url: "https://esb.albertanewsprint.com:50107/TMX",
+                    //     url: "https://esb.albertanewsprint.com:443/TMX",
+                    //     body : [{
+                    //         equipment : rawData.equipmentName,
+                    //         commodity : 2621345,
+                    //         id : 2621345,
+                    //         weight : 71064,
+                    //         // weight : 500,
+                    //         controlCust : 1,
+                    //         effectiveDate : "3/19/2024"
+                    //     }]
+                    // });
                     var rawResp = https.post({
                         // url: "https://esb.albertanewsprint.com:50107/TMX",
                         url: "https://esb.albertanewsprint.com:443/TMX",
-                        body : [{
-                            equipment : rawData.equipmentName,
-                            commodity : 2621345,
-                            id : 2621345,
-                            weight : 71064,
-                            // weight : 500,
-                            controlCust : 1,
-                            effectiveDate : "3/19/2024"
-                        }]
+                        body : [
+                            {
+                                "commodity": "FAK",
+                                "id": "F0314DP1",
+                                "weight": 20372,
+                                "equipment": "TBOX676282",
+                                "controlCust": "6170",
+                                "effectiveDate": "2019-08-24"
+                            }
+                        ]
                     });
 
                     log.debug("getRateInquiryResponse rawResp", rawResp)
