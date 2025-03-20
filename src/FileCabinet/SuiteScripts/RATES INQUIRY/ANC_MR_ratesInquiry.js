@@ -210,7 +210,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                                 //TODO, single request can have multi result with multi rates
                                 mapContext.write({
                                     key : mapContext.key,
-                                    value : rateInquiryResponse.firstresult
+                                    value : rateInquiryResponse.list[z]
                                 })
                             }
                         }
@@ -328,7 +328,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     var rawResp = https.post({
                         // url: "https://esb.albertanewsprint.com:50107/TMX",
                         url: "https://esb.albertanewsprint.com:443/TMX",
-                        body : {
+                        body : [{
                             equipment : rawData.equipmentName,
                             commodity : 2621345,
                             id : 2621345,
@@ -336,7 +336,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             // weight : 500,
                             controlCust : 1,
                             effectiveDate : "3/19/2024"
-                        }
+                        }]
                     });
 
                     log.debug("getRateInquiryResponse rawResp", rawResp)
@@ -389,7 +389,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                                     ],
                                     "fuelSurcharge": 0.1,
                                     "carrierGroupName": "string",
-                                    "totalCost": 0.1
+                                    "totalCost": 0.3
                                 },
                             ],
                             "id": "string",
@@ -401,7 +401,60 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             ],
                             "effectiveDate": "2019-08-24",
                             "timestamp": "string"
-                        }
+                        },
+                        {
+                            "loadID": "string",
+                            "shipmentID": "string",
+                            "rates": [
+                                {
+                                    "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3XXX",
+                                    "lineHaulCharge": 0.1,
+                                    "route": "ANC TEST LANE1",
+                                    "railRateAuthority": "string",
+                                    "distance": 0,
+                                    "transitTime": 111,
+                                    "equipment": rawData.equipmentName,
+                                    "currency": "string",
+                                    "accessorials": [
+                                        {
+                                            "accCharge": 0.1,
+                                            "accQual": "string"
+                                        }
+                                    ],
+                                    "fuelSurcharge": 0.1,
+                                    "carrierGroupName": "string",
+                                    "totalCost": 0.4
+                                },
+                                {
+                                    "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0YYY",
+                                    "lineHaulCharge": 0.1,
+                                    "route": "ANC TEST LANE2",
+                                    "railRateAuthority": "string",
+                                    "distance": 0,
+                                    "transitTime": 222,
+                                    "equipment": rawData.equipmentName,
+                                    "currency": "string",
+                                    "accessorials": [
+                                        {
+                                            "accCharge": 0.1,
+                                            "accQual": "string"
+                                        }
+                                    ],
+                                    "fuelSurcharge": 0.1,
+                                    "carrierGroupName": "string",
+                                    "totalCost": 0.2
+                                },
+                            ],
+                            "id": "string",
+                            "errors": [
+                                {
+                                    "errorDesc": "string",
+                                    "errorCode": 0
+                                }
+                            ],
+                            "effectiveDate": "2019-08-24",
+                            "timestamp": "string"
+                        },
                     ]
                 };
 
@@ -481,6 +534,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                 log.debug("reduce mapVal.parentleqid", mapVal.parentleqid);
 
+                var laneEquipsToUpdate = {};
 
                 for(var a = 0 ; a < compiledEquipmentRates.length ; a++)
                 {
@@ -551,9 +605,44 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             enableSourcing : true
                         })
 
+
+                        var targetLeqInternalId = laneEquipmentCarrierObj.parentleqid || compiledEquipmentRates[0].parentleqid;
+                        if(!laneEquipsToUpdate[targetLeqInternalId])
+                        {
+                            laneEquipsToUpdate[targetLeqInternalId] = {};
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime};
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier};
+
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
+                        }
+                        else
+                        {
+                            if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime.value > laneEquipmentCarrierObj.transitTime)
+                            {
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime}
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier}
+                            }
+                            if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton.value > laneEquipmentCarrierObj.totalCost)
+                            {
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
+                            }
+                        }
+
+                        log.debug("laneEquipsToUpdate", laneEquipsToUpdate);
+
                         log.debug("submittedLeqcRecId", submittedLeqcRecId);
 
                     }
+                }
+
+                for(var targetLeqInternalId in laneEquipsToUpdate)
+                {
+                    reduceContext.write({
+                        key : targetLeqInternalId,
+                        value : laneEquipsToUpdate[targetLeqInternalId]
+                    })
                 }
 
 
@@ -586,7 +675,83 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
          * @since 2015.2
          */
         const summarize = (summaryContext) => {
+            summaryContext.output.iterator().each(function(key, value) {
+                log.debug('Lane Equipment Id: ' + key, 'value ' + value);
 
+                // var recObj = record.load({
+                //     type : "",
+                //     id : key
+                // });
+                log.debug("typeof value", typeof value)
+                if(typeof value == "string")
+                {
+                    value = JSON.parse(value)
+                }
+
+                // var submittedLeqRecId = record.submitFields({
+                //     type : "customrecord_anc_laneequipment",
+                //     id : key,
+                //     values : value
+                // });
+                // log.debug("submittedLeqRecId", submittedLeqRecId);
+
+                var leqRecObj = record.load({
+                    type : "customrecord_anc_laneequipment",
+                    id : key,
+                });
+
+                for(var fieldId in value)
+                {
+                    if(value[fieldId].text)
+                    {
+                        leqRecObj.setText({
+                            fieldId : fieldId,
+                            text : value[fieldId].text
+                        })
+                    }
+                    else if(value[fieldId].value)
+                    {
+                        leqRecObj.setValue({
+                            fieldId : fieldId,
+                            value : value[fieldId].value
+                        })
+                    }
+                }
+
+                leqRecObj.setText({
+                    fieldId : "custrecord_anc_laneequip_lastsync",
+                    text : toMDY_text(new Date())
+                })
+
+
+                var submittedLeqRecObjId = leqRecObj.save({
+                    ignoreMandatoryFields : true,
+                    enableSourcing : true
+                })
+                log.debug("submittedLeqRecObjId", submittedLeqRecObjId);
+
+                return true;
+            });
+        }
+
+        const toMDY_text = (dateVal) => {
+            var retVal = dateVal;
+            try
+            {
+                if(dateVal)
+                {
+                    retVal = new Date(retVal);
+
+                    retVal = retVal.getMonth() + 1 + "/" + retVal.getDate() + "/" + retVal.getFullYear();
+                }
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function toMDY", e)
+            }
+            log.debug("retVal", retVal)
+            return retVal;
         }
 
         var getResults = function getResults(set) {
