@@ -108,6 +108,9 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 {
                     log.debug("mapContext.key", mapContext.key);
 
+
+                    log.debug("equipmentName", equipmentName);
+
                     var rateInquiryResponse = getRateInquiryResponse({
                         equipmentName : equipmentName,
                         routeName : `ANC TEST LANE1`
@@ -115,74 +118,184 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                     log.debug("rateInquiryResponse", rateInquiryResponse);
 
-
-                    //create the lane here, now! because reduce will need this reference
-
-                    log.debug("rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()", rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase())
-                    log.debug("rateInquiryResponse.firstresult.rates[0].route.toUpperCase()", rateInquiryResponse.firstresult.rates[0].route.toUpperCase())
-
-                    var nsLeqSearch = search.create({
-                        type : "customrecord_anc_laneequipment",
-                        filters : [
-                            ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse.firstresult.rates[0].route.toUpperCase()],
-                            "AND",
-                            ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()]
-                        ],
-                        columns : []
-                    })
-
-                    var nsLeqSearchSr = getResults(nsLeqSearch.run());
-
-                    log.debug("nsLeqSearchSr", nsLeqSearchSr)
-
-                    var targetLeqRecId = "";
-                    var targetLeqRecObj = "";
-                    if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
+                    if(rateInquiryResponse.list && rateInquiryResponse.list.length > 0)
                     {
-                        targetLeqRecId = nsLeqSearchSr[0].id;
-                        targetLeqRecObj = record.load({
-                            type : "customrecord_anc_laneequipment",
-                            id : targetLeqRecId
-                        })
+                        for(var z = 0 ; z < rateInquiryResponse.list.length ; z++)
+                        {
+                            var rateInquiryResponse_rates = rateInquiryResponse.list[z].rates
+
+                            log.debug("rateInquiryResponse_rates", rateInquiryResponse_rates);
+
+                            if(rateInquiryResponse_rates && rateInquiryResponse_rates.length > 0)
+                            {
+                                for(var a = 0 ; a < rateInquiryResponse_rates.length ; a++)
+                                {
+                                    //create the lane here, now! because reduce will need this reference
+                                    log.debug("rateInquiryResponse_rates[0].equipment.toUpperCase()", rateInquiryResponse_rates[a].equipment.toUpperCase())
+                                    log.debug("rateInquiryResponse_rates[0].route.toUpperCase()", rateInquiryResponse_rates[a].route.toUpperCase())
+
+                                    var nsLeqSearch = search.create({
+                                        type : "customrecord_anc_laneequipment",
+                                        filters : [
+                                            ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse_rates[a].route.toUpperCase()],
+                                            "AND",
+                                            ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse_rates[a].equipment.toUpperCase()]
+                                        ],
+                                        columns : []
+                                    })
+
+                                    var nsLeqSearchSr = getResults(nsLeqSearch.run());
+
+                                    log.debug("nsLeqSearchSr", nsLeqSearchSr)
+
+                                    var targetLeqRecId = "";
+                                    var targetLeqRecObj = "";
+                                    if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
+                                    {
+                                        targetLeqRecId = nsLeqSearchSr[0].id;
+                                        targetLeqRecObj = record.load({
+                                            type : "customrecord_anc_laneequipment",
+                                            id : targetLeqRecId
+                                        })
+                                    }
+
+                                    var submittedLeqRecId = "";
+
+                                    if(!targetLeqRecId)
+                                    {
+                                        targetLeqRecObj = record.create({
+                                            type : "customrecord_anc_laneequipment",
+                                        })
+
+                                        targetLeqRecObj.setValue({
+                                            fieldId : "name",
+                                            value : rateInquiryResponse_rates[a].route.toUpperCase() + " - " + rateInquiryResponse_rates[a].equipment.toUpperCase()
+                                        })
+
+                                        //attemptSet custrecord_anc_laneequip_lane
+                                        targetLeqRecObj.setText({
+                                            fieldId : "custrecord_anc_laneequip_lane",
+                                            text : rateInquiryResponse_rates[a].route.toUpperCase()
+                                        })
+                                        targetLeqRecObj.setText({
+                                            fieldId : "custrecord_anc_laneequip_equipment",
+                                            text : rateInquiryResponse_rates[a].equipment.toUpperCase()
+                                        })
+
+                                        submittedLeqRecId = targetLeqRecObj.save({
+                                            ignoreMandatoryFields : true,
+                                            enableSourcing : true
+                                        })
+
+                                        rateInquiryResponse_rates[a].parentleqid = submittedLeqRecId || targetLeqRecId;
+                                    }
+                                    else
+                                    {
+                                        rateInquiryResponse_rates[a].parentleqid = submittedLeqRecId || targetLeqRecId;
+                                    }
+
+
+
+                                    log.debug("map submittedLeqRecId", submittedLeqRecId);
+
+                                    //end
+                                    // rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
+
+                                    // mapContext.write({
+                                    //     key : mapContext.key,
+                                    //     value : rateInquiryResponse.firstresult
+                                    // })
+                                }
+
+                                //TODO, single request can have multi result with multi rates
+                                mapContext.write({
+                                    key : mapContext.key,
+                                    value : rateInquiryResponse.firstresult
+                                })
+                            }
+                        }
                     }
 
-                    var submittedLeqRecId = "";
 
-                    if(!targetLeqRecId)
-                    {
-                        targetLeqRecObj = record.create({
-                            type : "customrecord_anc_laneequipment",
-                        })
-                    }
-                    else
-                    {
-                        //attemptSet custrecord_anc_laneequip_lane
-                        targetLeqRecObj.setText({
-                            fieldId : "custrecord_anc_laneequip_lane",
-                            text : rateInquiryResponse.firstresult.rates[0].route.toUpperCase()
-                        })
-                        targetLeqRecObj.setText({
-                            fieldId : "custrecord_anc_laneequip_equipment",
-                            text : rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()
-                        })
-
-                        submittedLeqRecId = targetLeqRecObj.save({
-                            ignoreMandatoryFields : true,
-                            enableSourcing : true
-                        })
-                    }
-
-
-
-                    log.debug("map submittedLeqRecId", submittedLeqRecId);
-
-                    //end
-                    rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
-
-                    mapContext.write({
-                        key : mapContext.key,
-                        value : rateInquiryResponse.firstresult
-                    })
+                    // if(rateInquiryResponse.firstresult.rates && rateInquiryResponse.firstresult.rates.length > 0)
+                    // {
+                    //     for(var a = 0 ; a < rateInquiryResponse.firstresult.rates.length ; a++)
+                    //     {
+                    //         //create the lane here, now! because reduce will need this reference
+                    //         log.debug("rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()", rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase())
+                    //         log.debug("rateInquiryResponse.firstresult.rates[0].route.toUpperCase()", rateInquiryResponse.firstresult.rates[a].route.toUpperCase())
+                    //
+                    //         var nsLeqSearch = search.create({
+                    //             type : "customrecord_anc_laneequipment",
+                    //             filters : [
+                    //                 ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse.firstresult.rates[a].route.toUpperCase()],
+                    //                 "AND",
+                    //                 ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()]
+                    //             ],
+                    //             columns : []
+                    //         })
+                    //
+                    //         var nsLeqSearchSr = getResults(nsLeqSearch.run());
+                    //
+                    //         log.debug("nsLeqSearchSr", nsLeqSearchSr)
+                    //
+                    //         var targetLeqRecId = "";
+                    //         var targetLeqRecObj = "";
+                    //         if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
+                    //         {
+                    //             targetLeqRecId = nsLeqSearchSr[0].id;
+                    //             targetLeqRecObj = record.load({
+                    //                 type : "customrecord_anc_laneequipment",
+                    //                 id : targetLeqRecId
+                    //             })
+                    //         }
+                    //
+                    //         var submittedLeqRecId = "";
+                    //
+                    //         if(!targetLeqRecId)
+                    //         {
+                    //             targetLeqRecObj = record.create({
+                    //                 type : "customrecord_anc_laneequipment",
+                    //             })
+                    //
+                    //             targetLeqRecObj.setValue({
+                    //                 fieldId : "name",
+                    //                 value : rateInquiryResponse.firstresult.rates[a].route.toUpperCase() + " - " + rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
+                    //             })
+                    //
+                    //             //attemptSet custrecord_anc_laneequip_lane
+                    //             targetLeqRecObj.setText({
+                    //                 fieldId : "custrecord_anc_laneequip_lane",
+                    //                 text : rateInquiryResponse.firstresult.rates[a].route.toUpperCase()
+                    //             })
+                    //             targetLeqRecObj.setText({
+                    //                 fieldId : "custrecord_anc_laneequip_equipment",
+                    //                 text : rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
+                    //             })
+                    //
+                    //             submittedLeqRecId = targetLeqRecObj.save({
+                    //                 ignoreMandatoryFields : true,
+                    //                 enableSourcing : true
+                    //             })
+                    //         }
+                    //         else
+                    //         {
+                    //
+                    //         }
+                    //
+                    //
+                    //
+                    //         log.debug("map submittedLeqRecId", submittedLeqRecId);
+                    //
+                    //         //end
+                    //         rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
+                    //
+                    //         mapContext.write({
+                    //             key : mapContext.key,
+                    //             value : rateInquiryResponse.firstresult
+                    //         })
+                    //     }
+                    // }
 
                 }
             }
@@ -194,6 +307,13 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
         function getRateInquiryResponse(rawData)
         {
+
+            // var sample = {"transportationMethod":"R","methodOfPayment":"PP","releaseCode":"R","carrierID":"1250","equipment":[{"prefix":"RC60","number":"TBOX676282"}],"originStation":{"city":"Whitecourt","state":"AB"},"destinationStation":{"city":"Lulu Island","state":"BC"},"routeInformation":[{"carrierID":"1250","code":"CN","city":"Whitecourt"}],"orders":[{"orderNumber":"096847","lineItems":[{"commodity":"2621345","qualifier":"T","measures":[{"weight":71064,"weightQualifier":"E","ladingQuantity":10,"packagingCode":"ROL"}]}]}]}
+
+
+
+
+
             var rateInquiryResponse = {};
             try
             {
@@ -206,9 +326,16 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 try
                 {
                     var rawResp = https.post({
-                        url: "https://esb.albertanewsprint.com:50107/TMX",
+                        // url: "https://esb.albertanewsprint.com:50107/TMX",
+                        url: "https://esb.albertanewsprint.com:443/TMX",
                         body : {
-                            equipment : rawData.equipmentId
+                            equipment : rawData.equipmentName,
+                            commodity : 2621345,
+                            id : 2621345,
+                            weight : 71064,
+                            // weight : 500,
+                            controlCust : 1,
+                            effectiveDate : "3/19/2024"
                         }
                     });
 
@@ -227,9 +354,9 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             "shipmentID": "string",
                             "rates": [
                                 {
-                                    "carrier": "1503",
+                                    "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3",
                                     "lineHaulCharge": 0.1,
-                                    "route": rawData.routeName,
+                                    "route": "ANC TEST LANE1",
                                     "railRateAuthority": "string",
                                     "distance": 0,
                                     "transitTime": 111,
@@ -246,13 +373,13 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                                     "totalCost": 0.1
                                 },
                                 {
-                                    "carrier": "4001",
+                                    "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0",
                                     "lineHaulCharge": 0.1,
                                     "route": "ANC TEST LANE2",
                                     "railRateAuthority": "string",
                                     "distance": 0,
                                     "transitTime": 222,
-                                    "equipment": "ANC TEST EQUIPMENT2",
+                                    "equipment": rawData.equipmentName,
                                     "currency": "string",
                                     "accessorials": [
                                         {
@@ -316,21 +443,43 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 log.debug("reduce reduceContext", reduceContext)
                 log.debug("reduce reduceContext.key", reduceContext.key)
                 log.debug("reduce reduceContext.values", reduceContext.values)
+                //
+                // var values = JSON.parse(reduceContext.values);
+                // log.debug("values", values)
+                //
+                // var compiledEquipmentRates = [];
+                //
+                // var value = values.rates;
+                // log.debug("value", value);
+                // compiledEquipmentRates = compiledEquipmentRates.concat(value);
+                // log.debug("iter compiledEquipmentRates", compiledEquipmentRates);
 
-                var values = JSON.parse(reduceContext.values);
+
+
+
+                var values = reduceContext.values;
+                values = values.map(function(mapVal){
+                    return JSON.parse(mapVal)
+                });
                 log.debug("values", values)
 
                 var compiledEquipmentRates = [];
 
-                var value = values.rates;
-                log.debug("value", value);
-                compiledEquipmentRates = compiledEquipmentRates.concat(value);
+                for(var a = 0 ; a < values.length; a++)
+                {
+                    var mapVal = values[a];
+                    var rates = mapVal.rates;
+                    log.debug("mapVal", mapVal);
+                    compiledEquipmentRates = compiledEquipmentRates.concat(rates);
+
+                }
+
                 log.debug("iter compiledEquipmentRates", compiledEquipmentRates);
 
                 log.debug("compiledEquipmentRates", compiledEquipmentRates);
                 log.debug("compiledEquipmentRates.length", compiledEquipmentRates.length);
 
-                log.debug("reduce values.parentleqid", values.parentleqid);
+                log.debug("reduce mapVal.parentleqid", mapVal.parentleqid);
 
 
                 for(var a = 0 ; a < compiledEquipmentRates.length ; a++)
@@ -345,14 +494,16 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             filters : [
                                 ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_lane})","is",laneEquipmentCarrierObj.route.toUpperCase()],
                                 "AND",
-                                ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()]
+                                ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()],
+                                "AND",
+                                ["formulatext: UPPER({custrecord_anc_lec_carrier})","is",laneEquipmentCarrierObj.carrier.toUpperCase()]
                             ],
                             columns : []
                         })
 
                         var nsLeqcSearchSr = getResults(nsLeqcSearch.run());
 
-                        log.debug("nsLeqcSearchSr", nsLeqcSearchSr)
+                        log.debug("nsLeqcSearchSr", {nsLeqcSearchSr, nsLeqcSearch_filters:nsLeqcSearch.filters})
 
                         var targetLeqcRecId = "";
                         var targetLeqcRecObj = "";
@@ -379,16 +530,20 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                         })
                         targetLeqcRecObj.setValue({
                             fieldId : "custrecord_anc_lec_laneequipment",
-                            value : values.parentleqid
+                            value : laneEquipmentCarrierObj.parentleqid || compiledEquipmentRates[0].parentleqid
                         })
                         targetLeqcRecObj.setValue({
                             fieldId : "custrecord_anc_lec_transittime",
                             value : laneEquipmentCarrierObj.transitTime
                         })
                         //TODO hardcoded carrier
-                        targetLeqcRecObj.setValue({
+                        // targetLeqcRecObj.setValue({
+                        //     fieldId : "custrecord_anc_lec_carrier",
+                        //     value : laneEquipmentCarrierObj.carrier
+                        // })
+                        targetLeqcRecObj.setText({
                             fieldId : "custrecord_anc_lec_carrier",
-                            value : laneEquipmentCarrierObj.carrier
+                            text : laneEquipmentCarrierObj.carrier
                         })
 
                         var submittedLeqcRecId = targetLeqcRecObj.save({
@@ -400,6 +555,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                     }
                 }
+
 
             }
             catch(e)
