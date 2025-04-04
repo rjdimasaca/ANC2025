@@ -221,7 +221,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
+                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
                     ]
                 },
                 "orderquantity_and_inventorystatus" : {
@@ -405,7 +406,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
+                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
                     ]
                 },
                 "product_and_packaging" : {
@@ -556,7 +558,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
+                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
                     ]
                 },
                 "customer_and_shipping" : {
@@ -652,6 +655,18 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 }
                             },
                             {
+                                label : "Consignee",
+                                type : "select",
+                                id : "custpage_tranlineconsignee",
+                                source : "customrecord_alberta_ns_consignee_record",
+                                sourceSearchKey : "tranline_consignee",
+                                //container: "custpage_flgroup_input",
+                                targetColumnId : "custcol_consignee",
+                                displayType : {
+                                    displayType: "inline"
+                                },
+                            },
+                            {
                                 label : "Shipping Lane",
                                 type : "select",
                                 id : "custpage_tranlinelaneid",
@@ -718,7 +733,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
+                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
                     ]
                 },
                 "scheduling_and_keydates" : {
@@ -900,7 +916,8 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"})
+                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
+                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
                     ]
                 }
             }

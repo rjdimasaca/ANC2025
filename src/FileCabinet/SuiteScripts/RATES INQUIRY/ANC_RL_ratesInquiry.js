@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
+define(['N/task', 'N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
  * @param{https} https
  * @param{record} record
@@ -10,7 +10,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
  * @param{search} search
  * @param{url} url
  */
-    (https, record, runtime, search, url) => {
+    (task, https, record, runtime, search, url) => {
         /**
          * Defines the function that is executed when a GET request is sent to a RESTlet.
          * @param {Object} requestParams - Parameters from HTTP request URL; parameters passed as an Object (for all supported
@@ -21,7 +21,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
          */
         const get = (requestParams) =>
         {
-
+            triggerMr(requestParams);
         }
 
         /**
@@ -35,6 +35,18 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
          */
         const put = (requestBody) => {
 
+        }
+
+        function triggerMr(requestParams)
+        {
+            var taskObj = task.create({
+                taskType : task.TaskType.MAP_REDUCE,
+                scriptId : "customscript_anc_mr_ratesinquiry",
+                deploymentId : "customdeploy_anc_mr_ratesinquiry"
+            });
+
+            var mrTaskId = taskObj.submit();
+            log.debug("mrTaskId", mrTaskId);
         }
 
         /**
