@@ -42,8 +42,11 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
             var equipmentsSearch = search.create({
                 type : "customrecord_anc_equipment",
+                // filters : [
+                //     ["internalid", "anyof", 3]
+                // ],
                 columns : [
-                    search.createColumn({name: "name", label: "Name"})
+                    search.createColumn({name: "name", label: "Name"}),
                 ]
             })
 
@@ -320,6 +323,42 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 rateInquiryResponse.summary = {};
                 rateInquiryResponse.list = [];
 
+                // var requestBodyObj =
+                //     [{
+                //         "commodity": "FAK",
+                //         "id": "F0314DP1",
+                //         "weight": 20372,
+                //         "equipment": "TBOX676282",
+                //         "controlCust": "6170",
+                //         "effectiveDate": "2019-08-24"
+                //     }];
+                var requestBodyObj =
+                    [
+                        {
+                            "origAlias":"6170",
+                            "origCity":"WHITECOURT",
+                            "origState":"AB",
+                            "origZip":"T7S 1P9",
+                            "origCountry":"CAN",
+                            "destAlias":"6760",
+                            "destCity":"LULU ISLAND",
+                            "destState":"BC",
+                            "destZip":"V6W 1M1",
+                            "destCountry":"CAN",
+                            "commodity":"PPR",
+                            "distance": 661,
+                            "equipment":"TRTAMREF53",
+                            "weight":21769,
+                            "controlCust":"6170",
+                            "id":"TRTAMREF53",
+                            "destZone":"",
+                            "weightUOM":"LB",
+                            "hazmat": false,
+                            "effectiveDate":"2025-04-04"
+                        }
+                    ];
+                var requestBodyStr = JSON.stringify(requestBodyObj)
+
                 log.debug("getRateInquiryResponse rawData before HTTP POST", rawData)
 
                 var rawResp = "";
@@ -341,16 +380,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     var rawResp = https.post({
                         // url: "https://esb.albertanewsprint.com:50107/TMX",
                         url: "https://esb.albertanewsprint.com:443/TMX",
-                        body : [
-                            {
-                                "commodity": "FAK",
-                                "id": "F0314DP1",
-                                "weight": 20372,
-                                "equipment": "TBOX676282",
-                                "controlCust": "6170",
-                                "effectiveDate": "2019-08-24"
-                            }
-                        ]
+                        body : requestBodyStr
                     });
 
                     log.debug("getRateInquiryResponse rawResp", rawResp)
