@@ -19,7 +19,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
         var accountId = "";
         var form = "";
 
-        var uiSublistId = "custpage_itemfitmentandreservation";
+        var BASE_SUBLIST_ID = "custpage_sublist_fitmentcheck"
 
         const onRequest = (scriptContext) =>
         {
@@ -211,7 +211,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
 
 
                     var tranlineqtyField = form.addField({
-                        label : "LINE ITEM GRADE ORDER QUANTITY",
+                        label : "ORDER QUANTITY",
                         type : "float",
                         id : "custpage_tranlineqty",
                         container: "custpage_flgroup_source"
@@ -272,119 +272,147 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                 }
                 else
                 {
-                    log.debug("POST, Submitted", scriptContext);
-                    var tranInternalid = scriptContext.request.parameters.custpage_traninternalid;
-                    var tranLinenum = scriptContext.request.parameters.custpage_tranlinenum;
 
-                    var lineCount = scriptContext.request.getLineCount({
-                        group : uiSublistId
-                    });
-                    log.debug("lineCount", lineCount);
-
-                    var tranObj = record.load({
-                        type : "salesorder",
-                        id : tranInternalid,
-                        isDynamic : true
-                    });
-
-                    // custpage_col_ifr_inputqty
-                    // custpage_col_ifr_cb
-                    // custpage_ifr_weightplanned
-                    // custpage_ifr_percentage
-                    // custpage_ifr_loadnum
-                    // custpage_ifr_loadid
-                    for(var a = 0 ; a < lineCount ; a++)
-                    {
-                        var lineValues = {};
-                        lineValues["custpage_col_ifr_cb"] = scriptContext.request.getSublistValue({
-                            group: uiSublistId,
-                            name : "custpage_col_ifr_cb",
-                            line : a
-                        })
-                        if(lineValues["custpage_col_ifr_cb"] && lineValues["custpage_col_ifr_cb"] != "F")
-                        {
-                            lineValues["custpage_col_ifr_inputqty"] = scriptContext.request.getSublistValue({
-                                group: uiSublistId,
-                                name : "custpage_col_ifr_inputqty",
-                                line : a
-                            })
-                            lineValues["custpage_ifr_weightplanned"] = scriptContext.request.getSublistValue({
-                                group: uiSublistId,
-                                name : "custpage_ifr_weightplanned",
-                                line : a
-                            })
-                            lineValues["custpage_ifr_percentage"] = scriptContext.request.getSublistValue({
-                                group: uiSublistId,
-                                name : "custpage_ifr_percentage",
-                                line : a
-                            })
-                            lineValues["custpage_ifr_loadnum"] = scriptContext.request.getSublistValue({
-                                group: uiSublistId,
-                                name : "custpage_ifr_loadnum",
-                                line : a
-                            })
-                            lineValues["custpage_ifr_loadid"] = scriptContext.request.getSublistValue({
-                                group: uiSublistId,
-                                name : "custpage_ifr_loadid",
-                                line : a
-                            })
-
-                            log.debug("lineValues", lineValues)
-                            // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
-                            // {"custpage_col_ifr_cb":"T","custpage_col_ifr_inputqty":"1","custpage_ifr_weightplanned":"weight planned","custpage_ifr_percentage":"34.567","custpage_ifr_loadnum":"4","custpage_ifr_loadid":"17424"}
-                            var targetIndex = tranObj.findSublistLineWithValue({
-                                sublistId : "item",
-                                fieldId : "line",
-                                value : tranLinenum
-                            })
-                            log.debug("POST tranLinenum", tranLinenum)
-                            tranObj.selectLine({
-                                sublistId : "item",
-                                line : targetIndex
-                            })
-                            log.debug("POST targetIndex", targetIndex)
-                            tranObj.setCurrentSublistValue({
-                                sublistId : "item",
-                                fieldId : "custcol_anc_lxpert_loadweightplanned",
-                                line : targetIndex,
-                                value : lineValues["custpage_ifr_weightplanned"]
-                            })
-                            tranObj.setCurrentSublistValue({
-                                sublistId : "item",
-                                fieldId : "custcol_anc_lxpert_loadscount",
-                                line : targetIndex,
-                                value : lineValues["custpage_ifr_loadnum"]
-                            })
-                            tranObj.setCurrentSublistValue({
-                                sublistId : "item",
-                                fieldId : "custcol_anc_lxpert_lastloadutilrate",
-                                line : targetIndex,
-                                value : lineValues["custpage_ifr_percentage"]
-                            })
-                            tranObj.setCurrentSublistValue({
-                                sublistId : "item",
-                                fieldId : "custcol_anc_lxpert_loadreservedqty",
-                                line : targetIndex,
-                                value : lineValues["custpage_col_ifr_inputqty"]
-                            })
-                            log.debug("before commit")
-                            tranObj.commitLine({
-                                sublistId : "item",
-                            })
-                            log.debug("after commit")
-                        }
-                    }
-                    var submittedRecId = tranObj.save({
-                        ignoreMandatoryFeilds : true,
-                        enableSourcing : true
-                    });
-                    log.debug("submittedRecId", submittedRecId);
 
                 }
             }
             catch(e)
             {
                 log.error("ERROR in function onRequest", e);
+            }
+        }
+
+        function fitmentCheckFormSubmitted(scriptContext)
+        {
+            try
+            {
+                log.debug("POST, Submitted", scriptContext);
+                var tranInternalid = scriptContext.request.parameters.custpage_traninternalid;
+                var tranLinenum = scriptContext.request.parameters.custpage_tranlinenum;
+
+                //you can store the actual number of sublist in a BODY field, you can also just check if it exists
+                //since it is ordered, when it doesnt exist it means script should stop
+                for(var a = 0 ; a < 999 ; a++)
+                {
+
+                    // if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}fields`]){
+                    if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}data`]){
+
+                        log.debug(`ITERATING THE FITMENT CHECK SUBLISTS index=${a}`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}data`]);
+
+                        var lineCount = scriptContext.request.getLineCount({
+                            group : `${BASE_SUBLIST_ID}${a}`
+                        });
+                        log.debug("lineCount", lineCount);
+
+                        var tranObj = record.load({
+                            type : "salesorder",
+                            id : tranInternalid,
+                            isDynamic : true
+                        });
+
+                        // custpage_col_ifr_inputqty
+                        // custpage_col_ifr_cb
+                        // custpage_ifr_weightplanned
+                        // custpage_ifr_percentage
+                        // custpage_ifr_loadnum
+                        // custpage_ifr_loadid
+                        for(var a = 0 ; a < lineCount ; a++)
+                        {
+                            var lineValues = {};
+                            lineValues["custpage_col_ifr_cb"] = scriptContext.request.getSublistValue({
+                                group: uiSublistId,
+                                name : "custpage_col_ifr_cb",
+                                line : a
+                            })
+                            if(lineValues["custpage_col_ifr_cb"] && lineValues["custpage_col_ifr_cb"] != "F")
+                            {
+                                lineValues["custpage_col_ifr_inputqty"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_col_ifr_inputqty",
+                                    line : a
+                                })
+                                lineValues["custpage_ifr_weightplanned"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_ifr_weightplanned",
+                                    line : a
+                                })
+                                lineValues["custpage_ifr_percentage"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_ifr_percentage",
+                                    line : a
+                                })
+                                lineValues["custpage_ifr_loadnum"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_ifr_loadnum",
+                                    line : a
+                                })
+                                lineValues["custpage_ifr_loadid"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_ifr_loadid",
+                                    line : a
+                                })
+
+                                log.debug("lineValues", lineValues)
+                                // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
+                                // {"custpage_col_ifr_cb":"T","custpage_col_ifr_inputqty":"1","custpage_ifr_weightplanned":"weight planned","custpage_ifr_percentage":"34.567","custpage_ifr_loadnum":"4","custpage_ifr_loadid":"17424"}
+                                var targetIndex = tranObj.findSublistLineWithValue({
+                                    sublistId : "item",
+                                    fieldId : "line",
+                                    value : tranLinenum
+                                })
+                                log.debug("POST tranLinenum", tranLinenum)
+                                tranObj.selectLine({
+                                    sublistId : "item",
+                                    line : targetIndex
+                                })
+                                log.debug("POST targetIndex", targetIndex)
+                                tranObj.setCurrentSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_lxpert_loadweightplanned",
+                                    line : targetIndex,
+                                    value : lineValues["custpage_ifr_weightplanned"]
+                                })
+                                tranObj.setCurrentSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_lxpert_loadscount",
+                                    line : targetIndex,
+                                    value : lineValues["custpage_ifr_loadnum"]
+                                })
+                                tranObj.setCurrentSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_lxpert_lastloadutilrate",
+                                    line : targetIndex,
+                                    value : lineValues["custpage_ifr_percentage"]
+                                })
+                                tranObj.setCurrentSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_lxpert_loadreservedqty",
+                                    line : targetIndex,
+                                    value : lineValues["custpage_col_ifr_inputqty"]
+                                })
+                                log.debug("before commit")
+                                tranObj.commitLine({
+                                    sublistId : "item",
+                                })
+                                log.debug("after commit")
+                            }
+                        }
+                        var submittedRecId = tranObj.save({
+                            ignoreMandatoryFeilds : true,
+                            enableSourcing : true
+                        });
+                        log.debug("submittedRecId", submittedRecId);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function fitmentCheckFormSubmitted", e);
             }
         }
 
@@ -439,7 +467,6 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
 
                 var salesorderSearchObj = search.create({
                     type: "salesorder",
-                    settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
                     filters: filters,
                     columns:
                         [
@@ -466,6 +493,12 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
                             search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
                             search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                            search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
+                            search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
+                            search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
+                            search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
+                            // search.createColumn({name: "custitem_anc_rolldiameter", join:"item", label: "line_item_rolldiameter"}),
+                            // search.createColumn({name: "custitem_anc_rollwidth", join:"item", label: "line_item_rollwidth"}),
                         ]
                 });
                 var searchResultCount = salesorderSearchObj.runPaged().count;
@@ -515,6 +548,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                         {
                             resObjByColumnKey.line_consigneetext = res.getText(column);
                         }
+                        if(label == "line_equipment")
+                        {
+                            resObjByColumnKey.line_equipmenttext = res.getText(column);
+                        }
                     });
 
                     resObjByColumnKey.id = res.id
@@ -545,6 +582,12 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
+                            label : "Line Unique Key",
+                            type : "text",
+                            id : "custpage_ifr_lineuniquekey",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+                        {
                             label : "Grade / Item",
                             type : "select",
                             id : "custpage_ifr_item",
@@ -567,7 +610,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             label : "Order Qty",
                             type : "float",
                             id : "custpage_col_ifr_orderqty",
-                            displayType : uiSw.FieldDisplayType.HIDDEN
+                            displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
                             label : "Reserved Qty",
@@ -620,8 +663,9 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                         },
                         {
                             label : "Equipment",
-                            type : "text",
+                            type : "select",
                             id : "custpage_col_ifr_equipment",
+                            source : "customrecord_anc_equipment",
                             // sourceApiRespKey:"equipment",
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
@@ -690,7 +734,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                     log.debug("srGroupedByDeliveryDate[date]", srGroupedByDeliveryDate[date]);
                     var multiGradeIndex = 0;
 
-                    var uiSublistId = "custpage_sublist_fitmentcheck" + a;
+                    var uiSublistId = BASE_SUBLIST_ID + a;
                     // var fitmentCheckSublistLabel = "Fitment Check:" + toMDY_text(date);
                     var fitmentCheckSublistLabel = "Fitment Check " + (date);
 
@@ -725,10 +769,12 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             if(itemStats[responseItemId])
                             {
                                 itemStats[responseItemId].truckCount++;
+                                itemStats[responseItemId].shipmentNumbers.push(fitmentResponse_body_shipments[shipCtr].shipmentNumber)
                             }
                             else
                             {
                                 itemStats[responseItemId] = {};
+                                itemStats[responseItemId].shipmentNumbers = [];
                                 itemStats[responseItemId].truckCount = 1;
                             }
                         }
@@ -826,6 +872,14 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                                     value : (resObjByColumnKey.line_reservedqty || 0)
                                 })
                             }
+                            if(resObjByColumnKey.line_equipment)
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_col_ifr_equipment",
+                                    line : multiGradeIndex || b,
+                                    value : (resObjByColumnKey.line_equipment)
+                                })
+                            }
                             if(resObjByColumnKey.line_quantity)
                             {
                                 fitmentReservationSublist.setSublistValue({
@@ -872,6 +926,14 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                                     value : resObjByColumnKey.line_id
                                 })
                             }
+                            if(resObjByColumnKey.line_uniquekey)
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_lineuniquekey",
+                                    line : multiGradeIndex || b,
+                                    value : resObjByColumnKey.line_uniquekey
+                                })
+                            }
                             if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
                             {
                                 fitmentReservationSublist.setSublistValue({
@@ -911,8 +973,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             log.debug("sublistSettings.sublistFields.length", sublistSettings.sublistFields.length);
 
 
-                            log.debug("resObjByColumnKey.line_item", resObjByColumnKey.line_item)
-                            if(itemStats[resObjByColumnKey.line_item])
+                            log.debug("resObjByColumnKey.line_uniquekey", resObjByColumnKey.line_uniquekey)
+                            if(itemStats[resObjByColumnKey.line_uniquekey])
                             {
                                 for(var slfldCtr1 = 0 ; slfldCtr1 < sublistSettings.sublistFields.length ; slfldCtr1++)
                                 {
@@ -920,14 +982,14 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
 
                                     if(sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
                                     {
-                                        if(itemStats[resObjByColumnKey.line_item][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
+                                        if(itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
                                         {
-                                            log.debug("fitmentResponse:itemStats[resObjByColumnKey.line_item][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey] 1 ", itemStats[resObjByColumnKey.line_item][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
+                                            log.debug("fitmentResponse:itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey] 1 ", itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
 
                                             fitmentReservationSublist.setSublistValue({
                                                 id : sublistSettings.sublistFields[slfldCtr1].id,
                                                 line : multiGradeIndex || b,
-                                                value : itemStats[resObjByColumnKey.line_item][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey]
+                                                value : itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey]
                                             })
                                         }
 
@@ -1071,7 +1133,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
             var fitmentRequestData = {};
             // fitmentRequestData.country = "Canada"; //TODO
             fitmentRequestData.JurisdictionName = "Canada"; //TODO
-            fitmentRequestData.vehicleName = "TRTAMDV53"; //TODO
+            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext || "TRTAMDV53"; //TODO REMOVE THIS FALLBACK DEFAULT
             fitmentRequestData.transportationMode = "TRUCK"; //TODO
             fitmentRequestData.orderItems = [];
             try
@@ -1103,16 +1165,30 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                 {
                     fitmentRequestData.orderItems.push(
                         {
-                            ItemId : rawRequestData[a].line_item,
-                            Diameter : 127, //TODO
-                            Width : 88.90,
-                            Weight : 673.1,
-                            Nb : 28,
-                            Type : 1,
-                            RPP : 1,
+                            ItemId : rawRequestData[a].line_uniquekey,
+                            Diameter : rawRequestData[a].line_item_rolldiameter || 127, //TODO
+                            Width : rawRequestData[a].line_item_rollwidth || 88.90,
+                            Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                            Nb : rawRequestData[a].line_quantity,
+                            Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                            RPP : rawRequestData[a].line_item_rollsperpack || 1,
                         }
                     )
+
+                    // fitmentRequestData.orderItems.push(
+                    //     {
+                    //         ItemId : rawRequestData[a].line_uniquekey,
+                    //         Diameter : 127, //TODO
+                    //         Width : 88.90,
+                    //         Weight : 673.1,
+                    //         Nb : 28,
+                    //         Type : 1,
+                    //         RPP : 1,
+                    //     }
+                    // )
                 }
+
+                log.debug("fitmentRequestData", fitmentRequestData)
 
                 fitmentRequestData = JSON.stringify(fitmentRequestData)
 
