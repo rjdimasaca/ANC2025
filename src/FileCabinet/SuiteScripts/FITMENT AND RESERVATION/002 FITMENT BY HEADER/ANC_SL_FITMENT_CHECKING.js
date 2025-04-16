@@ -3,13 +3,13 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
+define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
     /**
      * @param{runtime} runtime
      * @param{search} search
      * @param{url} url
      */
-    (https, record, runtime, search, url, uiSw) => {
+    (https, record, redirect, runtime, search, url, uiSw) => {
 
         var globalrefs = {};
         var orderLineLimit = 0;
@@ -18,11 +18,30 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
         var DEBUGMODE = false;
         var accountId = "";
         var form = "";
+        var CONSIGNEE_REC_TYPE = "customrecord_alberta_ns_consignee_record"
 
-        var BASE_SUBLIST_ID = "custpage_sublist_fitmentcheck"
+        var SUBMITTED_FITMENT_RESULT_COLUMNS = [
+            "tranid",
+            "custcol_anc_relatedtransaction",
+            "custcol_anc_relatedlineuniquekey",
+            "item",
+            "custcol_anc_actualitemtobeshipped",
+            /*"custbody_anc_subcustomerconsignee",*/
+            "custbody_anc_carrier",
+            "custbody_anc_vehicleno",
+            "custbody_anc_trackingno"
+        ];
+
+        var TEMPORARY_SHIPMENT_ITEM = 188748;
+
+        var BASE_SUBLIST_ID = "custpage_sublist_fitmentcheck";
+
+        var SHIPMENT_CONSIGNEE_FIELD_ID = "custbody_consignee";
 
         const onRequest = (scriptContext) =>
         {
+            var script_timeStamp_start = new Date().getTime();
+
             accountId = runtime.accountId;
             try
             {
@@ -272,14 +291,17 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                 }
                 else
                 {
-
-
+                    fitmentCheckFormSubmitted(scriptContext)
                 }
             }
             catch(e)
             {
                 log.error("ERROR in function onRequest", e);
             }
+
+            var script_timeStamp_end = new Date().getTime();
+            log.debug("script time stats", {script_timeStamp_start, script_timeStamp_end, duration: script_timeStamp_start - script_timeStamp_end})
+
         }
 
         function fitmentCheckFormSubmitted(scriptContext)
@@ -290,26 +312,82 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                 var tranInternalid = scriptContext.request.parameters.custpage_traninternalid;
                 var tranLinenum = scriptContext.request.parameters.custpage_tranlinenum;
 
+                var shipmentObj_recIds = [];
+
+                var tranObj = record.load({
+                    type : "salesorder",
+                    id : tranInternalid,
+                    isDynamic : true
+                });
+
+                for(var key in scriptContext.request)
+                {
+                    log.debug(`scriptContext.request[key]___${key}`, scriptContext.request[key])
+                }
+                for(var key in scriptContext.request.parameters)
+                {
+                    log.debug(`scriptContext.request.parameters[key]___${key}`, scriptContext.request.parameters[key])
+                }
+
                 //you can store the actual number of sublist in a BODY field, you can also just check if it exists
                 //since it is ordered, when it doesnt exist it means script should stop
-                for(var a = 0 ; a < 999 ; a++)
+                for(var sublistCtr = 0 ; sublistCtr < 999 ; sublistCtr++)
                 {
-
+                    log.debug(`resolving ${BASE_SUBLIST_ID}${sublistCtr}data`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]);
                     // if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}fields`]){
-                    if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}data`]){
+                    if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]){
 
-                        log.debug(`ITERATING THE FITMENT CHECK SUBLISTS index=${a}`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}data`]);
+                        log.debug(`ITERATING THE FITMENT CHECK SUBLISTS index=${sublistCtr}`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]);
+
+                        uiSublistId = `${BASE_SUBLIST_ID}${sublistCtr}`
 
                         var lineCount = scriptContext.request.getLineCount({
-                            group : `${BASE_SUBLIST_ID}${a}`
+                            group : uiSublistId
                         });
                         log.debug("lineCount", lineCount);
 
-                        var tranObj = record.load({
-                            type : "salesorder",
-                            id : tranInternalid,
+                        var doCreateShipment = false;
+                        var shipmentObj = record.create({
+                            type : "customsale_anc_shipment",
                             isDynamic : true
                         });
+                        shipmentObj.setValue({
+                            fieldId : "entity",
+                            value : scriptContext.request.parameters["custpage_trancustomer"] || 106127 //TODO hardcoded
+                        })
+                        shipmentObj.setValue({
+                            fieldId : "location",
+                            value : scriptContext.request.parameters["custpage_tranlineorigin"] || 9 //TODO hardcoded
+                        })
+
+
+                        shipmentObj.setValue({
+                            sublistId : "item",
+                            fieldId : "custpage_anc_relatedtransaction",
+                            // line : targetIndex,
+                            value : scriptContext.request.parameters.custpage_traninternalid
+                        })
+                        //related transaction (salesorder can be guaranteed common because item fitment is done per SO)
+                        //on the contrary, because fitment check can have many groups, this is not guaranteed.
+
+                        // shipmentObj.setValue({
+                        //     sublistId : "item",
+                        //     fieldId : "custbody_anc_carrier",
+                        //     // line : targetIndex,
+                        //     value : scriptContext.request.parameters.custpage_traninternalid
+                        // })
+                        // shipmentObj.setValue({
+                        //     sublistId : "item",
+                        //     fieldId : "custbody_anc_vehicleno",
+                        //     // line : targetIndex,
+                        //     value : scriptContext.request.parameters.custpage_traninternalid
+                        // })
+                        // shipmentObj.setValue({
+                        //     sublistId : "item",
+                        //     fieldId : "custbody_anc_trackingno",
+                        //     // line : targetIndex,
+                        //     value : scriptContext.request.parameters.custpage_traninternalid
+                        // })
 
                         // custpage_col_ifr_inputqty
                         // custpage_col_ifr_cb
@@ -317,6 +395,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                         // custpage_ifr_percentage
                         // custpage_ifr_loadnum
                         // custpage_ifr_loadid
+                        var shipmentLineValues = [];
                         for(var a = 0 ; a < lineCount ; a++)
                         {
                             var lineValues = {};
@@ -356,59 +435,312 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                                 log.debug("lineValues", lineValues)
                                 // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
                                 // {"custpage_col_ifr_cb":"T","custpage_col_ifr_inputqty":"1","custpage_ifr_weightplanned":"weight planned","custpage_ifr_percentage":"34.567","custpage_ifr_loadnum":"4","custpage_ifr_loadid":"17424"}
-                                var targetIndex = tranObj.findSublistLineWithValue({
-                                    sublistId : "item",
-                                    fieldId : "line",
-                                    value : tranLinenum
-                                })
-                                log.debug("POST tranLinenum", tranLinenum)
-                                tranObj.selectLine({
-                                    sublistId : "item",
-                                    line : targetIndex
-                                })
-                                log.debug("POST targetIndex", targetIndex)
-                                tranObj.setCurrentSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_lxpert_loadweightplanned",
-                                    line : targetIndex,
-                                    value : lineValues["custpage_ifr_weightplanned"]
-                                })
-                                tranObj.setCurrentSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_lxpert_loadscount",
-                                    line : targetIndex,
-                                    value : lineValues["custpage_ifr_loadnum"]
-                                })
-                                tranObj.setCurrentSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_lxpert_lastloadutilrate",
-                                    line : targetIndex,
-                                    value : lineValues["custpage_ifr_percentage"]
-                                })
-                                tranObj.setCurrentSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_lxpert_loadreservedqty",
-                                    line : targetIndex,
-                                    value : lineValues["custpage_col_ifr_inputqty"]
-                                })
-                                log.debug("before commit")
-                                tranObj.commitLine({
-                                    sublistId : "item",
-                                })
-                                log.debug("after commit")
+                                // var targetIndex = tranObj.findSublistLineWithValue({
+                                //     sublistId : "item",
+                                //     fieldId : "line",
+                                //     value : tranLinenum
+                                // })
+                                // log.debug("POST tranLinenum", tranLinenum)
+                                // tranObj.selectLine({
+                                //     sublistId : "item",
+                                //     line : targetIndex
+                                // })
+                                // log.debug("POST targetIndex", targetIndex)
+                                // tranObj.setCurrentSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_lxpert_loadweightplanned",
+                                //     line : targetIndex,
+                                //     value : lineValues["custpage_ifr_weightplanned"]
+                                // })
+                                // tranObj.setCurrentSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_lxpert_loadscount",
+                                //     line : targetIndex,
+                                //     value : lineValues["custpage_ifr_loadnum"]
+                                // })
+                                // tranObj.setCurrentSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_lxpert_lastloadutilrate",
+                                //     line : targetIndex,
+                                //     value : lineValues["custpage_ifr_percentage"]
+                                // })
+                                // tranObj.setCurrentSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_lxpert_loadreservedqty",
+                                //     line : targetIndex,
+                                //     value : lineValues["custpage_col_ifr_inputqty"]
+                                // })
+                                // log.debug("before commit")
+                                // tranObj.commitLine({
+                                //     sublistId : "item",
+                                // })
+                                // log.debug("after commit")
+
+                                doCreateShipment = true;
+
+                                shipmentLineValues.push(lineValues)
                             }
+
+                            log.debug("shipmentLineValues", shipmentLineValues);
+
+                            var keptInfoForShipmentCreation = {
+                                targetConsignee : {val : ""},
+                                targetOriginLoc : {val : ""},
+                                targetDeliveryDate : {val : ""},
+                            };
+                            for(var a = 0 ; a < lineCount ; a++)
+                            {
+                                if(a == 0)
+                                {
+                                    keptInfoForShipmentCreation["targetConsignee"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_consignee",
+                                        line : a
+                                    })
+                                    keptInfoForShipmentCreation["targetOriginLoc"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_location",
+                                        line : a
+                                    })
+                                    keptInfoForShipmentCreation["targetDeliveryDate"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_line_deliverydate",
+                                        line : a
+                                    });
+                                }
+                                var lineValues = {};
+                                lineValues["custpage_col_ifr_cb"] = scriptContext.request.getSublistValue({
+                                    group: uiSublistId,
+                                    name : "custpage_col_ifr_cb",
+                                    line : a
+                                })
+                                if(lineValues["custpage_col_ifr_cb"] && lineValues["custpage_col_ifr_cb"] != "F")
+                                {
+                                    lineValues["custpage_col_ifr_inputqty"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_inputqty",
+                                        line : a
+                                    })
+                                    lineValues["custpage_ifr_weightplanned"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_weightplanned",
+                                        line : a
+                                    })
+                                    lineValues["custpage_ifr_percentage"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_percentage",
+                                        line : a
+                                    })
+                                    lineValues["custpage_ifr_loadnum"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_loadnum",
+                                        line : a
+                                    })
+                                    lineValues["custpage_ifr_loadid"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_loadid",
+                                        line : a
+                                    })
+                                    lineValues["item"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_item",
+                                        line : a
+                                    })
+                                    lineValues["item"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_item",
+                                        line : a
+                                    })
+                                    lineValues["custcol_anc_actualitemtobeshipped"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_item",
+                                        line : a
+                                    })
+                                    lineValues["quantity"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_orderqty",
+                                        line : a
+                                    })
+                                    lineValues["custcol_anc_relatedlineuniquekey"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_lineuniquekey",
+                                        line : a
+                                    })
+                                    lineValues["custcol_consignee"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_consignee",
+                                        line : a
+                                    })
+
+                                    log.debug("lineValues", lineValues)
+                                    // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
+                                    // {"custpage_col_ifr_cb":"T","custpage_col_ifr_inputqty":"1","custpage_ifr_weightplanned":"weight planned","custpage_ifr_percentage":"34.567","custpage_ifr_loadnum":"4","custpage_ifr_loadid":"17424"}
+                                    // var targetIndex = tranObj.findSublistLineWithValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "line",
+                                    //     value : tranLinenum
+                                    // })
+                                    // log.debug("POST tranLinenum", tranLinenum)
+                                    // shipmentObj.selectLine({
+                                    //     sublistId : "item",
+                                    //     line : targetIndex
+                                    // })
+                                    // log.debug("POST targetIndex", targetIndex)
+
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "item",
+                                        // line : targetIndex,
+                                        value : TEMPORARY_SHIPMENT_ITEM
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_actualitemtobeshipped",
+                                        // line : targetIndex,
+                                        value : lineValues["custcol_anc_actualitemtobeshipped"] || lineValues["item"]
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_consignee",
+                                        // line : targetIndex,
+                                        value : lineValues["custcol_consignee"]
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "quantity",
+                                        // line : targetIndex,
+                                        value : lineValues["quantity"]
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "rate",
+                                        // line : targetIndex,
+                                        value : 0
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "rate",
+                                        // line : targetIndex,
+                                        value : 0
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_relatedtransaction",
+                                        // line : targetIndex,
+                                        value : scriptContext.request.parameters.custpage_traninternalid
+                                    })
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : lineValues["custcol_anc_relatedlineuniquekey"],
+                                        // line : targetIndex,
+                                        value : lineValues["custcol_anc_relatedlineuniquekey"]
+                                    })
+                                    // shipmentObj.setCurrentSublistValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "custcol_anc_relatedtransaction",
+                                    //     // line : targetIndex,
+                                    //     value : scriptContext.request.parameters.custpage_traninternalid
+                                    // })
+
+
+                                    // shipmentObj.setCurrentSublistValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "custcol_anc_lxpert_loadweightplanned",
+                                    //     line : targetIndex,
+                                    //     value : lineValues["custpage_ifr_weightplanned"]
+                                    // })
+                                    // shipmentObj.setCurrentSublistValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "custcol_anc_lxpert_loadscount",
+                                    //     line : targetIndex,
+                                    //     value : lineValues["custpage_ifr_loadnum"]
+                                    // })
+                                    // shipmentObj.setCurrentSublistValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "custcol_anc_lxpert_lastloadutilrate",
+                                    //     line : targetIndex,
+                                    //     value : lineValues["custpage_ifr_percentage"]
+                                    // })
+                                    // shipmentObj.setCurrentSublistValue({
+                                    //     sublistId : "item",
+                                    //     fieldId : "custcol_anc_lxpert_loadreservedqty",
+                                    //     line : targetIndex,
+                                    //     value : lineValues["custpage_col_ifr_inputqty"]
+                                    // })
+                                    log.debug("before commit")
+                                    shipmentObj.commitLine({
+                                        sublistId : "item",
+                                    })
+                                    log.debug("after commit")
+
+                                    doCreateShipment = true;
+                                }
+
+                            }
+
+                            if(doCreateShipment)
+                            {
+                                if(keptInfoForShipmentCreation["targetConsignee"])
+                                {
+                                    shipmentObj.setValue({
+                                        fieldId : SHIPMENT_CONSIGNEE_FIELD_ID,
+                                        value : keptInfoForShipmentCreation["targetConsignee"]
+                                    })
+
+                                    shipmentObj.setValue({
+                                        fieldId : "location",
+                                        value : keptInfoForShipmentCreation["targetOriginLoc"]
+                                    })
+
+                                    log.debug(`keptInfoForShipmentCreation["targetDeliveryDate"]`, keptInfoForShipmentCreation["targetDeliveryDate"])
+                                    // shipmentObj.setValue({
+                                    shipmentObj.setText({
+                                        fieldId : "custbody_anc_deliverydate",
+                                        text : keptInfoForShipmentCreation["targetDeliveryDate"]
+                                        // value : keptInfoForShipmentCreation["targetDeliveryDate"]
+                                    })
+                                }
+
+                                var shipmentObj_recId = shipmentObj.save({
+                                    ignoreMandatoryFields : true
+                                });
+                                log.debug("shipmentObj_recId", shipmentObj_recId);
+
+                                shipmentObj_recIds.push(shipmentObj_recId);
+                            }
+
+
                         }
+                    }
+                    else
+                    {
+
                         var submittedRecId = tranObj.save({
                             ignoreMandatoryFeilds : true,
                             enableSourcing : true
                         });
                         log.debug("submittedRecId", submittedRecId);
-                    }
-                    else
-                    {
+
                         break;
                     }
                 }
+
+                log.debug("shipmentObj_recIds", shipmentObj_recIds);
+
+                var fitmentSubmitResultSearch = search.create({
+                    type : "transaction",
+                    filters : [
+                        ["internalid", "anyof", shipmentObj_recIds],
+                        "AND",
+                        ["mainline", "is", "F"],
+                    ],
+                    columns : SUBMITTED_FITMENT_RESULT_COLUMNS
+                });
+
+                redirect.toSearchResult({
+                    search: fitmentSubmitResultSearch
+                })
+
             }
             catch(e)
             {
@@ -573,7 +905,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             label : "SELECT",
                             type : "checkbox",
                             id : "custpage_col_ifr_cb",
-                            displayType : uiSw.FieldDisplayType.ENTRY
+                            displayType : uiSw.FieldDisplayType.ENTRY,
+                            defaultValue : "T"
                         },
                         {
                             label : "Line Ref",
@@ -595,10 +928,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
-                            label : "Delivery Date",
+                            label : "Delivery Date(MC requested to hide)", //TODO
                             type : "date",
                             id : "custpage_col_ifr_line_deliverydate",
-                            displayType : uiSw.FieldDisplayType.HIDDEN
+                            displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
                             label : "Ship Date",
@@ -669,13 +1002,6 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             // sourceApiRespKey:"equipment",
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
-                        {
-                            label : "Location",
-                            type : "select",
-                            id : "custpage_ifr_location",
-                            source : "location",
-                            displayType : uiSw.FieldDisplayType.HIDDEN
-                        },
                         //FROM FITMENT CHECK API
                         {
                             label : "FTL Count",
@@ -683,6 +1009,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             id : "custpage_ifr_ftlcount",
                             // sourceApiRespKey:"ftlcount",
                             sourceApiRespKey:"truckCount",
+                            sourceSearchKey:"custpage_ifr_consignee",
+                            targetShipmentColumn:"custpage_ifr_consignee",
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
@@ -722,7 +1050,21 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             type : "integer",
                             id : "custpage_ifr_ltlrolls",
                             displayType : uiSw.FieldDisplayType.INLINE
-                        }
+                        },
+                        {
+                            label : "Origin Location",
+                            type : "select",
+                            id : "custpage_ifr_location",
+                            source : "location",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+                        {
+                            label : "Consignee",
+                            type : "select",
+                            id : "custpage_ifr_consignee",
+                            source : CONSIGNEE_REC_TYPE,
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
                     ]
                 }
 
@@ -863,6 +1205,11 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                                     line : multiGradeIndex || b,
                                     value : resObjByColumnKey.line_quantity
                                 })
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_consignee",
+                                    line : multiGradeIndex || b,
+                                    value : resObjByColumnKey.line_consignee
+                                })
                             }
                             if(resObjByColumnKey.line_quantity)
                             {
@@ -886,6 +1233,14 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                                     id : "custpage_col_ifr_inputqty",
                                     line : multiGradeIndex || b,
                                     value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
+                                })
+                            }
+                            if(resObjByColumnKey.line_consginee)
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_col_ifr_consginee",
+                                    line : multiGradeIndex || b,
+                                    value : (resObjByColumnKey.line_consginee)
                                 })
                             }
 
@@ -978,7 +1333,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                             {
                                 for(var slfldCtr1 = 0 ; slfldCtr1 < sublistSettings.sublistFields.length ; slfldCtr1++)
                                 {
-                                    log.debug("fsublistSettings.sublistFields[slfldCtr1].sourceApiRespKey 0 ", sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
+                                    // log.debug("fsublistSettings.sublistFields[slfldCtr1].sourceApiRespKey 0 ", sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
 
                                     if(sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
                                     {
@@ -1192,6 +1547,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
 
                 fitmentRequestData = JSON.stringify(fitmentRequestData)
 
+                var connection_timeStamp_start = new Date().getTime();
+
                 var rawResp = https.post({
                     url: "https://loadfitting.anchub.ca/loadfitting/generateshipments",
                     body : fitmentRequestData,
@@ -1201,6 +1558,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWid
                         "accept": "*/*"
                     }
                 });
+
+                var connection_timeStamp_end = new Date().getTime();
+
+                log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
 
                 log.debug("rawResp.body", rawResp.body)
 
