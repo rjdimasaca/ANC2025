@@ -313,6 +313,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                 var tranLinenum = scriptContext.request.parameters.custpage_tranlinenum;
 
                 var shipmentObj_recIds = [];
+                var soStats = {};
 
                 var tranObj = record.load({
                     type : "salesorder",
@@ -631,10 +632,15 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                                     })
                                     shipmentObj.setCurrentSublistValue({
                                         sublistId : "item",
-                                        fieldId : lineValues["custcol_anc_relatedlineuniquekey"],
+                                        fieldId : "custcol_anc_relatedlineuniquekey",
                                         // line : targetIndex,
                                         value : lineValues["custcol_anc_relatedlineuniquekey"]
                                     })
+
+
+                                    soStats[lineValues["custcol_anc_relatedlineuniquekey"]] = {};
+
+
                                     // shipmentObj.setCurrentSublistValue({
                                     //     sublistId : "item",
                                     //     fieldId : "custcol_anc_relatedtransaction",
@@ -707,6 +713,8 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                                 log.debug("shipmentObj_recId", shipmentObj_recId);
 
                                 shipmentObj_recIds.push(shipmentObj_recId);
+
+                                soStats[lineValues["custcol_anc_relatedlineuniquekey"]] = {};
                             }
 
 
