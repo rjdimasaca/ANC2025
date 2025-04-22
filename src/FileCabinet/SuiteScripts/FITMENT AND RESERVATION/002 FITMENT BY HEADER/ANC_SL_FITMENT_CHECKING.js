@@ -833,12 +833,27 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                             search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
                             search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
                             search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                            // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
                             search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
                             search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
                             search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
                             search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
-                            // search.createColumn({name: "custitem_anc_rolldiameter", join:"item", label: "line_item_rolldiameter"}),
-                            // search.createColumn({name: "custitem_anc_rollwidth", join:"item", label: "line_item_rollwidth"}),
+                            search.createColumn({
+                                name: "custitem_anc_rolldiameter",
+                                join: "item",
+                                label: "line_item_rolldiameter"
+                            }),
+                            search.createColumn({
+                                name: "custitem_anc_rollwidth",
+                                join: "item",
+                                label: "line_item_rollwidth"
+                            }),
+                            search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
+                            search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
+                            search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
+                            search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
+                            search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
+                            search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
                         ]
                 });
                 var searchResultCount = salesorderSearchObj.runPaged().count;
@@ -892,6 +907,14 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                         {
                             resObjByColumnKey.line_equipmenttext = res.getText(column);
                         }
+                        if(label == "line_item_rollwidth")
+                        {
+                            resObjByColumnKey.line_item_rollwidthtext = res.getText(column);
+                        }
+                        if(label == "line_item_rolldiameter")
+                        {
+                            resObjByColumnKey.line_item_rolldiametertext = res.getText(column);
+                        }
                     });
 
                     resObjByColumnKey.id = res.id
@@ -903,7 +926,8 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                 log.debug("srToObjects", srToObjects)
 
                 // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
-                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext"])
+                // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
+                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
                 log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
 
@@ -1096,6 +1120,12 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                     });
                     globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
 
+                    fitmentReservationSublist.addButton({
+                        id : `custpage_btn_${uiSublistId}_button`,
+                        label : "Select All",
+                        functionName : `alert(123)`
+                    })
+
 
 
                     var fitmentResponse = getFitmentResponse(srGroupedByDeliveryDate[date]);
@@ -1109,7 +1139,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                     log.debug("typeof fitmentResponse_body", typeof fitmentResponse_body)
                     fitmentResponse_body = JSON.parse(fitmentResponse_body)
                     log.debug("fitmentResponse_body", fitmentResponse_body)
-                    var fitmentResponse_body_shipments = fitmentResponse_body.shipments;
+                    var fitmentResponse_body_shipments = fitmentResponse_body.shipments || [];
 
                     for(var shipCtr = 0 ; shipCtr < fitmentResponse_body_shipments.length ; shipCtr++)
                     {
@@ -1490,6 +1520,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
 
         function getFitmentResponse(rawRequestData)
         {
+            log.debug("getFitmentResponse rawRequestData", rawRequestData)
             var fitmentResponse = {
                 list : []
             };
@@ -1529,8 +1560,8 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                     fitmentRequestData.orderItems.push(
                         {
                             ItemId : rawRequestData[a].line_uniquekey,
-                            Diameter : rawRequestData[a].line_item_rolldiameter || 127, //TODO
-                            Width : rawRequestData[a].line_item_rollwidth || 88.90,
+                            Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                            Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
                             Weight : rawRequestData[a].line_item_basis_weight || 673.1,
                             Nb : rawRequestData[a].line_quantity,
                             Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
