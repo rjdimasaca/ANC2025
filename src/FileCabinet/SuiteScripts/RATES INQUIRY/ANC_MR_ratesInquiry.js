@@ -16,13 +16,13 @@
  */
 define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
- * @param{https} https
- * @param{query} query
- * @param{record} record
- * @param{runtime} runtime
- * @param{search} search
- * @param{url} url
- */
+     * @param{https} https
+     * @param{query} query
+     * @param{record} record
+     * @param{runtime} runtime
+     * @param{search} search
+     * @param{url} url
+     */
     (https, query, record, runtime, search, url) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
@@ -172,7 +172,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                                         targetLeqRecObj.setValue({
                                             fieldId : "name",
-                                            value : rateInquiryResponse_rates[a].route.toUpperCase() + " - " + rateInquiryResponse_rates[a].equipment.toUpperCase()
+                                            value : rateInquiryResponse_rates[a].route.toUpperCase() + " : " + rateInquiryResponse_rates[a].equipment.toUpperCase()
                                         })
 
                                         //attemptSet custrecord_anc_laneequip_lane
@@ -359,7 +359,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     ];
                 var requestBodyStr = JSON.stringify(requestBodyObj)
 
-                log.debug("getRateInquiryResponse rawData before HTTP POST", rawData)
+                log.debug("getRateInquiryResponse rawData before HTTP POST", requestBodyStr)
 
                 var rawResp = "";
                 try
@@ -391,121 +391,126 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 }
 
                 //TEMP
-                rawResp = {
-                    body : [
-                        {
-                            "loadID": "string",
-                            "shipmentID": "string",
-                            "rates": [
-                                {
-                                    "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3",
-                                    "lineHaulCharge": 0.1,
-                                    "route": "ANC TEST LANE1",
-                                    "railRateAuthority": "string",
-                                    "distance": 0,
-                                    "transitTime": 111,
-                                    "equipment": rawData.equipmentName,
-                                    "currency": "string",
-                                    "accessorials": [
-                                        {
-                                            "accCharge": 0.1,
-                                            "accQual": "string"
-                                        }
-                                    ],
-                                    "fuelSurcharge": 0.1,
-                                    "carrierGroupName": "string",
-                                    "totalCost": 0.1
-                                },
-                                {
-                                    "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0",
-                                    "lineHaulCharge": 0.1,
-                                    "route": "ANC TEST LANE2",
-                                    "railRateAuthority": "string",
-                                    "distance": 0,
-                                    "transitTime": 222,
-                                    "equipment": rawData.equipmentName,
-                                    "currency": "string",
-                                    "accessorials": [
-                                        {
-                                            "accCharge": 0.1,
-                                            "accQual": "string"
-                                        }
-                                    ],
-                                    "fuelSurcharge": 0.1,
-                                    "carrierGroupName": "string",
-                                    "totalCost": 0.3
-                                },
-                            ],
-                            "id": "string",
-                            "errors": [
-                                {
-                                    "errorDesc": "string",
-                                    "errorCode": 0
-                                }
-                            ],
-                            "effectiveDate": "2019-08-24",
-                            "timestamp": "string"
-                        },
-                        {
-                            "loadID": "string",
-                            "shipmentID": "string",
-                            "rates": [
-                                {
-                                    "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3XXX",
-                                    "lineHaulCharge": 0.1,
-                                    "route": "ANC TEST LANE1",
-                                    "railRateAuthority": "string",
-                                    "distance": 0,
-                                    "transitTime": 111,
-                                    "equipment": rawData.equipmentName,
-                                    "currency": "string",
-                                    "accessorials": [
-                                        {
-                                            "accCharge": 0.1,
-                                            "accQual": "string"
-                                        }
-                                    ],
-                                    "fuelSurcharge": 0.1,
-                                    "carrierGroupName": "string",
-                                    "totalCost": 0.4
-                                },
-                                {
-                                    "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0YYY",
-                                    "lineHaulCharge": 0.1,
-                                    "route": "ANC TEST LANE2",
-                                    "railRateAuthority": "string",
-                                    "distance": 0,
-                                    "transitTime": 222,
-                                    "equipment": rawData.equipmentName,
-                                    "currency": "string",
-                                    "accessorials": [
-                                        {
-                                            "accCharge": 0.1,
-                                            "accQual": "string"
-                                        }
-                                    ],
-                                    "fuelSurcharge": 0.1,
-                                    "carrierGroupName": "string",
-                                    "totalCost": 0.2
-                                },
-                            ],
-                            "id": "string",
-                            "errors": [
-                                {
-                                    "errorDesc": "string",
-                                    "errorCode": 0
-                                }
-                            ],
-                            "effectiveDate": "2019-08-24",
-                            "timestamp": "string"
-                        },
-                    ]
-                };
+                // rawResp = {
+                //     body : [
+                //         {
+                //             "loadID": "string",
+                //             "shipmentID": "string",
+                //             "rates": [
+                //                 {
+                //                     "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3",
+                //                     "lineHaulCharge": 0.1,
+                //                     "route": "ANC TEST LANE1",
+                //                     "railRateAuthority": "string",
+                //                     "distance": 0,
+                //                     "transitTime": 111,
+                //                     "equipment": rawData.equipmentName,
+                //                     "currency": "string",
+                //                     "accessorials": [
+                //                         {
+                //                             "accCharge": 0.1,
+                //                             "accQual": "string"
+                //                         }
+                //                     ],
+                //                     "fuelSurcharge": 0.1,
+                //                     "carrierGroupName": "string",
+                //                     "totalCost": 0.1
+                //                 },
+                //                 {
+                //                     "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0",
+                //                     "lineHaulCharge": 0.1,
+                //                     "route": "ANC TEST LANE2",
+                //                     "railRateAuthority": "string",
+                //                     "distance": 0,
+                //                     "transitTime": 222,
+                //                     "equipment": rawData.equipmentName,
+                //                     "currency": "string",
+                //                     "accessorials": [
+                //                         {
+                //                             "accCharge": 0.1,
+                //                             "accQual": "string"
+                //                         }
+                //                     ],
+                //                     "fuelSurcharge": 0.1,
+                //                     "carrierGroupName": "string",
+                //                     "totalCost": 0.3
+                //                 },
+                //             ],
+                //             "id": "string",
+                //             "errors": [
+                //                 {
+                //                     "errorDesc": "string",
+                //                     "errorCode": 0
+                //                 }
+                //             ],
+                //             "effectiveDate": "2019-08-24",
+                //             "timestamp": "string"
+                //         },
+                //         {
+                //             "loadID": "string",
+                //             "shipmentID": "string",
+                //             "rates": [
+                //                 {
+                //                     "carrier": "163AFC5F-1B38-4EB5-BE8F-51625D46F2E3XXX",
+                //                     "lineHaulCharge": 0.1,
+                //                     "route": "ANC TEST LANE1",
+                //                     "railRateAuthority": "string",
+                //                     "distance": 0,
+                //                     "transitTime": 111,
+                //                     "equipment": rawData.equipmentName,
+                //                     "currency": "string",
+                //                     "accessorials": [
+                //                         {
+                //                             "accCharge": 0.1,
+                //                             "accQual": "string"
+                //                         }
+                //                     ],
+                //                     "fuelSurcharge": 0.1,
+                //                     "carrierGroupName": "string",
+                //                     "totalCost": 0.4
+                //                 },
+                //                 {
+                //                     "carrier": "1B5F8CFF-5BB0-4112-834C-31964EC514F0YYY",
+                //                     "lineHaulCharge": 0.1,
+                //                     "route": "ANC TEST LANE2",
+                //                     "railRateAuthority": "string",
+                //                     "distance": 0,
+                //                     "transitTime": 222,
+                //                     "equipment": rawData.equipmentName,
+                //                     "currency": "string",
+                //                     "accessorials": [
+                //                         {
+                //                             "accCharge": 0.1,
+                //                             "accQual": "string"
+                //                         }
+                //                     ],
+                //                     "fuelSurcharge": 0.1,
+                //                     "carrierGroupName": "string",
+                //                     "totalCost": 0.2
+                //                 },
+                //             ],
+                //             "id": "string",
+                //             "errors": [
+                //                 {
+                //                     "errorDesc": "string",
+                //                     "errorCode": 0
+                //                 }
+                //             ],
+                //             "effectiveDate": "2019-08-24",
+                //             "timestamp": "string"
+                //         },
+                //     ]
+                // };
 
                 if(typeof rawResp.body == "object")
                 {
                     rateInquiryResponse.list = rawResp.body;
                     rateInquiryResponse.firstresult = rawResp.body[0];
+                }
+                else {
+
+                    rateInquiryResponse.list = JSON.parse(rawResp.body);
+                    rateInquiryResponse.firstresult = JSON.parse(rawResp.body)[0];
                 }
 
 
@@ -576,7 +581,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 log.debug("compiledEquipmentRates", compiledEquipmentRates);
                 log.debug("compiledEquipmentRates.length", compiledEquipmentRates.length);
 
-                log.debug("reduce mapVal.parentleqid", mapVal.parentleqid);
+                // log.debug("reduce mapVal.parentleqid", mapVal.parentleqid);
 
                 var laneEquipsToUpdate = {};
 
@@ -584,18 +589,35 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 {
                     var laneEquipmentCarrierObj = compiledEquipmentRates[a];
 
-                    if(laneEquipmentCarrierObj.equipment && laneEquipmentCarrierObj.route)
+                    if(laneEquipmentCarrierObj.equipment)
                     {
+
+                        var filters = [];
+                        // var baseFilters = [
+                        //     ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()],
+                        //     "AND",
+                        //     ["formulatext: UPPER({custrecord_anc_lec_carrier})","is",laneEquipmentCarrierObj.carrier.toUpperCase()]
+                        // ]
+                        var baseFilters = [
+                            ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()],
+                            "AND",
+                            ["custrecord_anc_lec_carrier","anyof",laneEquipmentCarrierObj.carrier]
+                        ]
+                        filters = filters.concat(baseFilters)
+                        if(laneEquipmentCarrierObj.route)
+                        {
+                            var routeFilters = [
+                                "AND",
+                                ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_lane})","is",laneEquipmentCarrierObj.route.toUpperCase()]
+                            ]
+                            filters = filters.concat(routeFilters)
+
+                        }
+
                         //can be optimized
                         var nsLeqcSearch = search.create({
                             type : "customrecord_anc_laneequipmentcarrier",
-                            filters : [
-                                ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_lane})","is",laneEquipmentCarrierObj.route.toUpperCase()],
-                                "AND",
-                                ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()],
-                                "AND",
-                                ["formulatext: UPPER({custrecord_anc_lec_carrier})","is",laneEquipmentCarrierObj.carrier.toUpperCase()]
-                            ],
+                            filters : filters,
                             columns : []
                         })
 
@@ -621,6 +643,10 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             })
                         }
 
+                        targetLeqcRecObj.setValue({
+                            fieldId : "name",
+                            value : laneEquipmentCarrierObj.carrier + " : " + laneEquipmentCarrierObj.parentleqid
+                        })
 
                         targetLeqcRecObj.setText({
                             fieldId : "custrecord_anc_lec_equipment",
@@ -634,15 +660,15 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             fieldId : "custrecord_anc_lec_transittime",
                             value : laneEquipmentCarrierObj.transitTime
                         })
-                        //TODO hardcoded carrier
-                        // targetLeqcRecObj.setValue({
-                        //     fieldId : "custrecord_anc_lec_carrier",
-                        //     value : laneEquipmentCarrierObj.carrier
-                        // })
-                        targetLeqcRecObj.setText({
+                        //TODO hardcoded carrier - errors if vendor is inactive
+                        targetLeqcRecObj.setValue({
                             fieldId : "custrecord_anc_lec_carrier",
-                            text : laneEquipmentCarrierObj.carrier
+                            value : /*1300*/Number(laneEquipmentCarrierObj.carrier)
                         })
+                        // targetLeqcRecObj.setText({
+                        //     fieldId : "custrecord_anc_lec_carrier",
+                        //     text : laneEquipmentCarrierObj.carrier
+                        // })
 
                         var submittedLeqcRecId = targetLeqcRecObj.save({
                             ignoreMandatoryFields : true,
@@ -655,9 +681,9 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                         {
                             laneEquipsToUpdate[targetLeqInternalId] = {};
                             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime};
-                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier};
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {value:laneEquipmentCarrierObj.carrier};
 
-                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                            laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {value:laneEquipmentCarrierObj.carrier}
                             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
                         }
                         else
@@ -665,11 +691,11 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime.value > laneEquipmentCarrierObj.transitTime)
                             {
                                 laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime}
-                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier}
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {value:laneEquipmentCarrierObj.carrier}
                             }
                             if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton.value > laneEquipmentCarrierObj.totalCost)
                             {
-                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                                laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {value:laneEquipmentCarrierObj.carrier}
                                 laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
                             }
                         }
@@ -679,6 +705,102 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                         log.debug("submittedLeqcRecId", submittedLeqcRecId);
 
                     }
+
+                    // if(laneEquipmentCarrierObj.equipment && laneEquipmentCarrierObj.route)
+                    // {
+                    //     //can be optimized
+                    //     var nsLeqcSearch = search.create({
+                    //         type : "customrecord_anc_laneequipmentcarrier",
+                    //         filters : [
+                    //             ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_lane})","is",laneEquipmentCarrierObj.route.toUpperCase()],
+                    //             "AND",
+                    //             ["formulatext: UPPER({custrecord_anc_lec_laneequipment.custrecord_anc_laneequip_equipment})","is",laneEquipmentCarrierObj.equipment.toUpperCase()],
+                    //             "AND",
+                    //             ["formulatext: UPPER({custrecord_anc_lec_carrier})","is",laneEquipmentCarrierObj.carrier.toUpperCase()]
+                    //         ],
+                    //         columns : []
+                    //     })
+                    //
+                    //     var nsLeqcSearchSr = getResults(nsLeqcSearch.run());
+                    //
+                    //     log.debug("nsLeqcSearchSr", {nsLeqcSearchSr, nsLeqcSearch_filters:nsLeqcSearch.filters})
+                    //
+                    //     var targetLeqcRecId = "";
+                    //     var targetLeqcRecObj = "";
+                    //     if(nsLeqcSearchSr && nsLeqcSearchSr.length > 0)
+                    //     {
+                    //         var targetLeqcRecId = nsLeqcSearchSr[0].id;
+                    //         targetLeqcRecObj = record.load({
+                    //             type : "customrecord_anc_laneequipmentcarrier",
+                    //             id : targetLeqcRecId
+                    //         })
+                    //     }
+                    //
+                    //     if(!targetLeqcRecId)
+                    //     {
+                    //         targetLeqcRecObj = record.create({
+                    //             type : "customrecord_anc_laneequipmentcarrier",
+                    //         })
+                    //     }
+                    //
+                    //
+                    //     targetLeqcRecObj.setText({
+                    //         fieldId : "custrecord_anc_lec_equipment",
+                    //         text : laneEquipmentCarrierObj.equipment.toUpperCase()
+                    //     })
+                    //     targetLeqcRecObj.setValue({
+                    //         fieldId : "custrecord_anc_lec_laneequipment",
+                    //         value : laneEquipmentCarrierObj.parentleqid || compiledEquipmentRates[0].parentleqid
+                    //     })
+                    //     targetLeqcRecObj.setValue({
+                    //         fieldId : "custrecord_anc_lec_transittime",
+                    //         value : laneEquipmentCarrierObj.transitTime
+                    //     })
+                    //     //TODO hardcoded carrier
+                    //     // targetLeqcRecObj.setValue({
+                    //     //     fieldId : "custrecord_anc_lec_carrier",
+                    //     //     value : laneEquipmentCarrierObj.carrier
+                    //     // })
+                    //     targetLeqcRecObj.setText({
+                    //         fieldId : "custrecord_anc_lec_carrier",
+                    //         text : laneEquipmentCarrierObj.carrier
+                    //     })
+                    //
+                    //     var submittedLeqcRecId = targetLeqcRecObj.save({
+                    //         ignoreMandatoryFields : true,
+                    //         enableSourcing : true
+                    //     })
+                    //
+                    //
+                    //     var targetLeqInternalId = laneEquipmentCarrierObj.parentleqid || compiledEquipmentRates[0].parentleqid;
+                    //     if(!laneEquipsToUpdate[targetLeqInternalId])
+                    //     {
+                    //         laneEquipsToUpdate[targetLeqInternalId] = {};
+                    //         laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime};
+                    //         laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier};
+                    //
+                    //         laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                    //         laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
+                    //     }
+                    //     else
+                    //     {
+                    //         if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime.value > laneEquipmentCarrierObj.transitTime)
+                    //         {
+                    //             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fasttransittime = {value:laneEquipmentCarrierObj.transitTime}
+                    //             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_fsttrnsttmcarrr = {text:laneEquipmentCarrierObj.carrier}
+                    //         }
+                    //         if(laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton.value > laneEquipmentCarrierObj.totalCost)
+                    //         {
+                    //             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostpertonca = {text:laneEquipmentCarrierObj.carrier}
+                    //             laneEquipsToUpdate[targetLeqInternalId].custrecord_anc_laneequip_lowcostperton = {value:laneEquipmentCarrierObj.totalCost}
+                    //         }
+                    //     }
+                    //
+                    //     log.debug("laneEquipsToUpdate", laneEquipsToUpdate);
+                    //
+                    //     log.debug("submittedLeqcRecId", submittedLeqcRecId);
+                    //
+                    // }
                 }
 
                 for(var targetLeqInternalId in laneEquipsToUpdate)
