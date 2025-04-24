@@ -35,6 +35,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
         var TEMPORARY_SHIPMENT_ITEM = 188748;
 
         var BASE_SUBLIST_ID = "custpage_sublist_fitmentcheck";
+        var BASE_SUBTAB_ID = "custpage_tab_fc";
 
         var SHIPMENT_CONSIGNEE_FIELD_ID = "custbody_consignee";
 
@@ -854,6 +855,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                             search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
                             search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
                             search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
+                            search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
                         ]
                 });
                 var searchResultCount = salesorderSearchObj.runPaged().count;
@@ -952,6 +954,22 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                             id : "custpage_ifr_lineuniquekey",
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
+                        {
+                            label : "Is Crossdock?",
+                            type : "checkbox",
+                            id : "custpage_ifr_iscrossdock",
+                            sourceSearchKey:"custrecord_anc_crossdockeligible",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+
+                        {
+                            label : "Leg",
+                            type : "text",
+                            id : "custpage_ifr_leg",
+                            sourceSearchKey:"custpage_ifr_leg",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+
                         {
                             label : "Grade / Item",
                             type : "select",
@@ -1101,6 +1119,10 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                 }
 
 
+                var subtabs = {
+
+                };
+                var mapping = {}
                 var a = 0;
                 for(var date in srGroupedByDeliveryDate)
                 {
@@ -1111,14 +1133,41 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                     var uiSublistId = BASE_SUBLIST_ID + a;
                     // var fitmentCheckSublistLabel = "Fitment Check:" + toMDY_text(date);
                     var fitmentCheckSublistLabel = "Fitment Check " + (date);
+                    var fitmentCheckSubtabLabel = "Fitment Check " + srGroupedByDeliveryDate[date][0].origkeys
 
-
+                    var subtabObj = "";
+                    var subtabId = `${(srGroupedByDeliveryDate[date][0].line_deliverydate).replace(/\//g, "_")}_${srGroupedByDeliveryDate[date][0].line_location}_${srGroupedByDeliveryDate[date][0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}`
+                    subtabId = subtabId.toLowerCase();
+                    if(!subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`])
+                    {
+                        log.debug("`${BASE_SUBTAB_ID}_${subtabId}`", `${BASE_SUBTAB_ID}_${subtabId}`);
+                        subtabObj = form.addTab({
+                        // subtabObj = form.addSubtab({
+                            label : fitmentCheckSubtabLabel,
+                            id : `${BASE_SUBTAB_ID}_${subtabId}`,
+                        });
+                        subtabObj.id = `${BASE_SUBTAB_ID}_${subtabId}`;
+                        mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
+                    }
+                    else
+                    {
+                        subtabObj = subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`]
+                        subtabObj.id = `${BASE_SUBTAB_ID}_${subtabId}`;
+                        mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
+                    }
+                    subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`] = subtabObj;
+                    mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
                     var fitmentReservationSublist = form.addSublist({
                         label : fitmentCheckSublistLabel,
                         type : "LIST",
                         id : uiSublistId,
+                        // tab : subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`].id
+                        tab : mapping[`${srGroupedByDeliveryDate[date][0].origkeys}`]
                     });
                     globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
+
+                    log.debug("subtabObj", subtabObj);
+                    log.debug("subtabs", subtabs);
 
                     fitmentReservationSublist.addButton({
                         id : `custpage_btn_${uiSublistId}_button`,
@@ -1137,7 +1186,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                     var itemStats = {};
                     var fitmentResponse_body = fitmentResponse.body;
                     log.debug("typeof fitmentResponse_body", typeof fitmentResponse_body)
-                    fitmentResponse_body = JSON.parse(fitmentResponse_body)
+                    fitmentResponse_body = fitmentResponse_body ? JSON.parse(fitmentResponse_body) : [];
                     log.debug("fitmentResponse_body", fitmentResponse_body)
                     var fitmentResponse_body_shipments = fitmentResponse_body.shipments || [];
 
@@ -1282,6 +1331,9 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                                 })
                             }
 
+
+
+
                             //FILL BY ORDER WEIGHT
                             if(resObjByColumnKey.line_quantity)
                             {
@@ -1325,6 +1377,22 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                                     id : "custpage_ifr_lineuniquekey",
                                     line : multiGradeIndex || b,
                                     value : resObjByColumnKey.line_uniquekey
+                                })
+                            }
+                            if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_iscrossdock",
+                                    line : multiGradeIndex || b,
+                                    value : "T"
+                                })
+                            }
+                            if(resObjByColumnKey.custpage_ifr_leg)
+                            {
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_leg",
+                                    line : multiGradeIndex || b,
+                                    value : (resObjByColumnKey.custpage_ifr_leg)
                                 })
                             }
                             if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
@@ -1457,17 +1525,87 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
         function groupByKeys(objectArray, property) {
             return objectArray.reduce(function (acc, obj) {
 
+                // var separator = " | ";
+                var separator = " > ";
                 var key = "";
-                for(var a = 0 ; a < property.length; a++)
+                var origkeys = "";
+                var isCrossDock = true;
+                var isCrossDock = obj.custrecord_anc_crossdockeligible;
+                if(!isCrossDock || isCrossDock == "F")
                 {
-                    key +=  " | " + (obj[property[a]] || "");
-                }
-                // key += "|"
+                    var obj1 = JSON.parse(JSON.stringify(obj))
+                    for(var a = 0 ; a < property.length; a++)
+                    {
+                        obj1["orig_"+property[a]] = obj1[""+property[a]];
+                        origkeys += separator + (obj1[property[a]] || "");
+                        key +=  separator + (obj1[property[a]] || "");
+                    }
 
-                if (!acc[key]) {
-                    acc[key] = [];
+                    obj1["orig_custrecord_anc_lane_destinationcity"] = obj1["custrecord_anc_lane_destinationcity"];
+                    obj1["orig_line_location"] = obj1["line_location"];
+                    obj1.origkeys = origkeys;
+                    // key += "|"
+
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(obj1);
                 }
-                acc[key].push(obj);
+                else/* if(isCrossDock)*/
+                {
+                    //LEG1
+
+                    var obj1 = JSON.parse(JSON.stringify(obj))
+                    for(var a = 0 ; a < property.length; a++)
+                    {
+                        origkeys += separator + (obj1[property[a]] || "");
+                        if(property[a] == "custrecord_anc_lane_destinationcity")
+                        {
+                            obj1["orig_"+property[a]] = obj1["custrecord_anc_lane_destinationcity"];
+                            obj1[property[a]] = obj1["custrecord_anc_lane_crossdockcity"];
+                        }
+                        key +=  separator + (obj1[property[a]] || "");
+                    }
+                    obj1["orig_line_location"] = obj1["line_location"];
+                    obj1.custpage_ifr_leg = "1";
+                    obj1.subtabname = obj1["line_uniquekey"];
+                    obj1.origkeys = origkeys;
+                    // key += "|"
+
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(obj1);
+
+                    key = "";
+                    origkeys = "";
+
+                    //LEG2
+
+                    var obj2 = JSON.parse(JSON.stringify(obj))
+                    for(var a = 0 ; a < property.length; a++)
+                    {
+                        origkeys += separator + (obj2[property[a]] || "");
+                        if(property[a] == "line_locationtext")
+                        {
+                            obj2["orig_"+property[a]] = obj2["line_locationtext"];
+                            obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
+                        }
+                        key +=  separator + (obj2[property[a]] || "");
+                    }
+                    obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                    obj2["orig_line_location"] = obj2["line_location"];
+                    obj2.custpage_ifr_leg = "2";
+                    obj2.subtabname = obj2["line_uniquekey"];
+                    obj2.origkeys = origkeys;
+                    // key += "|"
+
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(obj2);
+                }
+
                 return acc;
             }, {});
         }
