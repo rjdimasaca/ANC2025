@@ -59,7 +59,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
             {
                 var vbRecId = "";
                 log.debug("requestBody", requestBody);
-                var loadID = requestBody.loadID;
+                var loadID = requestBody.loadID || requestBody.LoadID;
                 log.debug("loadID", loadID)
 
                 var lookupPo_result = lookupPo(loadID);
