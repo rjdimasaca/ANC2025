@@ -2,195 +2,338 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/ui/serverWidget', 'N/search'], (serverWidget, search) => {
+define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
     const onRequest = (context) => {
         if (context.request.method === 'GET') {
             const form = serverWidget.createForm({ title: 'Sales Forecast' });
 
+            const filterFieldGroupObj = form.addFieldGroup({
+                id: 'custpage_fldgroup_filters',
+                label: 'Pre-Filters'
+            });
+
+            const yearFieldObj = form.addField({
+                id: 'custpage_filter_years',
+                type: serverWidget.FieldType.SELECT,
+                source : "customrecord_anc_pf_years",
+                label: "Year",
+                container : "custpage_fldgroup_filters"
+            });
+            const monthFieldObj = form.addField({
+                id: 'custpage_filter_month',
+                type: serverWidget.FieldType.MULTISELECT,
+                source : "customrecord_anc_pf_months",
+                label: "Months",
+                container : "custpage_fldgroup_filters"
+            });
+            const customerGroupFieldObj = form.addField({
+                id: 'custpage_filter_customergroup',
+                type: serverWidget.FieldType.MULTISELECT,
+                source : "customer",
+                label: "Customer Group",
+                container : "custpage_fldgroup_filters"
+            });
+            const customerFieldObj = form.addField({
+                id: 'custpage_filter_customer',
+                type: serverWidget.FieldType.MULTISELECT,
+                source : "customer",
+                label: "Customer",
+                container : "custpage_fldgroup_filters"
+            });
+            const customerConsigneeFieldObj = form.addField({
+                id: 'custpage_filter_consignee',
+                type: serverWidget.FieldType.MULTISELECT,
+                source : "customrecord_alberta_ns_consignee_record",
+                label: "Consignee",
+                container : "custpage_fldgroup_filters"
+            });
+            const gradeFieldObj = form.addField({
+                id: 'custpage_filter_grade',
+                type: serverWidget.FieldType.MULTISELECT,
+                source : "item",
+                label: "Grade",
+                container : "custpage_fldgroup_filters"
+            });
+
+            const forecastFieldGroupObj = form.addFieldGroup({
+                id: 'custpage_fldgroup_forecast',
+                label: 'Sales Forecast'
+            });
+
+            // var inlineHtmlField = {}
             const inlineHtmlField = form.addField({
                 id: 'custpage_inlinehtml',
                 type: serverWidget.FieldType.INLINEHTML,
-                label: 'HTML Table'
+                label: 'HTML Table',
+                container : "custpage_fldgroup_forecast"
             });
 
-
-            // Fetch data from a saved search (or define one inline)
-            const customerSearch = search.create({
-                type: "customrecord_anc_pf_",
-                columns: [
-                    'custrecord_anc_pf_year',
-                    'custrecord_anc_pf_customer', 'custrecord_anc_pf_consignee', 'custrecord_anc_pf_grade',
-                    'custrecord_anc_pf_parent', 'custrecord_anc_pf_month', 'custrecord_anc_pf_allocation'
-                ],
-                filters: []
-            });
-
-
-
-
-            const results = [];
-            const gradeSet = new Set();
-
-            customerSearch.run().each(result => {
-
-                const grade = result.getText({ name: 'custrecord_anc_pf_grade' }) || '';
-                gradeSet.add(grade);
-
-                results.push({
-                    custrecord_anc_pf_year: result.getValue({ name: 'custrecord_anc_pf_year' }),
-                    custrecord_anc_pf_month: result.getValue({ name: 'custrecord_anc_pf_month' }),
-                    custrecord_anc_pf_customer: result.getValue({ name: 'custrecord_anc_pf_customer' }),
-                    custrecord_anc_pf_consignee: result.getValue({ name: 'custrecord_anc_pf_consignee' }),
-                    custrecord_anc_pf_grade: result.getValue({ name: 'custrecord_anc_pf_grade' }),
-                    custrecord_anc_pf_parent: result.getValue({ name: 'custrecord_anc_pf_parent' }),
-                    custrecord_anc_pf_allocation: result.getValue({ name: 'custrecord_anc_pf_allocation' }),
-
-                    custrecord_anc_pf_year_text: result.getText({ name: 'custrecord_anc_pf_year' }),
-                    custrecord_anc_pf_month_text: result.getText({ name: 'custrecord_anc_pf_month' }),
-                    custrecord_anc_pf_customer_text: result.getText({ name: 'custrecord_anc_pf_customer' }),
-                    custrecord_anc_pf_consignee_text: result.getText({ name: 'custrecord_anc_pf_consignee' }),
-                    custrecord_anc_pf_grade_text: result.getText({ name: 'custrecord_anc_pf_grade' }),
-                    custrecord_anc_pf_parent_text: result.getText({ name: 'custrecord_anc_pf_parent' }),
-                    custrecord_anc_pf_allocation_text: result.getText({ name: 'custrecord_anc_pf_allocation' }),
-                });
-                return results.length < 100; // limit to 100 rows
-            });
-
-            // Convert to HTML table rows
-            const tableRows = results.map(row => `
-        <tr>
-          <td>${row.custrecord_anc_pf_year_text || ''}</td>
-          <td>${row.custrecord_anc_pf_month_text || ''}</td>
-          <td>${row.custrecord_anc_pf_customer_text || ''}</td>
-          <td>${row.custrecord_anc_pf_consignee_text || ''}</td>
-          <td>${row.custrecord_anc_pf_grade_text || ''}</td>
-          <td>${row.custrecord_anc_pf_parent_text || ''}</td>
-          <td>
-            <input type="number" 
-               name="custrecord_anc_pf_allocation_${row.id}" 
-               value="${row.custrecord_anc_pf_allocation || ''}" 
-               style="width: 60px;" />
-          </td>
-        </tr>
-      `).join('');
-
-            const gradeOptions = [...gradeSet].map(grade => `<option value="${grade}">${grade}</option>`).join('');
-
-
-            // Combine full HTML
             const html = `
-        <html>
-        <head>
-          <link rel="stylesheet" type="text/css"
-                href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-          <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-          <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-          <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-          <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-          <script>
-            require([], function() {
-              window.onload = function() {
-                jQuery(document).ready(function($) {
-                  $('#customerTable thead tr')
-                    .clone(true)
-                    .addClass('filters')
-                    .appendTo('#customerTable thead');
-
-                  const table = $('#customerTable').DataTable({
-                      columnDefs: [
-                        { targets: 5, visible: false } // assuming Parent is column index 5
-                      ],
-                    orderCellsTop: true,
-                    fixedHeader: true,
-                    initComplete: function () {
-                      var api = this.api();
-                      api.columns().eq(0).each(function (colIdx) {
-                        var cell = $('.filters th').eq(colIdx);
+<script>jQuery("[data-field-name='custpage_inlinehtml']").parents('td').eq(1).css('width', '100%');</script>
+                <html>
+                <head>
+                    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+                    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+                    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+                    <script src="https://cdn.datatables.net/fixedheader/3.2.0/js/dataTables.fixedHeader.min.js"></script>
+                    <style>
+                      #loadingModal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        color: white;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-size: 20px;
+                        z-index: 9999;
+                        visibility: visible;
+                      }
                     
-                        // Skip Allocation (editable) column
-                        if (colIdx === 5) {
-                          $(cell).html('');
-                          return;
+                      #loadingModal.hidden {
+                        visibility: hidden;
+                      }
+                    
+                      .spinner {
+                        border: 4px solid rgba(255, 255, 255, 0.3);
+                        border-top: 4px solid white;
+                        border-radius: 50%;
+                        width: 50px;
+                        height: 50px;
+                        animation: spin 1s linear infinite;
+                      }
+                    
+                      @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                      }
+                    </style>
+                    
+                    <div id="loadingModal">
+                      <div class="spinner"></div>
+                      <span>Loading... Please wait</span>
+                    </div>
+                    
+                    <script>
+                        require([], function() {
+                            window.onload = function() {
+                                jQuery(document).ready(function($) {
+                                    
+                                    const table = $('#customerTable').DataTable({
+                                        orderCellsTop: true,
+                                        fixedHeader: true,
+                                        dom: '<"top"ilp>rt<"bottom"lpi><"clear">',
+                                        pageLength: 100,
+                                        initComplete: function () {
+                                            const api = this.api();
+                                        }
+                                    });
+                                    
+                                    // Fetch data asynchronously
+                                    $.ajax({
+                                        url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1',
+                                        method: 'POST',
+                                        success: function(data) {
+                                            data = JSON.parse(data);
+                                            const tableRows = data.map(function(row) {
+                                                return '<tr>' +
+                                                    '<td>' + row.compositeKey + '</td>' +
+                                                    '<td>' + row.year + '</td>' +
+                                                    '<td>' + row.month + '</td>' +
+                                                    '<td>' + row.customerGroup + '</td>' +
+                                                    '<td>' + row.customer + '</td>' +
+                                                    '<td>' + row.consignee + '</td>' +
+                                                    '<td>' + row.grade + '</td>' +
+                                                    '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                                '</tr>';
+                                            }).join('');
+                                            
+                                            // Add fetched rows into the table
+                                            table.rows.add($(tableRows)).draw();
+                                            
+                                            
+                                            $('#loadingModal').removeClass('hidden');
+                                            $('#loadingModal').addClass('hidden');
+                                        },
+                                        error: function() {
+                                            alert('Error fetching data');
+                                        }
+                                    });
+                                    
+                                    // Simple Filtering Functionality
+                                    $("input[type='text']").on("keyup", function() {
+                                        var columnIdx = $(this).data('column');
+                                        table.column(columnIdx).search(this.value).draw();
+                                    });
+                                });
+                            };
+                        });
+                    </script>
+                </head>
+                <body>
+                    <form id="customerForm">
+                    
+                        <button type="button" onclick="collectInput()">Submit Changes</button>
+                        
+                        <button type="button" onclick="copyToYear()">Copy to Year</button>
+                        <button type="button" onclick="copyToYear()">Copy from Year</button>
+                        
+                        <table id="customerTable" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>COMPOSITE KEY</th>
+                                    <th>Year</th>
+                                    <th>Month</th>
+                                    <th>Customer Group</th>
+                                    <th>Customer</th>
+                                    <th>Consignee</th>
+                                    <th>Grade</th>
+                                    <th>Allocation</th>
+                                </tr>
+                                <tr>
+                                    <th><input type="text" class="filter-input" data-column="0" placeholder="Filter Composite Key" /></th>
+                                    <th><input type="text" class="filter-input" data-column="1" placeholder="Filter Year" /></th>
+                                    <th><input type="text" class="filter-input" data-column="2" placeholder="Filter Month" /></th>
+                                    <th><input type="text" class="filter-input" data-column="3" placeholder="Filter Customer Group" /></th>
+                                    <th><input type="text" class="filter-input" data-column="4" placeholder="Filter Customer" /></th>
+                                    <th><input type="text" class="filter-input" data-column="5" placeholder="Filter Consignee" /></th>
+                                    <th><input type="text" class="filter-input" data-column="6" placeholder="Filter Grade" /></th>
+                                    <th><input type="text" class="filter-input" data-column="7" placeholder="Filter Allocation" /></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Initially empty rows -->
+                            </tbody>
+                        </table>
+                        <br/>
+                        <button type="button" onclick="collectInput()">Submit Changes</button>
+                        
+                        <button type="button" onclick="copyToYear()">Copy to Year</button>
+                        <button type="button" onclick="copyToYear()">Copy from Year</button>
+                    </form>
+                    <script>
+                        function collectInput() {
+                            const data = {};
+                        
+                            const table = $('#customerTable').DataTable();
+                            const tableRows = table.rows().nodes(); // DataTables API
+                        
+                            $(tableRows).find('input[type="number"]').each(function() {
+                                const origValue = this.getAttribute('origvalue');
+                                const currentValue = this.value;
+                                if (origValue !== currentValue || (origValue==="0" && currentValue==="")) {
+                                    data[this.name] = currentValue;
+                                }
+                            });
+                        
+                            console.log('Collected Allocation Input:', data);
+                            alert('Open the console to see collected data. You can send it to NetSuite.');
+                            
+                            
+                            $.ajax({
+                                url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1&submitdata=T',
+                                method: 'POST',
+                                success: function(data) {
+                                    
+                                    console.log("resp data", data)
+                                    // const tableRows = data.map(function(row) {
+                                    //     return '<tr>' +
+                                    //         '<td>' + row.compositeKey + '</td>' +
+                                    //         '<td>' + row.year + '</td>' +
+                                    //         '<td>' + row.month + '</td>' +
+                                    //         '<td>' + row.customerGroup + '</td>' +
+                                    //         '<td>' + row.customer + '</td>' +
+                                    //         '<td>' + row.consignee + '</td>' +
+                                    //         '<td>' + row.grade + '</td>' +
+                                    //         '<td>' + row.parent + '</td>' +
+                                    //         '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                    //     '</tr>';
+                                    // }).join('');
+                                    //
+                                    // // Add fetched rows into the table
+                                    // table.rows.add($(tableRows)).draw();
+                                    
+                                    
+                                },
+                                data : JSON.stringify({compositeKeys : data}),
+                                error: function() {
+                                    alert('Error posting data');
+                                }
+                            });
                         }
-                    
-                        var uniqueVals = {};
-                        api.column(colIdx).data().each(function (val) {
-                          if (val) uniqueVals[val] = true;
-                        });
-                    
-                        var sortedOptions = '';
-                        Object.keys(uniqueVals).sort().forEach(function (val) {
-                          sortedOptions += '<option value="' + val + '">' + val + '</option>';
-                        });
-                    
-                        // Add multiselect dropdown with Select2
-                        var select = $('<select multiple style="width:100%">' + sortedOptions + '</select>')
-                          .appendTo(cell.empty())
-                          .on('change', function () {
-                            var selected = $(this).val();
-                            if (selected && selected.length > 0) {
-                              api.column(colIdx)
-                                .search(selected.join('|'), true, false) // regex match
-                                .draw();
-                            } else {
-                              api.column(colIdx).search('').draw();
+                        
+                        function copyToYear() {
+                        
+                            var confirmResults = prompt("What year do you want to setup?")
+
+                            if(Number(confirmResults) != "NaN")
+                            {
+                                const data = {};
+                        
+                                const table = $('#customerTable').DataTable();
+                                const tableRows = table.rows().nodes(); // DataTables API
+                            
+                                $(tableRows).find('input[type="number"]').each(function() {
+                                    const origValue = this.getAttribute('origvalue');
+                                    const currentValue = this.value;
+                                    if (origValue !== currentValue || (origValue==="0" && currentValue==="")) {
+                                        data[this.name] = currentValue;
+                                    }
+                                });
+                            
+                                console.log('Collected Allocation Input:', data);
+                                alert('Open the console to see collected data. You can send it to NetSuite.');
+                                
+                                
+                                $.ajax({
+                                    url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1&copyToYear=' + confirmResults,
+                                    method: 'POST',
+                                    success: function(data) {
+                                        
+                                        console.log("resp data", data)
+                                        // const tableRows = data.map(function(row) {
+                                        //     return '<tr>' +
+                                        //         '<td>' + row.compositeKey + '</td>' +
+                                        //         '<td>' + row.year + '</td>' +
+                                        //         '<td>' + row.month + '</td>' +
+                                        //         '<td>' + row.customerGroup + '</td>' +
+                                        //         '<td>' + row.customer + '</td>' +
+                                        //         '<td>' + row.consignee + '</td>' +
+                                        //         '<td>' + row.grade + '</td>' +
+                                        //         '<td>' + row.parent + '</td>' +
+                                        //         '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                        //     '</tr>';
+                                        // }).join('');
+                                        //
+                                        // // Add fetched rows into the table
+                                        // table.rows.add($(tableRows)).draw();
+                                        
+                                        
+                                    },
+                                    data : JSON.stringify({compositeKeys : data}),
+                                    error: function() {
+                                        alert('Error posting data');
+                                    }
+                                });
                             }
-                          });
-                    
-                        select.select2({ placeholder: 'Filter...', width: 'resolve' });
-                    
-                        // Add optional freeform input below
-                        $('<input type="text" placeholder="Search..." style="width:100%; margin-top:4px;" />')
-                          .appendTo(cell)
-                          .on('keyup change', function () {
-                            api.column(colIdx).search(this.value).draw();
-                          });
-                      });
-                    }
-                  });
-                });
-              };
-            });
-          </script>
-        </head>
-        <body>
-          <form id="customerForm">
-            <table id="customerTable" class="display" style="width:100%">
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Month</th>
-                  <th>Customer</th>
-                  <th>Consignee</th>
-                  <th>Grade</th>
-                  <th>Parent</th>
-                  <th>Allocation</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${tableRows}
-              </tbody>
-            </table>
-            <br/>
-            <button type="button" onclick="collectInput()">Submit Changes</button>
-          </form>
-          <script>
-            function collectInput() {
-              const inputs = document.querySelectorAll('input[type="number"]');
-              const data = {};
-              inputs.forEach(input => {
-                data[input.name] = input.value;
-              });
-              console.log('Collected Allocation Input:', data);
-              alert('Open the console to see collected data. You can send it to NetSuite.');
-            }
-          </script>
-        </body>
-        </html>
-      `;
+                            else
+                            {
+                                alert("Aborted, invalid input " + confirmResults)
+                            }
+                        
+                            
+                        }
+                    </script>
+                </body>
+                </html>
+            `;
 
             inlineHtmlField.defaultValue = html;
-
             context.response.writePage(form);
         }
     };
