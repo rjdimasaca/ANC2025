@@ -166,6 +166,18 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                     displayType: "entry"
                                 }
                             },
+                            {
+                                label : "Equipment",
+                                type : "select",
+                                id : "custpage_tranlineequipment",
+                                source : "customrecord_anc_equipment",
+                                sourceSearchKey:"tranline_equipment",
+                                targetColumnId : "custcol_anc_equipment",
+                                //container: "custpage_flgroup_input",
+                                displayType : {
+                                    displayType: "entry"
+                                }
+                            },
                         ]
                     },
                     sublists : {
@@ -220,6 +232,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
                         search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
                         search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
+                        search.createColumn({name: "custcol_anc_equipment", label: "tranline_equipment"}),
                         search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
                         search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
                         search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
@@ -663,7 +676,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 //container: "custpage_flgroup_input",
                                 targetColumnId : "custcol_consignee",
                                 displayType : {
-                                    displayType: "inline"
+                                    displayType: "entry"
                                 },
                             },
                             {
@@ -1099,9 +1112,91 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                         }
                                     }
 
-                                    log.debug("bodyFieldsList[a].targetColumnId", {colId : bodyFieldsList[a].targetColumnId, colVal : targetColumnValue})
+                                }
+
+
+
+
+                                var targetColumnValue = scriptContext.request.parameters["custpage_tranlinetransittom"];
+
+                                var searchFilters = [
+                                    ["type","anyof","SalesOrd"],
+                                    "AND",
+                                    ["mainline","is","F"],
+                                    "AND",
+                                    ["taxline","is","F"],
+                                ];
+                                if(searchFilters)
+                                {
+                                    searchFilters.push("AND")
+                                    searchFilters.push(["internalid", "anyof", scriptContext.request.parameters.custpage_traninternalid])
+                                    searchFilters.push("AND")
+                                    searchFilters.push(["line", "equalto", scriptContext.request.parameters.custpage_tranlinenum])
 
                                 }
+
+
+                                log.debug("searchFilters", searchFilters);
+
+                                var post_searchObj = search.create({
+                                    type: "salesorder",
+                                    settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
+                                    filters : searchFilters,
+                                    columns : [
+                                        search.createColumn({
+                                            name : "location"
+                                        }),
+                                        search.createColumn({
+                                            name : "custrecord_alberta_ns_city",
+                                            join : "custcol_consignee",
+                                            label : "consignee city"
+                                        }),
+                                        search.createColumn({
+                                            name : "location"
+                                        }),
+                                    ],
+                                })
+
+                                var sr = getResults(post_searchObj.run());
+                                log.debug("sr", sr)
+                                var originloc = "";
+                                var destCity = "";
+                                for(var a = 0 ; a < sr.length ; a++)
+                                {
+                                    originloc = sr[a].getValue(search.createColumn({
+                                        name : "location"
+                                    }))
+
+                                    destCity = sr[a].getValue(search.createColumn({
+                                        name : "custrecord_alberta_ns_city",
+                                        join : "custcol_consignee",
+                                        label : "consignee city"
+                                    }))
+
+                                }
+
+                                log.debug("{targetColumnValue, originloc, destCity}", {targetColumnValue, originloc, destCity})
+                                var newLineDetails = resolveLane(targetColumnValue, originloc, destCity);
+
+                                log.debug("bodyFieldsList[a].targetColumnId", {colId : bodyFieldsList[a].targetColumnId, colVal : targetColumnValue})
+
+                                soRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_shippinglane",
+                                    value : newLineDetails.laneid,
+                                    line : targetIndex
+                                })
+
+                                soRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_equipment",
+                                    value : newLineDetails.eqid,
+                                    line : targetIndex
+                                })
+
+
+
+
 
                                 if(colsToUpdateCount > 0)
                                 {
@@ -1126,6 +1221,99 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
             {
                 log.error("ERROR in function updateRecord", e);
             }
+        }
+
+
+        function resolveLane(tom, originloc, targetloc)
+        {
+            var resolveLaneObj = {};
+            if(tom && originloc && targetloc)
+            {
+                var tomFilter = [];
+                var LCTT_EQUIP = search.createColumn({
+                    name : "custrecord_anc_lane_lce",
+                    join : null,
+                    label : "LCTT_equip",
+                    sort : "ASC"
+                });
+                var LCTT_BASIS = search.createColumn({
+                        name : "custrecord_anc_lane_lctt",
+                        join : null,
+                        label : "LCTT",
+                        sort : "ASC",
+                        eqfield : JSON.parse(JSON.stringify(LCTT_EQUIP)) //TODO this does not work!!!
+                    });
+
+                var FTT_EQUIP = search.createColumn({
+                    name : "custrecord_anc_lane_ftte",
+                    join : null,
+                    label : "FTT_equip",
+                    sort : "ASC"
+                });
+                var FTT_BASIS = search.createColumn({
+                    name : "custrecord_anc_lane_ftt",
+                    join : null,
+                    label : "LCTT",
+                    sort : "ASC",
+                    eqfield : JSON.parse(JSON.stringify(FTT_EQUIP))
+                });
+
+                var defining_basis = LCTT_BASIS;
+                var defining_eq = LCTT_EQUIP;
+                if(tom == 1)
+                {
+                    defining_basis = LCTT_BASIS;
+                    defining_eq = LCTT_EQUIP
+                    tomFilter = [LCTT_BASIS.name, "notempty"]
+                }
+                else if(tom == 2)
+                {
+                    defining_basis = FTT_BASIS;
+                    defining_eq = FTT_EQUIP
+                    tomFilter = [FTT_BASIS.name, "notempty"]
+                }
+                else
+                {
+                    defining_basis = LCTT_BASIS;
+                    defining_eq = LCTT_EQUIP
+                    tomFilter = [LCTT_BASIS.name, "notempty"]
+                }
+
+                var laneSearchObj = search.create({
+                    type : "customrecord_anc_shippinglanes",
+                    filters :
+                        [
+                            ["custrecord_anc_lane_originwarehouse", "anyof", [originloc]],
+                            "AND",
+                            ["custrecord_anc_lane_destinationcity", "is", targetloc],
+                            // "AND",
+                            // tomFilter
+                        ],
+                    columns : [
+                        defining_basis,
+                        FTT_EQUIP,FTT_BASIS,LCTT_EQUIP,LCTT_BASIS,
+                        defining_eq
+
+                    ]
+                });
+
+                log.debug("laneSearchObj", laneSearchObj);
+                // laneSearchObj.title = "customsearch_anc0429rod_DBFIRST" + new Date().getTime();
+                // laneSearchObj.save();
+
+                laneSearchObj.run().each(function(res){
+                    resolveLaneObj.laneid = res.id
+                    // resolveLaneObj.eqid = res.getValue(defining_basis.eqfield);
+                    resolveLaneObj.eqid = res.getValue(laneSearchObj.columns[5]);
+                    return false;
+                })
+            }
+            else
+            {
+                throw "Cannot resolve lane, origin/destination/Transport Optimization Method Missing"
+            }
+            log.debug("resolveLaneObj", resolveLaneObj);
+            return resolveLaneObj;
         }
 
         const onRequest = (scriptContext) =>
