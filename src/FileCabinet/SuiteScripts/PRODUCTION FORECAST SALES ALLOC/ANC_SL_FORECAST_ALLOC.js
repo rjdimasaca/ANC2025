@@ -114,6 +114,17 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                       }
                     </style>
                     
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const currentYear = new Date().getFullYear().toString();
+                            document.querySelector("#years").value = currentYear;
+                
+                            
+                        });
+                    </script>
+                    
+                    
                     <div id="loadingModal">
                       <div class="spinner"></div>
                       <span>Loading... Please wait</span>
@@ -124,52 +135,9 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                             window.onload = function() {
                                 jQuery(document).ready(function($) {
                                     
-                                    const table = $('#customerTable').DataTable({
-                                        orderCellsTop: true,
-                                        fixedHeader: true,
-                                        dom: '<"top"ilp>rt<"bottom"lpi><"clear">',
-                                        pageLength: 100,
-                                        initComplete: function () {
-                                            const api = this.api();
-                                        }
-                                    });
+                                    $('#loadingModal').removeClass('hidden');
+                                    $('#loadingModal').addClass('hidden');
                                     
-                                    // Fetch data asynchronously
-                                    $.ajax({
-                                        url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1',
-                                        method: 'POST',
-                                        success: function(data) {
-                                            data = JSON.parse(data);
-                                            const tableRows = data.map(function(row) {
-                                                return '<tr>' +
-                                                    '<td>' + row.compositeKey + '</td>' +
-                                                    '<td>' + row.year + '</td>' +
-                                                    '<td>' + row.month + '</td>' +
-                                                    '<td>' + row.customerGroup + '</td>' +
-                                                    '<td>' + row.customer + '</td>' +
-                                                    '<td>' + row.consignee + '</td>' +
-                                                    '<td>' + row.grade + '</td>' +
-                                                    '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
-                                                '</tr>';
-                                            }).join('');
-                                            
-                                            // Add fetched rows into the table
-                                            table.rows.add($(tableRows)).draw();
-                                            
-                                            
-                                            $('#loadingModal').removeClass('hidden');
-                                            $('#loadingModal').addClass('hidden');
-                                        },
-                                        error: function() {
-                                            alert('Error fetching data');
-                                        }
-                                    });
-                                    
-                                    // Simple Filtering Functionality
-                                    $("input[type='text']").on("keyup", function() {
-                                        var columnIdx = $(this).data('column');
-                                        table.column(columnIdx).search(this.value).draw();
-                                    });
                                 });
                             };
                         });
@@ -182,6 +150,17 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                         
                         <button type="button" onclick="copyToYear()">Copy to Year</button>
                         <button type="button" onclick="copyToYear()">Copy from Year</button>
+                        
+                        
+                        <label for="years">Target Year:</label>
+                        <select id="years">
+                          <option value="2026">2026</option>
+                          <option value="2025">2025</option>
+                          <option value="2024">2024</option>
+                          <option value="2023">2023</option>
+                        </select>
+                        
+                        <button type="button" onclick="preFilterYear()">Pre-Filter</button>
                         
                         <table id="customerTable" class="display" style="width:100%">
                             <thead>
@@ -217,11 +196,64 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                         <button type="button" onclick="copyToYear()">Copy from Year</button>
                     </form>
                     <script>
+                        function preFilterYear()
+                        {
+                            var table = $('#customerTable').DataTable({
+                                orderCellsTop: true,
+                                fixedHeader: true,
+                                dom: '<"top"ilp>rt<"bottom"lpi><"clear">',
+                                pageLength: 100,
+                                initComplete: function () {
+                                    // const api = this.api();
+                                }
+                            });
+                            
+                            // table = $('#customerTable').DataTable();
+                            // table.clear().draw();
+                            
+                            
+                            // Fetch data asynchronously
+                            $.ajax({
+                                url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1' + "&year=" + document.querySelector("#years").value,
+                                method: 'POST',
+                                success: function(data) {
+                                    data = JSON.parse(data);
+                                    var tableRows = data.map(function(row) {
+                                        return '<tr>' +
+                                            '<td>' + row.compositeKey + '</td>' +
+                                            '<td>' + row.year + '</td>' +
+                                            '<td>' + row.month + '</td>' +
+                                            '<td>' + row.customerGroup + '</td>' +
+                                            '<td>' + row.customer + '</td>' +
+                                            '<td>' + row.consignee + '</td>' +
+                                            '<td>' + row.grade + '</td>' +
+                                            '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                        '</tr>';
+                                    }).join('');
+                                    
+                                    // Add fetched rows into the table
+                                    table.rows.add($(tableRows)).draw();
+                                    
+                                    
+                                    $('#loadingModal').removeClass('hidden');
+                                    $('#loadingModal').addClass('hidden');
+                                },
+                                error: function() {
+                                    alert('Error fetching data');
+                                }
+                            });
+                            
+                            // Simple Filtering Functionality
+                            $("input[type='text']").on("keyup", function() {
+                                var columnIdx = $(this).data('column');
+                                table.column(columnIdx).search(this.value).draw();
+                            });
+                        }
                         function collectInput() {
                             const data = {};
                         
-                            const table = $('#customerTable').DataTable();
-                            const tableRows = table.rows().nodes(); // DataTables API
+                            var table = $('#customerTable').DataTable();
+                            var tableRows = table.rows().nodes(); // DataTables API
                         
                             $(tableRows).find('input[type="number"]').each(function() {
                                 const origValue = this.getAttribute('origvalue');
@@ -275,8 +307,8 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                             {
                                 const data = {};
                         
-                                const table = $('#customerTable').DataTable();
-                                const tableRows = table.rows().nodes(); // DataTables API
+                                var table = $('#customerTable').DataTable();
+                                var tableRows = table.rows().nodes(); // DataTables API
                             
                                 $(tableRows).find('input[type="number"]').each(function() {
                                     const origValue = this.getAttribute('origvalue');

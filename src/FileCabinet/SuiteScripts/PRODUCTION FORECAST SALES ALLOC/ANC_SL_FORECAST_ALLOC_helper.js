@@ -185,8 +185,19 @@ define(['N/query', 'N/record'], (query, record) => {
               AND
                 matrixtype = 'PARENT'
         `;
-            const monthSql = `SELECT id, name FROM customrecord_anc_pf_months`;
-            const yearSql = `SELECT id, name FROM customrecord_anc_pf_years WHERE name='2024' OR name='2025'`;
+            var monthSql = `SELECT id, name FROM customrecord_anc_pf_months`;
+            var yearSql = `SELECT id, name FROM customrecord_anc_pf_years`;
+
+            if(context.request.parameters.year)
+            {
+                yearSql += ` WHERE name = '${context.request.parameters.year}'`;
+            }
+            else
+            {
+                yearSql += ` WHERE name = '${new Date().getFullYear()}'`;
+            }
+
+            log.debug("yearSql", yearSql);
 
             const customers = query.runSuiteQL({ query: customerConsigneeSql }).asMappedResults();
             const items = query.runSuiteQL({ query: itemSql }).asMappedResults();

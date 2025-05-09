@@ -40,18 +40,75 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
         const getInputData = (inputContext) =>
         {
 
-            var equipmentsSearch = search.create({
-                type : "customrecord_anc_equipment",
-                // filters : [
-                //     ["internalid", "anyof", 3]
-                // ],
-                columns : [
-                    search.createColumn({name: "name", label: "Name"}),
-                ]
-            })
+            const equipmentSql = `
+            SELECT
+                id as eq_id, name as eq_name
+            FROM customrecord_anc_equipment
+            WHERE customrecord_anc_equipment.isinactive='F'
+            `;
 
+            const eqs = query.runSuiteQL({ query: equipmentSql }).asMappedResults();
+            log.debug("eqs", {len:eqs.length, eqs});
 
-            return equipmentsSearch;
+            const locationSql = `
+                SELECT
+                    location.name as loc_id, location.name as loc_name, LocationMainAddress.city as loc_city
+                FROM location,
+                     LocationMainAddress
+                WHERE
+                    location.mainaddress = LocationMainAddress.nkey(+) AND location.makeinventoryavailable='T' AND LocationMainAddress.city IS NOT NULL
+                  AND ROWNUM = 1
+            `;
+
+            const locs = query.runSuiteQL({ query: locationSql }).asMappedResults();
+            log.debug("locs", {len:locs.length, locs});
+
+            const consigneeSql = `
+                SELECT
+                    cons.id as cons_id,
+                    cons.name as cons_name, cons.custrecord_alberta_ns_city as cons_city, cons.custrecord_alberta_ns_customer as cons_cust
+                FROM customrecord_alberta_ns_consignee_record cons
+                WHERE
+                    cons.isinactive='F' AND cons.custrecord_alberta_ns_city IS NOT NULL
+                    AND ROWNUM = 1
+            `;
+
+            const cons = query.runSuiteQL({ query: consigneeSql }).asMappedResults();
+            log.debug("cons", {len:cons.length, cons});
+
+            const array1 = eqs;
+            const array2 = locs;
+            const array3 = cons;
+            const arrays = [array1, array2, array3];
+            // const allCombinations = arrays.reduce((acc, curr) => {
+            //     return acc.flatMap(a =>
+            //         curr.map(b => ({ ...a, ...b }))
+            //     );
+            // }, [{}]);
+            //
+            // log.debug(`{sample:{allCombinations[0]}}`, {sample:allCombinations[0]});
+            //
+            // log.debug(`{len_allCombinations : allCombinations.length, allCombinations}`, {len_allCombinations : allCombinations.length, allCombinations});
+
+            const groupKeys = ['eq_id']; // Group by both a and b
+
+            const grouped = combineAndGroup(arrays, groupKeys);
+            log.debug("grouped", grouped);
+
+            return grouped;
+
+            // var equipmentsSearch = search.create({
+            //     type : "customrecord_anc_equipment",
+            //     // filters : [
+            //     //     ["internalid", "anyof", 3]
+            //     // ],
+            //     columns : [
+            //         search.createColumn({name: "name", label: "Name"}),
+            //     ]
+            // })
+            //
+            //
+            // return equipmentsSearch;
 
             // var equipmentsSearchSr = getResults(equipmentsSearch.run());
             //
@@ -76,6 +133,25 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
             //
             // return equipmentObjs;
 
+        }
+
+        function combineAndGroup(arrays, groupKeys) {
+            // Step 1: Generate all combinations
+            const combinations = arrays.reduce((acc, curr) => {
+                return acc.flatMap(a =>
+                    curr.map(b => ({ ...a, ...b }))
+                );
+            }, [{}]);
+
+            // Step 2: Group by specified keys
+            return combinations.reduce((groups, item) => {
+                const key = groupKeys.map(k => item[k]).join('|');
+                if (!groups[key]) {
+                    groups[key] = [];
+                }
+                groups[key].push(item);
+                return groups;
+            }, {});
         }
 
         /**
@@ -104,8 +180,12 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                 var mapValue = JSON.parse(mapContext.value);
                 log.debug("mapValue", mapValue);
+                log.debug("mapValue", mapValue);
 
-                var equipmentName = mapValue.values.name;
+                var equipmentId = mapContext.key;
+                var equipmentName = mapContext.value.eq_name;
+
+                log.debug("map equipmentName", equipmentName);
 
                 if(mapContext.key && equipmentName)
                 {
@@ -115,8 +195,8 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     log.debug("equipmentName", equipmentName);
 
                     var rateInquiryResponse = getRateInquiryResponse({
+                        equipmentId : equipmentId,
                         equipmentName : equipmentName,
-                        routeName : `ANC TEST LANE1`
                     })
 
                     log.debug("rateInquiryResponse", rateInquiryResponse);
@@ -210,6 +290,8 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                                     // })
                                 }
 
+
+
                                 //TODO, single request can have multi result with multi rates
                                 mapContext.write({
                                     key : mapContext.key,
@@ -218,88 +300,6 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             }
                         }
                     }
-
-
-                    // if(rateInquiryResponse.firstresult.rates && rateInquiryResponse.firstresult.rates.length > 0)
-                    // {
-                    //     for(var a = 0 ; a < rateInquiryResponse.firstresult.rates.length ; a++)
-                    //     {
-                    //         //create the lane here, now! because reduce will need this reference
-                    //         log.debug("rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()", rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase())
-                    //         log.debug("rateInquiryResponse.firstresult.rates[0].route.toUpperCase()", rateInquiryResponse.firstresult.rates[a].route.toUpperCase())
-                    //
-                    //         var nsLeqSearch = search.create({
-                    //             type : "customrecord_anc_laneequipment",
-                    //             filters : [
-                    //                 ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse.firstresult.rates[a].route.toUpperCase()],
-                    //                 "AND",
-                    //                 ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()]
-                    //             ],
-                    //             columns : []
-                    //         })
-                    //
-                    //         var nsLeqSearchSr = getResults(nsLeqSearch.run());
-                    //
-                    //         log.debug("nsLeqSearchSr", nsLeqSearchSr)
-                    //
-                    //         var targetLeqRecId = "";
-                    //         var targetLeqRecObj = "";
-                    //         if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
-                    //         {
-                    //             targetLeqRecId = nsLeqSearchSr[0].id;
-                    //             targetLeqRecObj = record.load({
-                    //                 type : "customrecord_anc_laneequipment",
-                    //                 id : targetLeqRecId
-                    //             })
-                    //         }
-                    //
-                    //         var submittedLeqRecId = "";
-                    //
-                    //         if(!targetLeqRecId)
-                    //         {
-                    //             targetLeqRecObj = record.create({
-                    //                 type : "customrecord_anc_laneequipment",
-                    //             })
-                    //
-                    //             targetLeqRecObj.setValue({
-                    //                 fieldId : "name",
-                    //                 value : rateInquiryResponse.firstresult.rates[a].route.toUpperCase() + " - " + rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
-                    //             })
-                    //
-                    //             //attemptSet custrecord_anc_laneequip_lane
-                    //             targetLeqRecObj.setText({
-                    //                 fieldId : "custrecord_anc_laneequip_lane",
-                    //                 text : rateInquiryResponse.firstresult.rates[a].route.toUpperCase()
-                    //             })
-                    //             targetLeqRecObj.setText({
-                    //                 fieldId : "custrecord_anc_laneequip_equipment",
-                    //                 text : rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
-                    //             })
-                    //
-                    //             submittedLeqRecId = targetLeqRecObj.save({
-                    //                 ignoreMandatoryFields : true,
-                    //                 enableSourcing : true
-                    //             })
-                    //         }
-                    //         else
-                    //         {
-                    //
-                    //         }
-                    //
-                    //
-                    //
-                    //         log.debug("map submittedLeqRecId", submittedLeqRecId);
-                    //
-                    //         //end
-                    //         rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
-                    //
-                    //         mapContext.write({
-                    //             key : mapContext.key,
-                    //             value : rateInquiryResponse.firstresult
-                    //         })
-                    //     }
-                    // }
-
                 }
             }
             catch(e)
@@ -307,6 +307,219 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 log.error("ERROR in function map", e)
             }
         }
+
+        // const map = (mapContext) =>
+        // {
+        //     try{
+        //         log.debug("mapContext", mapContext);
+        //         log.debug("mapContext.value", mapContext.value);
+        //         log.debug("mapContext.value.length", mapContext.value.length);
+        //
+        //         var mapValue = JSON.parse(mapContext.value);
+        //         log.debug("mapValue", mapValue);
+        //
+        //         var equipmentName = mapValue.values.name;
+        //
+        //         if(mapContext.key && equipmentName)
+        //         {
+        //             log.debug("mapContext.key", mapContext.key);
+        //
+        //
+        //             log.debug("equipmentName", equipmentName);
+        //
+        //             var rateInquiryResponse = getRateInquiryResponse({
+        //                 equipmentName : equipmentName,
+        //                 routeName : `ANC TEST LANE1`
+        //             })
+        //
+        //             log.debug("rateInquiryResponse", rateInquiryResponse);
+        //
+        //             if(rateInquiryResponse.list && rateInquiryResponse.list.length > 0)
+        //             {
+        //                 for(var z = 0 ; z < rateInquiryResponse.list.length ; z++)
+        //                 {
+        //                     var rateInquiryResponse_rates = rateInquiryResponse.list[z].rates
+        //
+        //                     log.debug("rateInquiryResponse_rates", rateInquiryResponse_rates);
+        //
+        //                     if(rateInquiryResponse_rates && rateInquiryResponse_rates.length > 0)
+        //                     {
+        //                         for(var a = 0 ; a < rateInquiryResponse_rates.length ; a++)
+        //                         {
+        //                             //create the lane here, now! because reduce will need this reference
+        //                             log.debug("rateInquiryResponse_rates[0].equipment.toUpperCase()", rateInquiryResponse_rates[a].equipment.toUpperCase())
+        //                             log.debug("rateInquiryResponse_rates[0].route.toUpperCase()", rateInquiryResponse_rates[a].route.toUpperCase())
+        //
+        //                             var nsLeqSearch = search.create({
+        //                                 type : "customrecord_anc_laneequipment",
+        //                                 filters : [
+        //                                     ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse_rates[a].route.toUpperCase()],
+        //                                     "AND",
+        //                                     ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse_rates[a].equipment.toUpperCase()]
+        //                                 ],
+        //                                 columns : []
+        //                             })
+        //
+        //                             var nsLeqSearchSr = getResults(nsLeqSearch.run());
+        //
+        //                             log.debug("nsLeqSearchSr", nsLeqSearchSr)
+        //
+        //                             var targetLeqRecId = "";
+        //                             var targetLeqRecObj = "";
+        //                             if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
+        //                             {
+        //                                 targetLeqRecId = nsLeqSearchSr[0].id;
+        //                                 targetLeqRecObj = record.load({
+        //                                     type : "customrecord_anc_laneequipment",
+        //                                     id : targetLeqRecId
+        //                                 })
+        //                             }
+        //
+        //                             var submittedLeqRecId = "";
+        //
+        //                             if(!targetLeqRecId)
+        //                             {
+        //                                 targetLeqRecObj = record.create({
+        //                                     type : "customrecord_anc_laneequipment",
+        //                                 })
+        //
+        //                                 targetLeqRecObj.setValue({
+        //                                     fieldId : "name",
+        //                                     value : rateInquiryResponse_rates[a].route.toUpperCase() + " : " + rateInquiryResponse_rates[a].equipment.toUpperCase()
+        //                                 })
+        //
+        //                                 //attemptSet custrecord_anc_laneequip_lane
+        //                                 targetLeqRecObj.setText({
+        //                                     fieldId : "custrecord_anc_laneequip_lane",
+        //                                     text : rateInquiryResponse_rates[a].route.toUpperCase()
+        //                                 })
+        //                                 targetLeqRecObj.setText({
+        //                                     fieldId : "custrecord_anc_laneequip_equipment",
+        //                                     text : rateInquiryResponse_rates[a].equipment.toUpperCase()
+        //                                 })
+        //
+        //                                 submittedLeqRecId = targetLeqRecObj.save({
+        //                                     ignoreMandatoryFields : true,
+        //                                     enableSourcing : true
+        //                                 })
+        //
+        //                                 rateInquiryResponse_rates[a].parentleqid = submittedLeqRecId || targetLeqRecId;
+        //                             }
+        //                             else
+        //                             {
+        //                                 rateInquiryResponse_rates[a].parentleqid = submittedLeqRecId || targetLeqRecId;
+        //                             }
+        //
+        //
+        //
+        //                             log.debug("map submittedLeqRecId", submittedLeqRecId);
+        //
+        //                             //end
+        //                             // rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
+        //
+        //                             // mapContext.write({
+        //                             //     key : mapContext.key,
+        //                             //     value : rateInquiryResponse.firstresult
+        //                             // })
+        //                         }
+        //
+        //                         //TODO, single request can have multi result with multi rates
+        //                         mapContext.write({
+        //                             key : mapContext.key,
+        //                             value : rateInquiryResponse.list[z]
+        //                         })
+        //                     }
+        //                 }
+        //             }
+        //
+        //
+        //             // if(rateInquiryResponse.firstresult.rates && rateInquiryResponse.firstresult.rates.length > 0)
+        //             // {
+        //             //     for(var a = 0 ; a < rateInquiryResponse.firstresult.rates.length ; a++)
+        //             //     {
+        //             //         //create the lane here, now! because reduce will need this reference
+        //             //         log.debug("rateInquiryResponse.firstresult.rates[0].equipment.toUpperCase()", rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase())
+        //             //         log.debug("rateInquiryResponse.firstresult.rates[0].route.toUpperCase()", rateInquiryResponse.firstresult.rates[a].route.toUpperCase())
+        //             //
+        //             //         var nsLeqSearch = search.create({
+        //             //             type : "customrecord_anc_laneequipment",
+        //             //             filters : [
+        //             //                 ["formulatext: UPPER({custrecord_anc_laneequip_lane})","is",rateInquiryResponse.firstresult.rates[a].route.toUpperCase()],
+        //             //                 "AND",
+        //             //                 ["formulatext: UPPER({custrecord_anc_laneequip_equipment})","is",rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()]
+        //             //             ],
+        //             //             columns : []
+        //             //         })
+        //             //
+        //             //         var nsLeqSearchSr = getResults(nsLeqSearch.run());
+        //             //
+        //             //         log.debug("nsLeqSearchSr", nsLeqSearchSr)
+        //             //
+        //             //         var targetLeqRecId = "";
+        //             //         var targetLeqRecObj = "";
+        //             //         if(nsLeqSearchSr && nsLeqSearchSr.length > 0)
+        //             //         {
+        //             //             targetLeqRecId = nsLeqSearchSr[0].id;
+        //             //             targetLeqRecObj = record.load({
+        //             //                 type : "customrecord_anc_laneequipment",
+        //             //                 id : targetLeqRecId
+        //             //             })
+        //             //         }
+        //             //
+        //             //         var submittedLeqRecId = "";
+        //             //
+        //             //         if(!targetLeqRecId)
+        //             //         {
+        //             //             targetLeqRecObj = record.create({
+        //             //                 type : "customrecord_anc_laneequipment",
+        //             //             })
+        //             //
+        //             //             targetLeqRecObj.setValue({
+        //             //                 fieldId : "name",
+        //             //                 value : rateInquiryResponse.firstresult.rates[a].route.toUpperCase() + " - " + rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
+        //             //             })
+        //             //
+        //             //             //attemptSet custrecord_anc_laneequip_lane
+        //             //             targetLeqRecObj.setText({
+        //             //                 fieldId : "custrecord_anc_laneequip_lane",
+        //             //                 text : rateInquiryResponse.firstresult.rates[a].route.toUpperCase()
+        //             //             })
+        //             //             targetLeqRecObj.setText({
+        //             //                 fieldId : "custrecord_anc_laneequip_equipment",
+        //             //                 text : rateInquiryResponse.firstresult.rates[a].equipment.toUpperCase()
+        //             //             })
+        //             //
+        //             //             submittedLeqRecId = targetLeqRecObj.save({
+        //             //                 ignoreMandatoryFields : true,
+        //             //                 enableSourcing : true
+        //             //             })
+        //             //         }
+        //             //         else
+        //             //         {
+        //             //
+        //             //         }
+        //             //
+        //             //
+        //             //
+        //             //         log.debug("map submittedLeqRecId", submittedLeqRecId);
+        //             //
+        //             //         //end
+        //             //         rateInquiryResponse.firstresult.parentleqid = submittedLeqRecId || targetLeqRecId;
+        //             //
+        //             //         mapContext.write({
+        //             //             key : mapContext.key,
+        //             //             value : rateInquiryResponse.firstresult
+        //             //         })
+        //             //     }
+        //             // }
+        //
+        //         }
+        //     }
+        //     catch(e)
+        //     {
+        //         log.error("ERROR in function map", e)
+        //     }
+        // }
 
         function getRateInquiryResponse(rawData)
         {
@@ -347,10 +560,10 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             "destCountry":"CAN",
                             "commodity":"PPR",
                             "distance": 661,
-                            "equipment":"TRTAMREF53",
+                            "equipment":rawData.equipmentName,
                             "weight":21769,
                             "controlCust":"6170",
-                            "id":"TRTAMREF53",
+                            "id":rawData.equipmentName + new Date().getTime(),
                             "destZone":"",
                             "weightUOM":"LB",
                             "hazmat": false,

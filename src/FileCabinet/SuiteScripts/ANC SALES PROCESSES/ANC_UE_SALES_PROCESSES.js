@@ -12,7 +12,7 @@
  * version      :       1.0.0
  *
  */
-define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
+define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
     /**
      * @param{https} https
      * @param{record} record
@@ -22,7 +22,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
      * @param{serverWidget} serverWidget
      * @param{url} url
      */
-    (https, record, runtime, dialog, message, serverWidget, url) => {
+    (query, https, record, runtime, dialog, message, serverWidget, url) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -35,6 +35,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
         const beforeLoad = (scriptContext) => {
             try
             {
+                eval_requestforecastadj(scriptContext)
                 addElements(scriptContext);
             }
             catch(e)
@@ -74,12 +75,346 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                     //     targetScript : "customscript_anc_sl_salesprocesses",
                     //     targetDeployment : "customdeploy_anc_sl_salesprocesses",
                     //     processid : "grreservation",
-                    // }
+                    // },
+                    {
+                        name : "custpage_soprocesses_forecastcheck",
+                        id : "custpage_soprocesses_forecastcheck",
+                        label : "Forecast Check",
+                        functionName : "alert('Forecast Check')",
+                        targetScript : "customscript_anc_sl_salesprocesses",
+                        targetDeployment : "customdeploy_anc_sl_salesprocesses",
+                        processid : "forecastcheck",
+                    },
+                    {
+                        name : "custpage_soprocesses_reqforecastadj",
+                        id : "custpage_soprocesses_reqforecastadj",
+                        label : "Request Forecast Adjustment",
+                        functionName : "alert('Request Forecast Adjustment')",
+                        targetScript : "customscript_anc_sl_salesprocesses",
+                        targetDeployment : "customdeploy_anc_sl_salesprocesses",
+                        processid : "requestforecastadj",
+                    },
                 ],
             },
             sublistElems : [
 
             ]
+        }
+
+        var salesAllocRecType = "customrecord_anc_pf_"
+        function eval_requestforecastadj(scriptContext)
+        {
+            // salesAllocRecType
+
+            var eval_requestforecastadj_res = {};
+
+            var itemGradeList = [];
+            var lineCount = scriptContext.newRecord.getLineCount({
+                sublistId : "item"
+            });
+
+            var itemIdList = [];
+            var itemGradeIdList = [];
+            var gradeLineMapping = {};
+            var lineGradeMapping = {};
+            var orderLinesByConsignee = {};
+
+            var sqlFilters = [];
+            var sqlFilters_text = "";
+
+
+            var compositeKeys = {};
+
+            for(var a = 0 ; a < lineCount ; a++)
+            {
+                var lineGradeId = scriptContext.newRecord.getSublistValue({
+                    sublistId : "item",
+                    fieldId : "custcol_anc_grade",
+                    line : a
+                });
+                var lineQty = scriptContext.newRecord.getSublistValue({
+                    sublistId : "item",
+                    fieldId : "quantity",
+                    line : a
+                });
+                var lineConsignee = scriptContext.newRecord.getSublistValue({
+                    sublistId : "item",
+                    fieldId : "custcol_consignee",
+                    line : a
+                });
+                var lineDate = scriptContext.newRecord.getSublistValue({
+                    sublistId : "item",
+                    fieldId : "custcol_anc_deliverydate",
+                    line : a
+                });
+
+
+                log.debug("lineDate", lineDate)
+
+                if(typeof lineDate != "object" && lineDate != "null" && lineDate)
+                {
+                    log.debug("NON date blineDate", lineDate)
+                    lineDate = new Date(lineDate);
+                    log.debug("NON date alineDate", lineDate)
+                }
+                else
+                {
+                    log.debug("alrd date blineDate", lineDate)
+                    lineDate = lineDate ? new Date(lineDate) : new Date();
+                    log.debug("alrd date alineDate", lineDate)
+                }
+
+                var lineDate_year = lineDate.getFullYear();
+                var lineDate_year_plain = lineDate.getFullYear();
+
+                log.debug("lineDate_year fullyear", lineDate_year)
+
+                lineDate_year = `'${lineDate_year}'`
+                log.debug("lineDate_yearlineDate_year", lineDate_year)
+
+
+                var lineDate_month = lineDate.getMonth() + 1;
+
+                log.debug("lineDate_month", lineDate_month)
+
+
+                sqlFilters.push(`(
+                sf.custrecord_anc_pf_grade = ${lineGradeId} 
+                AND 
+                y.name = ${lineDate_year} 
+                AND 
+                sf.custrecord_anc_pf_month = ${lineDate_month} 
+                AND 
+                sf.custrecord_anc_pf_consignee = ${lineConsignee}
+                )`)
+
+
+                var compositeKey = `${lineGradeId}_${lineConsignee}_${lineDate_month}_${lineDate_year_plain}`
+
+                log.debug("compositeKey", compositeKey)
+
+                sqlFilters_text = sqlFilters.join( " OR " )
+
+                log.debug("sqlFilters_text", sqlFilters_text);
+
+                if(gradeLineMapping[lineGradeId])
+                {
+                    gradeLineMapping[lineGradeId].lines.push(a);
+                    gradeLineMapping[lineGradeId].totalQty += lineQty;
+                }
+                else
+                {
+                    gradeLineMapping[lineGradeId] = {};
+                    gradeLineMapping[lineGradeId].lines = [a];
+                    gradeLineMapping[lineGradeId].totalQty = lineQty;
+                }
+
+                if(lineGradeMapping[lineGradeId])
+                {
+                    lineGradeMapping[a].grades.push(lineGradeId);
+                    lineGradeMapping[a].totalQty += lineQty;
+                }
+                else
+                {
+                    lineGradeMapping[a] = {};
+                    lineGradeMapping[a].grades = [lineGradeId];
+                    lineGradeMapping[a].totalQty = lineQty;
+                }
+
+
+                if(compositeKeys[compositeKey])
+                {
+                    compositeKeys[compositeKey].lines.push(a);
+                    compositeKeys[compositeKey].totalQty += lineQty;
+                }
+                else
+                {
+                    compositeKeys[compositeKey] = {};
+                    compositeKeys[compositeKey].lines = [a];
+                    compositeKeys[compositeKey].totalQty = lineQty;
+                }
+
+                itemGradeIdList.push(`'${lineGradeId}'`);
+            }
+
+            log.debug("itemGradeIdList", itemGradeIdList);
+            log.debug("lineGradeMapping", lineGradeMapping);
+            log.debug("gradeLineMapping", gradeLineMapping);
+            log.debug("compositeKeys", compositeKeys);
+
+            var itemGradeIdList_joined = `(${itemGradeIdList.join(",")})`;
+
+
+            log.debug("itemGradeIdList_joined", itemGradeIdList_joined);
+
+
+            var sql =
+            `Select
+                 sf.custrecord_anc_pf_grade as sf_grade,
+                 sf.custrecord_anc_pf_allocation as sf_allocation,
+                 sf.custrecord_anc_pf_year as sf_year,
+                 sf.custrecord_anc_pf_month as sf_month,
+                 sf.custrecord_anc_pf_consignee as sf_consignee,
+                 y.name as y_name,
+                 m.name as m_name
+
+             FROM
+                 customrecord_anc_pf_ as sf
+                     JOIN
+                 customrecord_anc_pf_years as y ON y.id = sf.custrecord_anc_pf_year
+                     JOIN
+                 customrecord_anc_pf_months as m ON m.id = sf.custrecord_anc_pf_month
+
+             WHERE
+                 ${sqlFilters_text}
+                 `
+
+            log.debug("sql", sql)
+
+            const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+            log.debug("sqlResults", sqlResults)
+
+            var sqlResults_byKey = groupByKeys(sqlResults, ["sf_grade", "sf_consignee", "sf_month", "y_name"]);
+
+            eval_requestforecastadj_res.sqlResults = sqlResults;
+            eval_requestforecastadj_res.sqlResults_byKey = sqlResults_byKey;
+            eval_requestforecastadj_res.gradeLineMapping = gradeLineMapping;
+            eval_requestforecastadj_res.lineGradeMapping = lineGradeMapping;
+            eval_requestforecastadj_res.itemGradeIdList = itemGradeIdList;
+
+            log.debug("eval_requestforecastadj_res", eval_requestforecastadj_res);
+
+            log.debug("sqlResults_byKey", sqlResults_byKey);
+
+            var linesToHighlight_yellow = [];
+            var linesToHighlight_orange = [];
+            for(var compositeKey in compositeKeys)
+            {
+                if(sqlResults_byKey[compositeKey] && sqlResults_byKey[compositeKey][0])
+                {
+                    //TODO you need to look at other orders, not just this salesorder
+                    if(sqlResults_byKey[compositeKey][0].sf_allocation < compositeKeys[compositeKey].totalQty)
+                    {
+                        log.debug("detected forecast issue on lines", compositeKeys[compositeKey].lines)
+                        linesToHighlight_yellow = linesToHighlight_yellow.concat(compositeKeys[compositeKey].lines)
+                    }
+                    else
+                    {
+                        log.debug("NO forecast issue on lines", compositeKeys[compositeKey].lines)
+                    }
+                }
+                else
+                {
+                    log.debug("detected forecast issue on lines, no forcast found", compositeKeys[compositeKey].lines)
+                    linesToHighlight_orange = linesToHighlight_orange.concat(compositeKeys[compositeKey].lines)
+                }
+            }
+
+            log.debug("linesToHighlight_orange", linesToHighlight_orange)
+            log.debug("linesToHighlight_yellow", linesToHighlight_yellow)
+
+            var yellowHtml = "";
+            if(linesToHighlight_orange.length > 0)
+            {
+                // highlightItemSplitsSpecificRows(linesToHighlight_orange, 'orange');
+                yellowHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_orange)}, 'orange');`
+            }
+            var orangeHtml = "";
+            if(linesToHighlight_yellow.length > 0)
+            {
+                // highlightItemSplitsSpecificRows(linesToHighlight_yellow, 'yellow')
+                orangeHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_yellow)}, 'yellow');`
+            }
+
+            var inlineHtmlField = scriptContext.form.addField({
+                id: "custpage_anc_forecasthighlighter",
+                type: "inlinehtml",
+                label: "ANC SALES_forecasthighlighter"
+            });
+
+            var inlineHtmlFieldValue =`<script>
+
+
+            console.log('wasap man111')
+            function highlightItemSplitsSpecificRows(rowIndices, color = 'lightblue', apply = true) {
+              const tableElement = document.getElementById('item_splits');
+
+              if (!tableElement || tableElement.tagName !== 'TABLE') {
+                console.error('Table with ID "item_splits" not found or is not a table element.');
+                return;
+              }
+
+              const rows = Array.from(tableElement.querySelectorAll('tbody > tr'));
+              // Filter out the header row to get data rows for 0-based indexing
+              const dataRows = rows.filter(row => !row.classList.contains('uir-machine-headerrow'));
+
+              rowIndices.forEach(index => {
+                // Check if the index is valid for the data rows
+                if (index >= 0 && index < dataRows.length) {
+                  const row = dataRows[index];
+                  const cells = row.querySelectorAll('td');
+
+                  cells.forEach(cell => {
+                    if (apply) {
+                      // Apply background color with !important to override existing styles
+                      cell.style.setProperty('background-color', color, 'important');
+                    } else {
+                      // Remove the applied background color style
+                      cell.style.removeProperty('background-color');
+                    }
+                  });
+                } else {
+                }
+              });
+            }
+            
+            jQuery(document).ready(function() {
+                ${orangeHtml}
+                console.log('wasap man orange')
+                ${yellowHtml}
+                console.log('wasap man yellow')
+            })
+            </script>`
+
+            inlineHtmlField.defaultValue = inlineHtmlFieldValue;
+
+            return eval_requestforecastadj_res;
+
+        }
+
+        function groupBy(array, key) {
+            return array.reduce(function (acc, obj) {
+                let groupKey = obj[key];
+                acc[groupKey] = acc[groupKey] || [];
+                acc[groupKey].push(obj);
+                return acc;
+            }, {});
+        }
+
+        function groupByKeys(objectArray, property) {
+            return objectArray.reduce(function (acc, obj) {
+
+                var key = "";
+                for(var a = 0 ; a < property.length; a++)
+                {
+                    if(!key)
+                    {
+                        key += (obj[property[a]] || "");
+                    }
+                    else
+                    {
+                        key += "_" + (obj[property[a]] || "");
+                    }
+                }
+                // key += "|"
+
+                if (!acc[key]) {
+                    acc[key] = [];
+                }
+                acc[key].push(obj);
+                return acc;
+            }, {});
         }
 
         function completeFunction(nsObj,scriptContext)
@@ -319,3 +654,39 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
         return {beforeLoad, beforeSubmit, afterSubmit}
 
     });
+
+
+
+
+// function highlightItemSplitsSpecificRows(color = 'lightblue', apply = true) {
+//     const tableElement = document.getElementById('item_splits');
+//
+//     console.log("tableElement", tableElement)
+//
+//     if (!tableElement || tableElement.tagName !== 'TABLE') {
+//         console.error('Table with ID "item_splits" not found or is not a table element.');
+//         return;
+//     }
+//
+//     const rows = tableElement.querySelectorAll('tbody > tr');
+//
+//     rows.forEach(row => {
+//         // Skip the header row if it has the observed header class
+//         if (row.classList.contains('uir-machine-headerrow')) {
+//             return;
+//         }
+//
+//         const cells = row.querySelectorAll('td');
+//         cells.forEach(cell => {
+//             if (apply) {
+//                 // Apply background color with !important to override existing styles
+//                 cell.style.setProperty('background-color', color, 'important');
+//             } else {
+//                 // Remove the applied background color style
+//                 cell.style.removeProperty('background-color');
+//             }
+//         });
+//     });
+// }
+//
+// highlightItemSplitsSpecificRows()
