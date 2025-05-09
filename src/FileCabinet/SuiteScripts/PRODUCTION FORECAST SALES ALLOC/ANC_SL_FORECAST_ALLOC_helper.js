@@ -5,15 +5,206 @@
 define(['N/query', 'N/record'], (query, record) => {
     const onRequest = (context) => {
 
-
+        var startTimeStamp = new Date().getTime();
         log.debug("context",context)
         log.debug("context.request",context.request)
         log.debug("body",context.request.body)
         log.debug("parameters",context.request.parameters)
+        log.debug("parameters.copyToYear",context.request.parameters.copyToYear)
 
 
         var groupedByYear = {};
-        if(context.request.parameters.submitdata=="T")
+        if(context.request.parameters.copyToYear || typeof context.request.parameters.copytoyear=='number')
+        {
+            var targetYear = context.request.parameters.copyToYear;
+            var yearSql = `SELECT id, name FROM customrecord_anc_pf_years`;
+
+            if(targetYear)
+            {
+                yearSql += ` WHERE name = '${targetYear}'`;
+            }
+
+            log.debug("yearSql", yearSql);
+
+            const years = query.runSuiteQL({ query: yearSql }).asMappedResults();
+
+            var reqBodyObj = JSON.parse(context.request.body);
+
+            var yearRecObj = "";
+            if(years.length < 1)
+            {
+                yearRecObj = record.create({
+                    type : "customrecord_anc_pf_years"
+                });
+                yearRecObj.setValue({
+                    fieldId : "name",
+                    value : targetYear
+                })
+                // fillupYearRecObj(yearRecObj, reqBodyObj, "new")
+            }
+            else
+            {
+                yearRecObj = record.load({
+                    type : "customrecord_anc_pf_years",
+                    id : years[0].id
+                });
+                // fillupYearRecObj(yearRecObj, reqBodyObj, "edit")
+            }
+
+            var reqBodyObj = JSON.parse(context.request.body);
+            for(var compositeKey in reqBodyObj.compositeKeys)
+            {
+                var compositeKeyBreakdown = compositeKey.split("_");
+
+                var yearInternalId = compositeKeyBreakdown[0]
+                var monthInternalId = compositeKeyBreakdown[1]
+                var customerInternalId = compositeKeyBreakdown[2]
+                var consigneeInternalId = compositeKeyBreakdown[3]
+                var gradeInternalId = compositeKeyBreakdown[4]
+                var qty = reqBodyObj.compositeKeys[compositeKey]
+
+                var compositeObj ={};
+                compositeObj[compositeKey] = reqBodyObj.compositeKeys[compositeKey]
+
+                if(groupedByYear[yearInternalId])
+                {
+                    groupedByYear[yearInternalId].entries.push(compositeObj)
+                    groupedByYear[yearInternalId].byKeys[compositeKey] = {
+                        qty : qty,
+                        colVals : {
+                            monthInternalId,
+                            customerInternalId,
+                            consigneeInternalId,
+                            gradeInternalId,
+                            qty
+                        }
+                    }
+                }
+                else
+                {
+                    groupedByYear[yearInternalId] = {
+                        entries : [
+                            compositeObj
+                        ]
+                    }
+                    groupedByYear[yearInternalId].byKeys = {}
+                    groupedByYear[yearInternalId].byKeys[compositeKey] = {
+                        qty : qty,
+                        colVals : {
+                            monthInternalId,
+                            customerInternalId,
+                            consigneeInternalId,
+                            gradeInternalId,
+                            qty
+                        }
+                    }
+                    // groupedByYear[yearInternalId].entries.push(compositeKeyBreakdown)
+                }
+            }
+
+            log.debug("groupedByYear", groupedByYear);
+
+
+            for(var yearId in groupedByYear)
+            {
+                // var yearRecObj = record.load({
+                //     type : "customrecord_anc_pf_years",
+                //     id : yearId
+                // })
+
+                // for(var a = 0 ; a < groupedByYear[yearId].entries.length ; a++)
+                // {
+                //     yearRecObj.findSublistLineWithValue({
+                //         sublistId : "recmachcustrecord_anc_pf_year",
+                //         fieldId : "custrecord_anc_pf_compositekey",
+                //         value : groupedByYear[yearId].entries[a].
+                //     })
+                // }
+
+                var newLineIndex = yearRecObj.getLineCount({
+                    sublistId : "recmachcustrecord_anc_pf_year",
+                })
+                for(var compositeKeys in groupedByYear[yearId].byKeys)
+                {
+                    var targetIndex = yearRecObj.findSublistLineWithValue({
+                        sublistId : "recmachcustrecord_anc_pf_year",
+                        fieldId : "custrecord_anc_pf_compositekey",
+                        value : compositeKeys
+                    });
+
+                    if(targetIndex > -1)
+                    {
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_allocation",
+                            line : targetIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].qty
+                        })
+                    }
+                    else
+                    {
+                        // log.debug("it does not exist yet? then add it then!")
+
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_month",
+                            line : newLineIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].colVals.monthInternalId
+                        })
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_customer",
+                            line : newLineIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].colVals.customerInternalId
+                        })
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_consignee",
+                            line : newLineIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].colVals.consigneeInternalId
+                        })
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_grade",
+                            line : newLineIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].colVals.gradeInternalId
+                        })
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_allocation",
+                            line : newLineIndex,
+                            value : groupedByYear[yearId].byKeys[compositeKeys].colVals.qty
+                        })
+                        yearRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_anc_pf_year",
+                            fieldId : "custrecord_anc_pf_compositekey",
+                            line : newLineIndex,
+                            value : compositeKeys
+                        })
+                        newLineIndex++;
+                    }
+                }
+
+                var submittedYearRecId = yearRecObj.save({
+                    ignoreMandatoryFields : true,
+                    enableSourcing : true
+                });
+
+                log.debug("submittedYearRecId", submittedYearRecId);
+            }
+
+            var endTimeStamp = new Date().getTime();
+            log.debug("{startTimeStamp,endTimeStamp}", {startTimeStamp,endTimeStamp})
+
+            log.debug("attemptsave year")
+
+            // var yearRecInternalId = yearRecObj.save({
+            //     ignoreMandatoryFields : true,
+            //     enableSoucrcing : true
+            // });
+            // log.debug("yearRecInternalId", yearRecInternalId);
+        }
+        else if(context.request.parameters.submitdata=="T")
         {
             var reqBodyObj = JSON.parse(context.request.body);
             for(var compositeKey in reqBodyObj.compositeKeys)
@@ -107,7 +298,7 @@ define(['N/query', 'N/record'], (query, record) => {
                     }
                     else
                     {
-                        log.debug("it does not exist yet? then add it then!")
+                        // log.debug("it does not exist yet? then add it then!")
 
                         yearRecObj.setSublistValue({
                             sublistId : "recmachcustrecord_anc_pf_year",
@@ -161,6 +352,9 @@ define(['N/query', 'N/record'], (query, record) => {
         }
         else
         {
+            var currYear = new Date().getFullYear();
+
+
             const customerConsigneeSql = `
             SELECT
                 cust.id AS customer_id,
@@ -194,7 +388,7 @@ define(['N/query', 'N/record'], (query, record) => {
             }
             else
             {
-                yearSql += ` WHERE name = '${new Date().getFullYear()}'`;
+                yearSql += ` WHERE name = '${currYear}'`;
             }
 
             log.debug("yearSql", yearSql);
@@ -213,13 +407,27 @@ define(['N/query', 'N/record'], (query, record) => {
 
             log.debug("years", years.length)
 
+            var yearFilter = ""
+            var targetYear = context.request.parameters.year;
+            if(targetYear)
+            {
+                yearFilter = `AND customrecord_anc_pf_years.name='${targetYear}'`
+            }
+            else
+            {
+                yearFilter = `AND customrecord_anc_pf_years.name = '${currYear}'`;
+                targetYear = currYear
+            }
+
 
             forecastSql = `SELECT customrecord_anc_pf_.*
             FROM customrecord_anc_pf_ 
                 JOIN customrecord_anc_pf_years ON customrecord_anc_pf_.custrecord_anc_pf_year = customrecord_anc_pf_years.ID 
-            WHERE customrecord_anc_pf_years.name='2024' OR customrecord_anc_pf_years.name='2025'`;
+            WHERE customrecord_anc_pf_.isinactive='F' AND customrecord_anc_pf_years.name='${targetYear}'`;
             const existingForecast = query.runSuiteQL({ query: forecastSql }).asMappedResults();
 
+
+            log.debug("forecastSql", forecastSql);
             log.debug("existingForecast", existingForecast);
 
 
@@ -297,6 +505,207 @@ define(['N/query', 'N/record'], (query, record) => {
             context.response.write(JSON.stringify(responseData)); // Return data as JSON
         }
     };
+
+    var yearRecForecastSublistId = "recmachcustrecord_anc_pf_year";
+    var yearRecCompositeKeyFieldId = "custrecord_anc_pf_compositekey";
+    var yearRecFieldMapping = {
+        columns: [
+            // {
+            //     source : "customerGroup",
+            //     dataType : "compositekey",
+            //     compositeKeyIndex : 2,
+            //     targetCol : "custrecord_anc_pf_customer"
+            // },
+            {
+                source : "month",
+                dataType : "compositekey",
+                compositeKeyIndex : 0,
+                targetCol : "custrecord_anc_pf_month"
+            },
+            // {
+            //     source : "year",
+            //     dataType : "compositekey",
+            //     compositeKeyIndex : 1,
+            //     targetCol : "custrecord_anc_pf_year"
+            // },
+            {
+                source : "customer",
+                dataType : "compositekey",
+                compositeKeyIndex : 2,
+                targetCol : "custrecord_anc_pf_customer"
+            },
+            {
+                source : "consignee",
+                dataType : "compositekey",
+                compositeKeyIndex : 3,
+                targetCol : "custrecord_anc_pf_consignee"
+            },
+            {
+                source : "grade",
+                dataType : "compositekey",
+                compositeKeyIndex : 4,
+                targetCol : "custrecord_anc_pf_grade"
+            },
+            {
+                source : "compositekey",
+                dataType : "text",
+                targetCol : "custrecord_anc_pf_compositekey"
+            },
+            {
+                source : "currQty",
+                dataType : "value",
+                targetCol : "custrecord_anc_pf_allocation"
+            },
+            // {
+            //     source : "name",
+            //     dataType : "combination",
+            //     combinationKeys : ["month", "year", "customer", "consignee", "grade"],
+            //     targetCol : "name"
+            // },
+        ]
+    }
+
+    function fillupYearRecObj(yearRecObj, reqBodyObj, mode)
+    {
+        var groupedByYear = {};
+        for(var compositeKey in reqBodyObj.compositeKeys)
+        {
+            var compositeKeyBreakdown = compositeKey.split("_");
+
+            var yearInternalId = compositeKeyBreakdown[0]
+            var monthInternalId = compositeKeyBreakdown[1]
+            var customerInternalId = compositeKeyBreakdown[2]
+            var consigneeInternalId = compositeKeyBreakdown[3]
+            var gradeInternalId = compositeKeyBreakdown[4]
+            var qty = reqBodyObj.compositeKeys[compositeKey]
+
+            var compositeObj ={};
+            compositeObj[compositeKey] = reqBodyObj.compositeKeys[compositeKey]
+
+            if(groupedByYear[yearInternalId])
+            {
+                groupedByYear[yearInternalId].entries.push(compositeObj)
+                groupedByYear[yearInternalId].byKeys[compositeKey] = {
+                    qty : qty,
+                    colVals : {
+                        monthInternalId,
+                        customerInternalId,
+                        consigneeInternalId,
+                        gradeInternalId,
+                        qty
+                    }
+                }
+            }
+            else
+            {
+                groupedByYear[yearInternalId] = {
+                    entries : [
+                        compositeObj
+                    ]
+                }
+                groupedByYear[yearInternalId].byKeys = {}
+                groupedByYear[yearInternalId].byKeys[compositeKey] = {
+                    qty : qty,
+                    colVals : {
+                        monthInternalId,
+                        customerInternalId,
+                        consigneeInternalId,
+                        gradeInternalId,
+                        qty
+                    }
+                }
+                // groupedByYear[yearInternalId].entries.push(compositeKeyBreakdown)
+            }
+        }
+        // for(var a = 0 ; a < sublistValues.length ; a++)
+        // {
+        //     var targetIndex = yearRecObj.findSublistLineWithValue({
+        //         sublistId : yearRecForecastSublistId,
+        //         fieldId : yearRecCompositeKeyFieldId
+        //     })
+        //     if(mode == "edit")
+        //     {
+        //
+        //     }
+        //     else
+        //     {
+        //         var nameValue = "";
+        //         for(var b = 0 ; b < yearRecFieldMapping.columns.length ; b++)
+        //         {
+        //             var lineObj = yearRecFieldMapping.columns[b];
+        //             var dataType = lineObj.dataType;
+        //             var targetValue = "";
+        //             if(dataType == "compositekey")
+        //             {
+        //                 var compositeArr = sublistValues[a].compositekey.split("_")
+        //                 try
+        //                 {
+        //                     targetValue = compositeArr[lineObj.compositeKeyIndex] || "";
+        //
+        //                     yearRecObj.setSublistValue({
+        //                         sublistId : yearRecForecastSublistId,
+        //                         fieldId : lineObj.targetCol,
+        //                         value : targetValue,
+        //                         line : b
+        //                     })
+        //                 }
+        //                 catch(compositeArrIssue)
+        //                 {
+        //                     error.log("Error ignored in function fillupYearRecObj compositeArrIssue", compositeArrIssue);
+        //                 }
+        //             }
+        //             else if(dataType == "value")
+        //             {
+        //                 var targetValue = sublistValues[a][lineObj.source]
+        //                 try
+        //                 {
+        //                     targetValue = sublistValues[lineObj.compositeKeyIndex] || "";
+        //
+        //                     yearRecObj.setSublistValue({
+        //                         sublistId : yearRecForecastSublistId,
+        //                         fieldId : lineObj.targetCol,
+        //                         value : targetValue,
+        //                         line : b
+        //                     })
+        //                 }
+        //                 catch(compositeArrIssue)
+        //                 {
+        //                     error.log("Error ignored in function fillupYearRecObj compositeArrIssue", compositeArrIssue);
+        //                 }
+        //             }
+        //             else if(dataType == "text")
+        //             {
+        //                 var targetValue = sublistValues[a][lineObj.source]
+        //                 try
+        //                 {
+        //                     targetValue = sublistValues[lineObj.compositeKeyIndex] || "";
+        //
+        //                     yearRecObj.setSublistText({
+        //                         sublistId : yearRecForecastSublistId,
+        //                         fieldId : lineObj.targetCol,
+        //                         text : targetValue,
+        //                         line : b
+        //                     })
+        //                 }
+        //                 catch(compositeArrIssue)
+        //                 {
+        //                     error.log("Error ignored in function fillupYearRecObj compositeArrIssue", compositeArrIssue);
+        //                 }
+        //             }
+        //
+        //         }
+        //         yearRecObj.setSublistValue({
+        //             sublistId : yearRecForecastSublistId,
+        //             fieldId : nameValue,
+        //             value : `${sublistValues[a].year}|${sublistValues[a].month}|${sublistValues[a].customer.id}|${sublistValues[a].customer.id}|${sublistValues[a].consignee}|${sublistValues[a].grade}`,
+        //             line : b
+        //         })
+        //
+        //
+        //     }
+        // }
+
+    }
 
     return { onRequest };
 });
