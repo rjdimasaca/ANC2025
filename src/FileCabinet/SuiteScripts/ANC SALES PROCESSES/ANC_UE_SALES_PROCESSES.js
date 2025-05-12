@@ -12,7 +12,7 @@
  * version      :       1.0.0
  *
  */
-define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
+define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
     /**
      * @param{https} https
      * @param{record} record
@@ -22,7 +22,7 @@ define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/mess
      * @param{serverWidget} serverWidget
      * @param{url} url
      */
-    (query, https, record, runtime, dialog, message, serverWidget, url) => {
+    (ANC_lib, query, https, record, runtime, dialog, message, serverWidget, url) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -35,6 +35,7 @@ define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/mess
         const beforeLoad = (scriptContext) => {
             try
             {
+                log.debug("beforeLoad ANC_lib", ANC_lib)
                 eval_requestforecastadj(scriptContext)
                 addElements(scriptContext);
             }
@@ -636,9 +637,18 @@ define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/mess
          * @since 2015.2
          */
         const beforeSubmit = (scriptContext) => {
+            try
+            {
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function beforeSubmit", e)
+            }
 
         }
 
+        var doSaveAfterSubmit = false;
         /**
          * Defines the function definition that is executed after record is submitted.
          * @param {Object} scriptContext
@@ -647,13 +657,166 @@ define(['N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/mess
          * @param {string} scriptContext.type - Trigger type; use values from the context.UserEventType enum
          * @since 2015.2
          */
-        const afterSubmit = (scriptContext) => {
+        const afterSubmit = (scriptContext) =>
+        {
+            log.debug("afterSubmit , call implementSF");
+            var recObj = record.load({
+                type : scriptContext.newRecord.type,
+                id : scriptContext.newRecord.id
+            });
+            implementSF(recObj);
+
+            if(doSaveAfterSubmit)
+            {
+                var submittedRecId = recObj.save({
+                    ignoreMandatoryFields : true,
+                    enableSourcing : true
+                })
+
+                log.debug("submittedRecId", submittedRecId);
+            }
 
         }
 
-        return {beforeLoad, beforeSubmit, afterSubmit}
+
+        var yearMapping = {};
+        function implementSF(recObj)
+        {
+            var doImplementSf = true;
+            yearMapping = ANC_lib.yearMapping;
+
+
+            try
+            {
+                if(doImplementSf)
+                {
+                    var lineCount = recObj.getLineCount({
+                        sublistId : "item"
+                    });
+
+                    log.debug("implementSF lineCount", lineCount)
+                    log.debug("implementSF ANC_lib.references", ANC_lib.references)
+                    var lineValList = [];
+                    var headerEntity = recObj.getValue({
+                        fieldId : "entity"
+                    })
+
+                    for(var a = 0 ; a < lineCount ; a++)
+                    {
+                        var lineVals = {}
+                        lineVals.customer = headerEntity;
+                        lineVals.grade = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.GRADE,
+                            line : a
+                        })
+                        lineVals.consignee = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
+                            line : a
+                        })
+                        lineVals.deliverydate = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                            line : a
+                        })
+                        lineVals.month = lineVals.deliverydate ? (new Date(lineVals.deliverydate).getMonth())+ 1 : (new Date().getMonth()) + 1;
+                        lineVals.year = lineVals.deliverydate ? new Date(lineVals.deliverydate).getFullYear() : new Date().getFullYear();
+                        lineValList.push(lineVals);
+                    }
+                    log.debug("lineValList", lineValList);
+
+
+                    var compositeKeyResults = ANC_lib.getRelatedForecasts(recObj.id, lineValList)
+                    log.debug("implementSF compositeKeyResults", compositeKeyResults);
+                    var SF_RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
+
+
+                    //TODO you can optimize this because it performs another loop that it already had.
+                    for(var a = 0 ; a < lineCount ; a++)
+                    {
+                        var lineVals = {}
+                        lineVals.customer = headerEntity;
+                        lineVals.grade = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.GRADE,
+                            line : a
+                        })
+                        lineVals.consignee = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
+                            line : a
+                        })
+                        lineVals.deliverydate = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                            line : a
+                        })
+                        lineVals.month = lineVals.deliverydate ? (new Date(lineVals.deliverydate).getMonth())+ 1 : (new Date().getMonth()) + 1;
+                        lineVals.year = lineVals.deliverydate ? new Date(lineVals.deliverydate).getFullYear() : new Date().getFullYear();
+
+                        //TODO if not in yearmapping then refrain from proceeding, just from the start, dont waste effort if year is not mapped.
+                        // you have a defaulting anyway so year will always be mapped, but what if its's 2051?!?!?
+                        var lineCompositeKey = `${lineVals.customer}_${lineVals.consignee}_${lineVals.grade}_${lineVals.month}_${yearMapping[lineVals.year]}`;
+
+                        log.debug("setting SF COLUMN lineCompositeKey", lineCompositeKey);
+                        // log.debug("setting SF COLUMN SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id", SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id);
+                        if(SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey])
+                        {
+                            if(SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id) {
+                                recObj.setSublistValue({
+                                    sublistId: "item",
+                                    fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                                    line: a,
+                                    value: SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id
+                                })
+
+                                doSaveAfterSubmit = true;
+                            }
+                            else
+                            {
+                                recObj.setSublistValue({
+                                    sublistId: "item",
+                                    fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                                    line: a,
+                                    value: ""
+                                })
+
+                                doSaveAfterSubmit = true;
+                            }
+                        }
+                        else
+                        {
+                            recObj.setSublistValue({
+                                sublistId: "item",
+                                fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                                line: a,
+                                value: ""
+                            })
+
+                            doSaveAfterSubmit = true;
+                        }
+
+
+
+                    }
+                    log.debug("lineValList", lineValList);
+
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in funtion implementSF", e)
+            }
+        }
+
+
+
+        return {/*beforeLoad,*/ beforeSubmit, afterSubmit}
 
     });
+
+
 
 
 

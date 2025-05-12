@@ -335,76 +335,46 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                 });
                             
                                 $('#loadingModal').removeClass('hidden');
-                                
                                 console.log('Collected Allocation Input:', data);
                                 alert('Open the console to see collected data. You can send it to NetSuite.');
                                 
-                                // Split the object into chunks of 1000 keys
-                                const chunkSize = 1000;
-                                const keys = Object.keys(data);
                                 
-                                const distributed = data; // This will hold objects like data_0, data_1, ...
-                                
-                                keys.forEach((key, index) => {
-                                  const chunkIndex = Math.floor(index / chunkSize);
-                                  const chunkKey = "data_" + chunkIndex;
-                                
-                                  if (!distributed[chunkKey]) {
-                                    distributed[chunkKey] = {};
-                                  }
-                                
-                                  distributed[chunkKey][key] = data[key];
+                                $.ajax({
+                                    url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1&copyToYear=' + confirmResults,
+                                    method: 'POST',
+                                    success: function(data) {
+                                        
+                                        console.log("resp data", data)
+                                        // const tableRows = data.map(function(row) {
+                                        //     return '<tr>' +
+                                        //         '<td>' + row.compositeKey + '</td>' +
+                                        //         '<td>' + row.year + '</td>' +
+                                        //         '<td>' + row.month + '</td>' +
+                                        //         '<td>' + row.customerGroup + '</td>' +
+                                        //         '<td>' + row.customer + '</td>' +
+                                        //         '<td>' + row.consignee + '</td>' +
+                                        //         '<td>' + row.grade + '</td>' +
+                                        //         '<td>' + row.parent + '</td>' +
+                                        //         '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                        //     '</tr>';
+                                        // }).join('');
+                                        //
+                                        // // Add fetched rows into the table
+                                        // table.rows.add($(tableRows)).draw();
+                                        
+                                        
+                                        $('#loadingModal').removeClass('hidden');
+                                        $('#loadingModal').addClass('hidden');
+                                        
+                                    },
+                                    data : JSON.stringify({compositeKeys : data}),
+                                    error: function() {
+                                        alert('Error posting data');
+                                        
+                                        
+                                        $('#loadingModal').removeClass('hidden');
+                                    }
                                 });
-                                
-                                console.log(distributed);
-                                
-                                
-                                
-                                
-                                
-                                
-                                
-                                for(var chunk in distributed)
-                                {
-                                    data = distributed[chunk]
-                                    $.ajax({
-                                        url: '/app/site/hosting/scriptlet.nl?script=5595&deploy=1&copyToYear=' + confirmResults,
-                                        method: 'POST',
-                                        success: function(data) {
-                                            
-                                            console.log("resp data", data)
-                                            // const tableRows = data.map(function(row) {
-                                            //     return '<tr>' +
-                                            //         '<td>' + row.compositeKey + '</td>' +
-                                            //         '<td>' + row.year + '</td>' +
-                                            //         '<td>' + row.month + '</td>' +
-                                            //         '<td>' + row.customerGroup + '</td>' +
-                                            //         '<td>' + row.customer + '</td>' +
-                                            //         '<td>' + row.consignee + '</td>' +
-                                            //         '<td>' + row.grade + '</td>' +
-                                            //         '<td>' + row.parent + '</td>' +
-                                            //         '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
-                                            //     '</tr>';
-                                            // }).join('');
-                                            //
-                                            // // Add fetched rows into the table
-                                            // table.rows.add($(tableRows)).draw();
-                                            
-                                            
-                                            $('#loadingModal').removeClass('hidden');
-                                            $('#loadingModal').addClass('hidden');
-                                            
-                                        },
-                                        data : JSON.stringify({compositeKeys : data}),
-                                        error: function() {
-                                            alert('Error posting data');
-                                            
-                                            
-                                            $('#loadingModal').removeClass('hidden');
-                                        }
-                                    });
-                                }
-                                
                             }
                             else
                             {

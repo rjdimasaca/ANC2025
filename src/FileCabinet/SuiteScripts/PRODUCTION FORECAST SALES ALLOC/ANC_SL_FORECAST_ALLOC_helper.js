@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/query', 'N/record'], (query, record) => {
+define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) => {
     const onRequest = (context) => {
 
         var startTimeStamp = new Date().getTime();
@@ -103,7 +103,35 @@ define(['N/query', 'N/record'], (query, record) => {
             }
 
             log.debug("groupedByYear", groupedByYear);
+            // groupedByYear = {"test1": {"test2":123}}
 
+            var fileTitle = "sf_job_" + new Date().getTime();
+            var fileObj = file.create({
+                name : fileTitle,
+                fileType : file.Type.PLAINTEXT,
+                contents : JSON.stringify(groupedByYear),
+                folder : 392686,
+
+            });
+            fileObj.title =fileTitle
+            fileObj.folder = 392686;
+            var fileId = fileObj.save();
+            log.debug("fileId", fileId)
+
+            var mrTaskObj = task.create({
+                taskType : task.TaskType.MAP_REDUCE,
+                scriptId : "customscript_anc_mr_forecastalloc",
+                deploymentId : "customdeploy_anc_mr_forecastalloc",
+                params : {
+                    custscript_anc_salesforecastdata:fileId,
+                    custscript_anc_salesforecasttyear:targetYear,
+                }
+            });
+
+            var mrTaskid = mrTaskObj.submit();
+            log.debug("mrTaskid", mrTaskid);
+
+            return "Job to setup year is queued in the background, with job id : " + mrTaskid
 
             for(var yearId in groupedByYear)
             {
@@ -198,11 +226,11 @@ define(['N/query', 'N/record'], (query, record) => {
 
             log.debug("attemptsave year")
 
-            // var yearRecInternalId = yearRecObj.save({
-            //     ignoreMandatoryFields : true,
-            //     enableSoucrcing : true
-            // });
-            // log.debug("yearRecInternalId", yearRecInternalId);
+            var yearRecInternalId = yearRecObj.save({
+                ignoreMandatoryFields : true,
+                enableSoucrcing : true
+            });
+            log.debug("yearRecInternalId", yearRecInternalId);
         }
         else if(context.request.parameters.submitdata=="T")
         {
