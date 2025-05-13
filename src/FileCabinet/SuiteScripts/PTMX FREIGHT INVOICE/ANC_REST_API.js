@@ -5,23 +5,23 @@
 /*
 
 create freight PO
-{"CarrierParentId":null,"NetAmount":1300,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"InvoiceDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1300,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":false}
+{"CarrierParentId":null,"NetAmount":1300,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"transactionDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1300,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":false}
 
 update freight PO
-{"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"InvoiceDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":false}
+{"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"transactionDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":false}
 
 BILL load
-{"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"InvoiceDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":true}
+{"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"transactionDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":true}
 */
 
 define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
- * @param{https} https
- * @param{record} record
- * @param{runtime} runtime
- * @param{search} search
- * @param{url} url
- */
+     * @param{https} https
+     * @param{record} record
+     * @param{runtime} runtime
+     * @param{search} search
+     * @param{url} url
+     */
     (https, record, runtime, search, url) => {
         /**
          * Defines the function that is executed when a GET request is sent to a RESTlet.
@@ -109,18 +109,18 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                                 toType : "itemreceipt",
                             });
 
-                            var invoiceDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate;
-                            var invoiceDate = new Date(invoiceDateRaw);
-                            var invoiceDateStr = (invoiceDate.getMonth() + 1) + "/" + (invoiceDate.getDate()) + "/" + (invoiceDate.getFullYear());
+                            var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate;
+                            var transactionDate = new Date(transactionDateRaw);
+                            var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
 
-                            log.debug("invoiceDateRaw", invoiceDateRaw)
-                            log.debug("invoiceDate", invoiceDate)
-                            log.debug("invoiceDateStr", invoiceDateStr)
+                            log.debug("transactionDateRaw", transactionDateRaw)
+                            log.debug("transactionDate", transactionDate)
+                            log.debug("transactionDateStr", transactionDateStr)
 
                             irRecObj.setText({
                                 fieldId : "trandate",
-                                value :invoiceDateStr,
-                                text :invoiceDateStr
+                                value :transactionDateStr,
+                                text :transactionDateStr
                             })
 
 
@@ -151,18 +151,18 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             toType : "vendorbill",
                         });
 
-                        var invoiceDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate;
-                        var invoiceDate = new Date(invoiceDateRaw);
-                        var invoiceDateStr = (invoiceDate.getMonth() + 1) + "/" + (invoiceDate.getDate()) + "/" + (invoiceDate.getFullYear());
+                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate;
+                        var transactionDate = new Date(transactionDateRaw);
+                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
 
-                        log.debug("invoiceDateRaw", invoiceDateRaw)
-                        log.debug("invoiceDate", invoiceDate)
-                        log.debug("invoiceDateStr", invoiceDateStr)
+                        log.debug("transactionDateRaw", transactionDateRaw)
+                        log.debug("transactionDate", transactionDate)
+                        log.debug("transactionDateStr", transactionDateStr)
 
                         vbRecObj.setText({
                             fieldId : "trandate",
-                            value :invoiceDateStr,
-                            text :invoiceDateStr
+                            value :transactionDateStr,
+                            text :transactionDateStr
                         })
 
                         vbRecObj.setValue({
@@ -190,7 +190,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                         var respMsg = {success:false, message : "Cannot resolve load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody}
                         if(lookupPo_result.list[0].errorcode)
                         {
-                            respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            respMsg.errorcode = lookupPo_result.errorcode
                         }
                         return JSON.stringify(respMsg);
                     }
@@ -212,18 +213,18 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             id : poId,
                         });
 
-                        var invoiceDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
-                        var invoiceDate = new Date(invoiceDateRaw);
-                        var invoiceDateStr = (invoiceDate.getMonth() + 1) + "/" + (invoiceDate.getDate()) + "/" + (invoiceDate.getFullYear());
+                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
+                        var transactionDate = new Date(transactionDateRaw);
+                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
 
-                        log.debug("invoiceDateRaw", invoiceDateRaw)
-                        log.debug("invoiceDate", invoiceDate)
-                        log.debug("invoiceDateStr", invoiceDateStr)
+                        log.debug("transactionDateRaw", transactionDateRaw)
+                        log.debug("transactionDate", transactionDate)
+                        log.debug("transactionDateStr", transactionDateStr)
 
                         poRecObj.setText({
                             fieldId : "trandate",
-                            value :invoiceDateStr,
-                            text :invoiceDateStr
+                            value :transactionDateStr,
+                            text :transactionDateStr
                         })
 
                         poRecObj.setValue({
@@ -241,7 +242,13 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                         log.debug("poRecId edit", poRecId);
 
-                        return JSON.stringify({success:true, errorcode : lookupPo_result.list[0].errorcode, message : "Successfully Updated NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
+                        var respMsg = {success:true, errorcode : lookupPo_result.errorcode, message : "Successfully Updated NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
+                        if(lookupPo_result.list[0].errorcode)
+                        {
+                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            respMsg.errorcode = lookupPo_result.errorcode
+                        }
+                        return JSON.stringify(respMsg);
                     }
                     else
                     {
@@ -283,18 +290,18 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             }
                         });
 
-                        var invoiceDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
-                        var invoiceDate = new Date(invoiceDateRaw);
-                        var invoiceDateStr = (invoiceDate.getMonth() + 1) + "/" + (invoiceDate.getDate()) + "/" + (invoiceDate.getFullYear());
+                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
+                        var transactionDate = new Date(transactionDateRaw);
+                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
 
-                        log.debug("invoiceDateRaw", invoiceDateRaw)
-                        log.debug("invoiceDate", invoiceDate)
-                        log.debug("invoiceDateStr", invoiceDateStr)
+                        log.debug("transactionDateRaw", transactionDateRaw)
+                        log.debug("transactionDate", transactionDate)
+                        log.debug("transactionDateStr", transactionDateStr)
 
                         poRecObj.setText({
                             fieldId : "trandate",
-                            value :invoiceDateStr,
-                            text :invoiceDateStr
+                            value :transactionDateStr,
+                            text :transactionDateStr
                         })
 
                         poRecObj.setValue({
@@ -329,7 +336,13 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                         log.debug("poRecId edit", poRecId);
 
-                        return JSON.stringify({success:true, message : "Successfully Created NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
+                        respMsg = {success:true, message : "Successfully Created NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
+                        if(lookupPo_result.list[0].errorcode)
+                        {
+                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            respMsg.errorcode = lookupPo_result.errorcode
+                        }
+                        return JSON.stringify(respMsg);
                     }
                 }
             }
@@ -347,10 +360,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
             var nsRecObj_stringified = JSON.stringify(nsRecObj);
             log.debug("nsRecObj_stringified", nsRecObj_stringified);
             var nsRecObj_stringified_lineFields = nsRecObj.lineFields;
-            for(var key in nsRecObj)
-            {
-                log.audit("key" + key, nsRecObj[key]);
-            }
+            // for(var key in nsRecObj)
+            // {
+            //     log.audit("key" + key, nsRecObj[key]);
+            // }
 
 
 
@@ -591,31 +604,31 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
             "netAmount": 0.1,
             "harmonizedSalesAmount": 0.1,
             "nonassignedCarrierAccessorials": [
-            {
-                "carrier": "string",
-                "charge": 0.1,
-                "qualifier": "string",
-                "acctCode": "string"
-            }
-        ],
-            "invoiceDate": "2019-08-24T14:15:22Z",
+                {
+                    "carrier": "string",
+                    "charge": 0.1,
+                    "qualifier": "string",
+                    "acctCode": "string"
+                }
+            ],
+            "transactionDate": "2019-08-24T14:15:22Z",
             "acctCode": "string",
             "refs": [
-            {
-                "referenceNumber": "string",
-                "referenceType": "string"
-            }
-        ],
+                {
+                    "referenceNumber": "string",
+                    "referenceType": "string"
+                }
+            ],
             "methodOfPayment": "string",
             "lineHaul": 0.1,
             "minimumCharge": 0.1,
             "rateQualifier": "string",
             "accessorials": [
-            {
-                "charge": 0.1,
-                "qualifier": "string"
-            }
-        ],
+                {
+                    "charge": 0.1,
+                    "qualifier": "string"
+                }
+            ],
             "provincialSalesAmount": 0.1,
             "fuelSurcharge": 0.1,
             "apiType": "string"
@@ -654,7 +667,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     lookupPo_result.list.push(res.id);
                     if(res.getValue({name:"status"}))
                     {
-                        lookupPo_result.errorcode = "Action rejected, the PO have related records that will be affected."
+                        lookupPo_result.errorcode = "Warning, the PO have related records that may be affected."
                     }
                     //no just get the first result
                     return false;
@@ -701,7 +714,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                     lookupPo_result.list.push(res.id);
                     if(res.getValue({name:"status"}) == "fullyBilled")
                     {
-                        lookupPo_result.errorcode = "Action rejected, the PO have related records that will be affected."
+                        lookupPo_result.errorcode = "Warning, the PO have related records that may be affected."
                     }
                     //no just get the first result
                     //no just get the first result

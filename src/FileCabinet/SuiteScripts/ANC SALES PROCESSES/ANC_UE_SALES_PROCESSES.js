@@ -12,7 +12,7 @@
  * version      :       1.0.0
  *
  */
-define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
+define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
     /**
      * @param{https} https
      * @param{record} record
@@ -22,7 +22,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
      * @param{serverWidget} serverWidget
      * @param{url} url
      */
-    (ANC_lib, query, https, record, runtime, dialog, message, serverWidget, url) => {
+    (ANC_lib, query, format, search, https, record, runtime, dialog, message, serverWidget, url) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -43,6 +43,26 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
             {
                 log.error("ERROR in function beforeLoad", e);
             }
+        }
+
+
+        var linesToHighlight_yellow = [];
+        var linesToHighlight_orange = [];
+        function showReqForecastButton()
+        {
+            var retVal = false;
+            try
+            {
+                if(linesToHighlight_yellow.length > 0 || linesToHighlight_orange.length > 0)
+                {
+                    retVal = true;
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function showReqForecastButton", e);
+            }
+            return retVal;
         }
 
 
@@ -94,6 +114,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
                         targetScript : "customscript_anc_sl_salesprocesses",
                         targetDeployment : "customdeploy_anc_sl_salesprocesses",
                         processid : "requestforecastadj",
+                        condition : showReqForecastButton
                     },
                 ],
             },
@@ -191,6 +212,8 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
 
 
                 var compositeKey = `${lineGradeId}_${lineConsignee}_${lineDate_month}_${lineDate_year_plain}`
+                //make month the last part of the compositeKey to make it easy for the salesforecasting piece
+                // var compositeKey = `${lineDate_year_plain}_${lineGradeId}_${lineConsignee}_${lineDate_month}`
 
                 log.debug("compositeKey", compositeKey)
 
@@ -288,8 +311,6 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
 
             log.debug("sqlResults_byKey", sqlResults_byKey);
 
-            var linesToHighlight_yellow = [];
-            var linesToHighlight_orange = [];
             for(var compositeKey in compositeKeys)
             {
                 if(sqlResults_byKey[compositeKey] && sqlResults_byKey[compositeKey][0])
@@ -458,9 +479,22 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
                             var nsObj = elemList.bodyElems.buttons[j];
                             completeFunction(nsObj,scriptContext);
 
-                            scriptContext.form.addButton(
-                                nsObj
-                            )
+                            if(!nsObj.condition)
+                            {
+                                scriptContext.form.addButton(
+                                    nsObj
+                                )
+                            }
+                            else
+                            {
+                                if(nsObj.condition())
+                                {
+                                    scriptContext.form.addButton(
+                                        nsObj
+                                    )
+                                }
+                            }
+
                         }
 
                         for(var j = 0 ; j < elemList.sublistElems.length; j++)
@@ -664,6 +698,9 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
                 type : scriptContext.newRecord.type,
                 id : scriptContext.newRecord.id
             });
+
+            determineLane(recObj);
+
             implementSF(recObj);
 
             if(doSaveAfterSubmit)
@@ -678,6 +715,476 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
 
         }
 
+        function determineLane(recObj)
+        {
+            var doDetermineLane = true;
+            try
+            {
+                if(doDetermineLane)
+                {
+                    var lineCount = recObj.getLineCount({
+                        sublistId : "item"
+                    });
+                    var header_consigneeId = recObj.getValue({
+                        fieldId : "custbody_consignee"
+                    });
+                    var header_consigneeLookup = search.lookupFields({
+                        type : ANC_lib.references.RECTYPES.consignee.id,
+                        id : header_consigneeId,
+                        columns : ANC_lib.references.RECTYPES.consignee.fields.city
+                    })
+                    var header_consigneeCity = header_consigneeLookup[ANC_lib.references.RECTYPES.consignee.fields.city]
+                    log.debug("header_consigneeCity.", header_consigneeCity);
+
+                    var header_originWarehouse = recObj.getValue({
+                        fieldId : "location"
+                    })
+
+                    var lineDetailsSql = `
+                        SELECT
+                            BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber /*{transactionlines.linesequencenumber#RAW}*/,
+                            BUILTIN_RESULT.TYPE_INTEGER(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID") AS "cons_id" /*{transactionlines.custcol_consignee.id#RAW}*/,
+                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD.custrecord_alberta_ns_city) AS custrecord_alberta_ns_city /*{transactionlines.custcol_consignee.custrecord_alberta_ns_city#RAW}*/,
+                            BUILTIN_RESULT.TYPE_INTEGER(transactionLine.uniquekey) AS uniquekey /*{transactionlines.uniquekey#RAW}*/,
+                            BUILTIN_RESULT.TYPE_INTEGER("LOCATION"."ID") AS loc_id /*{transactionlines.location.id#RAW}*/
+                        FROM
+                            "TRANSACTION",
+                            CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD,
+                            "LOCATION",
+                            transactionLine
+                        WHERE
+                            (((transactionLine.custcol_consignee = CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID"(+) AND transactionLine."LOCATION" = "LOCATION"."ID"(+)) AND "TRANSACTION"."ID" = transactionLine."TRANSACTION"))
+                          AND ((CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID" IS NOT NULL AND transactionLine."TRANSACTION" IN ('${recObj.id}') AND NVL(transactionLine.mainline, 'F') = 'F'))
+                    `
+
+                    var lineDetailsSqlRes = query.runSuiteQL({ query: lineDetailsSql }).asMappedResults();
+                    lineDetailsSqlRes_byCons = groupBy(lineDetailsSqlRes, "cons_id")
+                    lineDetailsSqlRes_byCity_loc = groupByKeys(lineDetailsSqlRes, ["custrecord_alberta_ns_city", "loc_id"])
+
+                    log.debug("lineDetailsSqlRes_byCons", lineDetailsSqlRes_byCons);
+                    log.debug("lineDetailsSqlRes_byCity_loc", lineDetailsSqlRes_byCity_loc);
+
+                    var laneFiltersArray = [];
+                    for(var city_loc in lineDetailsSqlRes_byCity_loc)
+                    {
+                        var consigneeCity = lineDetailsSqlRes_byCity_loc[city_loc][0].custrecord_alberta_ns_city ? lineDetailsSqlRes_byCity_loc[city_loc][0].custrecord_alberta_ns_city : header_consigneeCity;
+                        var originWarehouse = lineDetailsSqlRes_byCity_loc[city_loc][0].loc_id ? lineDetailsSqlRes_byCity_loc[city_loc][0].loc_id : header_originWarehouse;
+                        laneFiltersArray.push(
+                            `(
+                            ${ANC_lib.references.RECTYPES.lane.fields.originwarehouse} = '${originWarehouse}'
+                            AND ${ANC_lib.references.RECTYPES.consignee.fields.city} = '${consigneeCity}'
+                            )`
+                        )
+                    }
+
+                    var laneFiltersStr = laneFiltersArray.join(" OR ");
+
+                    //i need city_whsid
+                    var laneSql = `
+                        SELECT lane.id as lane_id, cons.id as cons_id, 
+                               lane.custrecord_anc_lane_destinationcity as lane_destcity,
+                               lane.custrecord_anc_lane_originwarehouse as lane_origloc,
+                               
+                               lane.custrecord_anc_lane_cdw as lane_xdockloc,
+                               lane.custrecord_anc_lane_crossdockcity as lane_xdockcity,
+                               lane.custrecord_anc_lane_cdtt as lane_xdocktt,
+                               lane.custrecord_anc_lane_cdc as lane_xdockcost,
+                               lane.custrecord_anc_lane_cde as lane_xdockeq,
+
+                               lane.custrecord_anc_lane_lcpt as lane_lcpt,
+                               lane.custrecord_anc_lane_lctt as lane_lctt,
+                               lane.custrecord_anc_lane_lce as lane_lceq,
+
+
+                               lane.custrecord_fttc as lane_fttc,
+                               lane.custrecord_anc_lane_ftt as lane_ftt,
+                               lane.custrecord_anc_lane_ftte as lane_ftteq,
+                               
+                               lane.custrecord_anc_lane_ltt as lane_ltt,
+                               lane.custrecord_anc_crossdockeligible as lane_xdockelig,
+                        FROM ${ANC_lib.references.RECTYPES.lane.id} as lane 
+                            JOIN ${ANC_lib.references.RECTYPES.consignee.id} as cons 
+                                ON cons.ID = lane.custrecord_anc_lane_destination
+                        WHERE
+                            lane.isinactive = 'F'
+                        AND 
+                            ${laneFiltersStr}
+                    `
+
+                    // SELECT lane.id FROM customrecord_anc_shippinglanes as lane JOIN customrecord_alberta_ns_consignee_record as cons ON cons.ID = lane.custrecord_anc_lane_destination WHERE lane.isinactive = 'F' AND ( lane.custrecord_anc_lane_originwarehouse = '215' AND cons.ID = 198816)
+
+                    log.debug("determineLane laneSql", laneSql)
+                    const laneSqlResults = query.runSuiteQL({ query: laneSql }).asMappedResults();
+
+                    log.debug("laneSqlResults", laneSqlResults)
+
+
+                    laneSqlResults_byCity_loc = groupByKeys(laneSqlResults, ["lane_destcity", "lane_origloc"]);
+
+                    log.debug("laneSqlResults_byCity_loc", laneSqlResults_byCity_loc);
+
+                    // log.debug("implementSF lineCount", lineCount)
+                    // log.debug("implementSF ANC_lib.references", ANC_lib.references)
+                    // var lineValList = [];
+                    // var headerEntity = recObj.getValue({
+                    //     fieldId : "entity"
+                    // });
+                    //
+                    // var targetOriginLoc = recObj.getValue({
+                    //     fieldId : "location"
+                    // });
+                    // var targetConsignee = recObj.getValue({
+                    //     fieldId : "custbody_consignee"
+                    // });
+                    // var targetConsigneeCity = recObj.getValue({
+                    //     fieldId : "custbody_consignee"
+                    // });
+                    //
+                    for(var a = 0 ; a < lineCount ; a++)
+                    {
+                        var lineVals = {}
+                        lineVals.consignee = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
+                            line : a
+                        })
+                        lineVals.consigneeCity = lineDetailsSqlRes_byCons[lineVals.consignee].custrecord_alberta_ns_city || header_consigneeCity;
+                        lineVals.location = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : "location",
+                            line : a
+                        })
+                        lineVals.location = lineVals.location ? lineVals.location : header_originWarehouse;
+
+
+                        var line_destCity_origloc = lineVals.consigneeCity + "_" + lineVals.location
+                        log.debug("setting shippinglane index" + a, {a, line_destCity_origloc})
+                        if(laneSqlResults_byCity_loc[line_destCity_origloc])
+                        {
+
+
+                            lineVals.optmethod = recObj.getSublistValue({
+                                sublistId : "item",
+                                fieldId : "custcol_anc_transitoptmethod",
+                                line : a
+                            })
+
+                            var transitTime = "";
+                            var xdockElig = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_xdockelig
+                            var targetEquip = "";
+
+
+                            var xdockCost = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_xdockcost;
+                            var directLowestCost = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_lcpt
+                            var lane_lceq = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_lceq
+                            var lane_xdockeq = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_xdockeq
+                            var lane_xdocktt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_xdocktt
+                            var lane_lctt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_lctt
+                            var xdock_direct_diff = xdockCost - directLowestCost;
+                            //LOWEST COST
+                            if(lineVals.optmethod == 1)
+                            {
+
+                                log.debug("xdockElig", xdockElig)
+                                //if you want fastest time, then you never look at cross docks - Mike, Rod
+                                if(xdockElig && xdockElig != "F")
+                                {
+
+                                    //xdock attributes such as cost will be maintained by delivery planner, manually - Mike, Rod
+                                    //it is manageable enough for the delivery planner - Mike, Rod
+                                    //TODO no thresholds
+                                    //xdock9 - direct10 = -1, if diff is under 0 then we want to use xdock cause it's cheaper
+                                    log.debug("set usecrossdock = T", xdock_direct_diff)
+                                    if(xdock_direct_diff < 0)
+                                    {
+                                        recObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "custcol_anc_usecrossdock",
+                                            line : a,
+                                            value : true
+                                        })
+                                        log.debug("set custcol_anc_usecrossdock", "T")
+
+                                        //only if xdock eq is defined
+                                        if(lane_xdockeq)
+                                        {
+                                            recObj.setSublistValue({
+                                                sublistId : "item",
+                                                fieldId : "custcol_anc_equipment",
+                                                line : a,
+                                                value : lane_xdockeq
+                                            })
+                                            recObj.setSublistValue({
+                                                sublistId : "item",
+                                                fieldId : "custcol_anc_transittime",
+                                                line : a,
+                                                value : lane_xdocktt
+                                            })
+                                        }
+
+                                        transitTime = lane_xdocktt
+                                    }
+                                    //xdock elig, but direct lowest cost is cheaper
+                                    else
+                                    {
+                                        //only if direct lowest cost equip is defined
+                                        if(lane_lceq)
+                                        {
+                                            recObj.setSublistValue({
+                                                sublistId : "item",
+                                                fieldId : "custcol_anc_equipment",
+                                                line : a,
+                                                value : lane_lceq
+                                            })
+
+                                            recObj.setSublistValue({
+                                                sublistId : "item",
+                                                fieldId : "custcol_anc_transittime",
+                                                line : a,
+                                                value : lane_lctt
+                                            })
+
+                                        }
+
+                                        transitTime = lane_lctt
+                                    }
+                                }
+                                //not xdock eligible, auto refer to direct lowest cost
+                                else
+                                {
+                                    //only if direct lowest cost equip is defined
+                                    if(lane_lceq)
+                                    {
+                                        recObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "custcol_anc_equipment",
+                                            line : a,
+                                            value : lane_lceq
+                                        })
+                                    }
+
+                                    recObj.setSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_transittime",
+                                        line : a,
+                                        value : lane_lctt
+                                    })
+
+                                    transitTime = lane_lctt
+                                }
+
+
+
+                            }
+                            else if(lineVals.optmethod == 2)
+                            //FASTEST TRANSIT TIME
+                            {
+                                log.debug("FTT", laneSqlResults_byCity_loc);
+                                //YOU DONT NEED TO LOOK AT XDOCKS, xdocks will never be faster - MIKE, ROD
+                                //only if direct lowest cost equip is defined
+                                var lane_ftteq = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftteq
+                                var lane_ftt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftt
+                                if(lane_ftteq)
+                                {
+                                    recObj.setSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_equipment",
+                                        line : a,
+                                        value : lane_ftteq
+                                    })
+                                }
+
+                                recObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_transittime",
+                                    line : a,
+                                    value : lane_ftt
+                                })
+
+                                transitTime = lane_ftt
+                            }
+
+                            //TODO example , line 1 used to be 0403 deliver ship 0325, but should be 0403 - 2 days = 0401
+                            var newShipDate = "";
+                            var newProductionDate = "";
+                            var deliverydate = recObj.getSublistValue({
+                                sublistId : "item",
+                                fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                                line : a
+                            });
+                            //need deep copies
+                            var deliverydate_forprod = recObj.getSublistValue({
+                                sublistId : "item",
+                                fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                                line : a
+                            });
+                            log.debug("raw deliverydate", deliverydate)
+                            log.debug("raw deliverydate_forprod", deliverydate_forprod)
+                            log.debug("transitTime", transitTime)
+
+                            if(deliverydate)
+                            {
+                                deliverydate = new Date(deliverydate);
+                                if(typeof deliverydate == "object")
+                                {
+                                    newShipDate = deliverydate.setDate(deliverydate.getDate() - transitTime)
+                                    newProductionDate = deliverydate_forprod.setDate(deliverydate_forprod.getDate() - transitTime - 1)
+                                }
+                                else
+                                {
+                                    newShipDate = new Date(deliverydate).setDate(deliverydate.getDate() - transitTime)
+                                    newProductionDate = new Date(deliverydate_forprod).setDate(deliverydate_forprod.getDate() - transitTime - 1)
+                                }
+                                newShipDate = (typeof newShipDate) != "object" ? new Date(newShipDate) : newShipDate;
+                                newProductionDate = (typeof newProductionDate) != "object" ? new Date(newProductionDate) : newProductionDate;
+
+                                var newShipDate = format.format({
+                                    value: newShipDate,
+                                    type: format.Type.DATE
+                                });
+
+                                var newProductionDate = format.format({
+                                    value: newProductionDate,
+                                    type: format.Type.DATE
+                                });
+
+                                log.debug("newProductionDate", newProductionDate);
+                                log.debug("newShipDate", newShipDate);
+                                // transitTime
+                                //update shipdate
+                                if(newShipDate)
+                                {
+                                    recObj.setSublistText({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_shipdate",
+                                        line : a,
+                                        // value : newShipDate,
+                                        text : newShipDate
+                                    })
+                                }
+                                if(newProductionDate)
+                                {
+                                    recObj.setSublistText({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_productiondate",
+                                        line : a,
+                                        // value : newProductionDate,
+                                        text : newProductionDate
+                                    })
+                                }
+                            }
+
+
+
+
+
+                            doSaveAfterSubmit = true;
+                            log.debug("attempt to set line " + a, {a, lane_id : laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_id})
+
+                            log.debug("lineVals", lineVals)
+
+
+                            recObj.setSublistValue({
+                                sublistId : "item",
+                                fieldId : "custcol_anc_shippinglane",
+                                line : a,
+                                value : laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_id
+                            })
+                            // recObj.setSublistValue({
+                            //     sublistId : "item",
+                            //     fieldId : "custcol_anc_shippinglane",
+                            //     line : a,
+                            //     value : ""
+                            // })
+                            log.debug("successfully set")
+
+                        }
+                    }
+                    // log.debug("lineValList", lineValList);
+                    //
+                    //
+                    // var compositeKeyResults = ANC_lib.getRelatedForecasts(recObj.id, lineValList)
+                    // log.debug("implementSF compositeKeyResults", compositeKeyResults);
+                    // var SF_RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
+                    //
+                    //
+                    // //TODO you can optimize this because it performs another loop that it already had.
+                    // for(var a = 0 ; a < lineCount ; a++)
+                    // {
+                    //     var lineVals = {}
+                    //     lineVals.customer = headerEntity;
+                    //     lineVals.grade = recObj.getSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : ANC_lib.references.SO_COLUMNS.GRADE,
+                    //         line : a
+                    //     })
+                    //     lineVals.consignee = recObj.getSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
+                    //         line : a
+                    //     })
+                    //     lineVals.deliverydate = recObj.getSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                    //         line : a
+                    //     })
+                    //     lineVals.month = lineVals.deliverydate ? (new Date(lineVals.deliverydate).getMonth())+ 1 : (new Date().getMonth()) + 1;
+                    //     lineVals.year = lineVals.deliverydate ? new Date(lineVals.deliverydate).getFullYear() : new Date().getFullYear();
+                    //
+                    //     //TODO if not in yearmapping then refrain from proceeding, just from the start, dont waste effort if year is not mapped.
+                    //     // you have a defaulting anyway so year will always be mapped, but what if its's 2051?!?!?
+                    //     var lineCompositeKey = `${lineVals.customer}_${lineVals.consignee}_${lineVals.grade}_${lineVals.month}_${yearMapping[lineVals.year]}`;
+                    //
+                    //     log.debug("setting SF COLUMN lineCompositeKey", lineCompositeKey);
+                    //     // log.debug("setting SF COLUMN SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id", SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id);
+                    //     if(SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey])
+                    //     {
+                    //         if(SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id) {
+                    //             recObj.setSublistValue({
+                    //                 sublistId: "item",
+                    //                 fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                    //                 line: a,
+                    //                 value: SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id
+                    //             })
+                    //
+                    //             doSaveAfterSubmit = true;
+                    //         }
+                    //         else
+                    //         {
+                    //             recObj.setSublistValue({
+                    //                 sublistId: "item",
+                    //                 fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                    //                 line: a,
+                    //                 value: ""
+                    //             })
+                    //
+                    //             doSaveAfterSubmit = true;
+                    //         }
+                    //     }
+                    //     else
+                    //     {
+                    //         recObj.setSublistValue({
+                    //             sublistId: "item",
+                    //             fieldId: ANC_lib.references.SO_COLUMNS.SALESFORECAST,
+                    //             line: a,
+                    //             value: ""
+                    //         })
+                    //
+                    //         doSaveAfterSubmit = true;
+                    //     }
+                    //
+                    //
+                    //
+                    // }
+                    // log.debug("lineValList", lineValList);
+
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in funtion determineLane", e)
+            }
+        }
 
         var yearMapping = {};
         function implementSF(recObj)
@@ -812,7 +1319,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/https', 'N/record', 'N/runtime'
 
 
 
-        return {/*beforeLoad,*/ beforeSubmit, afterSubmit}
+        return {beforeLoad, beforeSubmit, afterSubmit}
 
     });
 

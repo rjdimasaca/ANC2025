@@ -240,10 +240,12 @@ define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) 
                 var compositeKeyBreakdown = compositeKey.split("_");
 
                 var yearInternalId = compositeKeyBreakdown[0]
-                var monthInternalId = compositeKeyBreakdown[1]
-                var customerInternalId = compositeKeyBreakdown[2]
-                var consigneeInternalId = compositeKeyBreakdown[3]
-                var gradeInternalId = compositeKeyBreakdown[4]
+                var customerInternalId = compositeKeyBreakdown[1]
+                var consigneeInternalId = compositeKeyBreakdown[2]
+                var gradeInternalId = compositeKeyBreakdown[3]
+
+                var monthInternalId = compositeKeyBreakdown[4]
+
                 var qty = reqBodyObj.compositeKeys[compositeKey]
 
                 var compositeObj ={};
@@ -389,13 +391,14 @@ define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) 
                 cust.entityid AS customer_name,
                 con.id AS consignee_id,
                 con.name AS consignee_name,
+                con.custrecord_alberta_ns_city AS consignee_city,
                 parent.entityid AS parent_entityid
             FROM customer cust
                      JOIN customrecord_alberta_ns_consignee_record con
                           ON con.custrecord_alberta_ns_customer = cust.id
                      JOIN customersubsidiaryrelationship csr ON csr.entity = cust.ID
                      JOIN customer parent ON parent.ID = cust.parent
-            WHERE cust.isinactive='F' AND con.isinactive='F' AND csr.subsidiary=5
+            WHERE cust.isinactive='F' AND con.isinactive='F' AND con.custrecord_anc_includeinsalesforecast='T' AND csr.subsidiary=5 
         `;
             const itemSql = `
             SELECT itemid, id,  FROM item
@@ -471,21 +474,42 @@ define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) 
             }
             log.debug("forecastByCompositeKey",forecastByCompositeKey);
 
+            // var baseMonths = [];
+            // months.forEach(month => {
+            //     baseMonths.push(0)
+            // });
+            //
+            // // Build permutations
+            // let combinations = [];
+            // years.forEach(year => {
+            //     customers.forEach(c => {
+            //         items.forEach(item => {
+            //             combinations.push({
+            //                 year,
+            //                 customer: { id: c.customer_id, name: c.customer_name, parent_entityid : c.parent_entityid },
+            //                 consignee: { id: c.consignee_id, name: c.consignee_name },
+            //                 item,
+            //             });
+            //         });
+            //     });
+            //
+            // });
 
             // Build permutations
             let combinations = [];
             years.forEach(year => {
-                months.forEach(month => {
-                    items.forEach(item => {
-                        customers.forEach(c => {
-                            combinations.push({
-                                year, month, item,
-                                customer: { id: c.customer_id, name: c.customer_name, parent_entityid : c.parent_entityid },
-                                consignee: { id: c.consignee_id, name: c.consignee_name }
-                            });
+                // months.forEach(month => {
+                items.forEach(item => {
+                    customers.forEach(c => {
+                        combinations.push({
+                            year, /*month,*/
+                            customer: { id: c.customer_id, name: c.customer_name, parent_entityid : c.parent_entityid },
+                            consignee: { id: c.consignee_id, name: c.consignee_name, city : c.consignee_city },
+                            item,
                         });
                     });
                 });
+                // });
             });
 
             log.debug("combinations.length", combinations.length)
@@ -495,38 +519,72 @@ define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) 
             // combinations = combinations.splice(0, 100000);
 
 
-            const tableRows = combinations.map(row => `
-                <tr>
-                    <td>${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}</td>
-                    <td>${row.year.name}</td>
-                    <td>${row.month.name}</td>
-                    <td>${row.customer.parent_entityid}</td>
-                    <td>${row.customer.name}</td>
-                    <td>${row.consignee.name}</td>
-                    <td>${row.item.itemid}</td>
-                    <td></td>
-                    <td>
-                        <input type="number"
-                               name="alloc_${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}"
-                               style="width: 60px;" />
-                    </td>
-                </tr>
-            `).join('');
-
-            log.debug("tableRows", tableRows);
+            // const tableRows = combinations.map(row => `
+            //     <tr>
+            //         <td>${row.customer.parent_entityid}</td>
+            //         <td>${row.customer.name}</td>
+            //         <td>${row.consignee.name}</td>
+            //         <td>${row.item.itemid}</td>
+            //         <td></td>
+            //         <td>
+            //             <input type="number"
+            //                    name="alloc_${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}"
+            //                    style="width: 60px;" />
+            //         </td>
+            //         <td>${row.customer.id}_${row.consignee.id}_${row.item.id}</td>
+            //     </tr>
+            // `).join('');
+            //
+            // log.debug("tableRows", tableRows);
 
 
-            const responseData = combinations.map(row => ({
-                compositeKey: `${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}`,
-                year: `${row.year.name}`,
-                month: `${row.month.name}`,
-                customerGroup: `${row.customer.parent_entityid}`,
-                customer: `${row.customer.name}`,
-                consignee: `${row.consignee.name}`,
-                grade: `${row.item.itemid}`,
-                currQty : forecastByCompositeKey[`${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0
+            // const responseData = combinations.map(row => ({
+            //     customerGroup: `${row.customer.parent_entityid}`,
+            //     customer: `${row.customer.name}`,
+            //     consignee: `${row.consignee.name}`,
+            //     grade: `${row.item.itemid}`,
+            //     month1 : forecastByCompositeKey[`${row.year.id}_1_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_1_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month2 : forecastByCompositeKey[`${row.year.id}_2_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_2_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month3 : forecastByCompositeKey[`${row.year.id}_3_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_3_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month4 : forecastByCompositeKey[`${row.year.id}_4_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_4_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month5 : forecastByCompositeKey[`${row.year.id}_5_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_5_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month6 : forecastByCompositeKey[`${row.year.id}_6_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_6_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month7 : forecastByCompositeKey[`${row.year.id}_7_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_7_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month8 : forecastByCompositeKey[`${row.year.id}_8_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_8_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month9 : forecastByCompositeKey[`${row.year.id}_9_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_9_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month10 : forecastByCompositeKey[`${row.year.id}_10_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_10_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month11 : forecastByCompositeKey[`${row.year.id}_11_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_11_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     month12 : forecastByCompositeKey[`${row.year.id}_12_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_12_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+            //     total: `0`,
+            //     compositeKey: `${row.year.id}_${row.month.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}`,
+            // }));
+            const responseData = combinations.map(function(row){
 
-            }));
+                var obj = {
+                    customerGroup: `${row.customer.parent_entityid}`,
+                    customer: `${row.customer.name}`,
+                    consignee: `${row.consignee.name}`,
+                    city: `${row.consignee.city}`,
+                    grade: `${row.item.itemid}`,
+                    month1 : forecastByCompositeKey[`${row.year.id}_1_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_1_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month2 : forecastByCompositeKey[`${row.year.id}_2_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_2_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month3 : forecastByCompositeKey[`${row.year.id}_3_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_3_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month4 : forecastByCompositeKey[`${row.year.id}_4_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_4_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month5 : forecastByCompositeKey[`${row.year.id}_5_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_5_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month6 : forecastByCompositeKey[`${row.year.id}_6_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_6_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month7 : forecastByCompositeKey[`${row.year.id}_7_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_7_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month8 : forecastByCompositeKey[`${row.year.id}_8_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_8_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month9 : forecastByCompositeKey[`${row.year.id}_9_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_9_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month10 : forecastByCompositeKey[`${row.year.id}_10_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_10_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month11 : forecastByCompositeKey[`${row.year.id}_11_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_11_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    month12 : forecastByCompositeKey[`${row.year.id}_12_${row.customer.id}_${row.consignee.id}_${row.item.id}`] ? forecastByCompositeKey[`${row.year.id}_12_${row.customer.id}_${row.consignee.id}_${row.item.id}`].qty : 0,
+                    total: `0`,
+                    compositeKey: `${row.year.id}_${row.customer.id}_${row.consignee.id}_${row.item.id}`}
+
+                obj.total = Number(obj.month1) + Number(obj.month2) + Number(obj.month3) + Number(obj.month4) + Number(obj.month5) + Number(obj.month6) + Number(obj.month7) + Number(obj.month8) + Number(obj.month9) + Number(obj.month10) + Number(obj.month11) + Number(obj.month12)
+                // log.debug("responseData row", row)
+                return obj
+            });
 
             log.debug("responseData", responseData);
 

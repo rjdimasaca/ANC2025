@@ -7,53 +7,53 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
         if (context.request.method === 'GET') {
             const form = serverWidget.createForm({ title: 'Sales Forecast' });
 
-            const filterFieldGroupObj = form.addFieldGroup({
-                id: 'custpage_fldgroup_filters',
-                label: 'Pre-Filters'
-            });
-
-            const yearFieldObj = form.addField({
-                id: 'custpage_filter_years',
-                type: serverWidget.FieldType.SELECT,
-                source : "customrecord_anc_pf_years",
-                label: "Year",
-                container : "custpage_fldgroup_filters"
-            });
-            const monthFieldObj = form.addField({
-                id: 'custpage_filter_month',
-                type: serverWidget.FieldType.MULTISELECT,
-                source : "customrecord_anc_pf_months",
-                label: "Months",
-                container : "custpage_fldgroup_filters"
-            });
-            const customerGroupFieldObj = form.addField({
-                id: 'custpage_filter_customergroup',
-                type: serverWidget.FieldType.MULTISELECT,
-                source : "customer",
-                label: "Customer Group",
-                container : "custpage_fldgroup_filters"
-            });
-            const customerFieldObj = form.addField({
-                id: 'custpage_filter_customer',
-                type: serverWidget.FieldType.MULTISELECT,
-                source : "customer",
-                label: "Customer",
-                container : "custpage_fldgroup_filters"
-            });
-            const customerConsigneeFieldObj = form.addField({
-                id: 'custpage_filter_consignee',
-                type: serverWidget.FieldType.MULTISELECT,
-                source : "customrecord_alberta_ns_consignee_record",
-                label: "Consignee",
-                container : "custpage_fldgroup_filters"
-            });
-            const gradeFieldObj = form.addField({
-                id: 'custpage_filter_grade',
-                type: serverWidget.FieldType.MULTISELECT,
-                source : "item",
-                label: "Grade",
-                container : "custpage_fldgroup_filters"
-            });
+            // const filterFieldGroupObj = form.addFieldGroup({
+            //     id: 'custpage_fldgroup_filters',
+            //     label: 'Pre-Filters'
+            // });
+            //
+            // const yearFieldObj = form.addField({
+            //     id: 'custpage_filter_years',
+            //     type: serverWidget.FieldType.SELECT,
+            //     source : "customrecord_anc_pf_years",
+            //     label: "Year",
+            //     container : "custpage_fldgroup_filters"
+            // });
+            // const monthFieldObj = form.addField({
+            //     id: 'custpage_filter_month',
+            //     type: serverWidget.FieldType.MULTISELECT,
+            //     source : "customrecord_anc_pf_months",
+            //     label: "Months",
+            //     container : "custpage_fldgroup_filters"
+            // });
+            // const customerGroupFieldObj = form.addField({
+            //     id: 'custpage_filter_customergroup',
+            //     type: serverWidget.FieldType.MULTISELECT,
+            //     source : "customer",
+            //     label: "Customer Group",
+            //     container : "custpage_fldgroup_filters"
+            // });
+            // const customerFieldObj = form.addField({
+            //     id: 'custpage_filter_customer',
+            //     type: serverWidget.FieldType.MULTISELECT,
+            //     source : "customer",
+            //     label: "Customer",
+            //     container : "custpage_fldgroup_filters"
+            // });
+            // const customerConsigneeFieldObj = form.addField({
+            //     id: 'custpage_filter_consignee',
+            //     type: serverWidget.FieldType.MULTISELECT,
+            //     source : "customrecord_alberta_ns_consignee_record",
+            //     label: "Consignee",
+            //     container : "custpage_fldgroup_filters"
+            // });
+            // const gradeFieldObj = form.addField({
+            //     id: 'custpage_filter_grade',
+            //     type: serverWidget.FieldType.MULTISELECT,
+            //     source : "item",
+            //     label: "Grade",
+            //     container : "custpage_fldgroup_filters"
+            // });
 
             const forecastFieldGroupObj = form.addFieldGroup({
                 id: 'custpage_fldgroup_forecast',
@@ -165,29 +165,107 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                         <table id="customerTable" class="display" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>COMPOSITE KEY</th>
-                                    <th>Year</th>
-                                    <th>Month</th>
                                     <th>Customer Group</th>
                                     <th>Customer</th>
                                     <th>Consignee</th>
                                     <th>Grade</th>
-                                    <th>Allocation</th>
+                                    <th>City</th>
+                                    <th>Jan</th>
+                                    <th>Feb</th>
+                                    <th>Mar</th>
+                                    <th>Apr</th>
+                                    <th>May</th>
+                                    <th>Jun</th>
+                                    <th>Jul</th>
+                                    <th>Aug</th>
+                                    <th>Sep</th>
+                                    <th>Oct</th>
+                                    <th>Nov</th>
+                                    <th>Dec</th>
+                                    <th>Total</th>
+                                    <th>COMPOSITE KEY</th>
+                                    
                                 </tr>
                                 <tr>
-                                    <th><input type="text" class="filter-input" data-column="0" placeholder="Filter Composite Key" /></th>
-                                    <th><input type="text" class="filter-input" data-column="1" placeholder="Filter Year" /></th>
-                                    <th><input type="text" class="filter-input" data-column="2" placeholder="Filter Month" /></th>
-                                    <th><input type="text" class="filter-input" data-column="3" placeholder="Filter Customer Group" /></th>
-                                    <th><input type="text" class="filter-input" data-column="4" placeholder="Filter Customer" /></th>
-                                    <th><input type="text" class="filter-input" data-column="5" placeholder="Filter Consignee" /></th>
-                                    <th><input type="text" class="filter-input" data-column="6" placeholder="Filter Grade" /></th>
-                                    <th><input type="text" class="filter-input" data-column="7" placeholder="Filter Allocation" /></th>
+                                    <th><input type="text" class="filter-input" data-column="0" placeholder="Filter Customer Group" /></th>
+                                    <th><input type="text" class="filter-input" data-column="1" placeholder="Filter Customer" /></th>
+                                    <th><input type="text" class="filter-input" data-column="2" placeholder="Filter Consignee" /></th>
+                                    <th><input type="text" class="filter-input" data-column="3" placeholder="Filter Grade" /></th>
+                                    <th><input type="text" class="filter-input" data-column="4" placeholder="Filter City" /></th>
+                                    <!--<th><input type="text" class="filter-input" data-column="5" placeholder="Filter Jan" /></th>
+                                    <th><input type="text" class="filter-input" data-column="6" placeholder="Filter Feb" /></th>
+                                    <th><input type="text" class="filter-input" data-column="7" placeholder="Filter Mar" /></th>
+                                    <th><input type="text" class="filter-input" data-column="8" placeholder="Filter Apr" /></th>
+                                    <th><input type="text" class="filter-input" data-column="9" placeholder="Filter May" /></th>
+                                    <th><input type="text" class="filter-input" data-column="10" placeholder="Filter Jun" /></th>
+                                    <th><input type="text" class="filter-input" data-column="11" placeholder="Filter Jul" /></th>
+                                    <th><input type="text" class="filter-input" data-column="12" placeholder="Filter Aug" /></th>
+                                    <th><input type="text" class="filter-input" data-column="13" placeholder="Filter Sep" /></th>
+                                    <th><input type="text" class="filter-input" data-column="14" placeholder="Filter Oct" /></th>
+                                    <th><input type="text" class="filter-input" data-column="15" placeholder="Filter Nov" /></th>
+                                    <th><input type="text" class="filter-input" data-column="16" placeholder="Filter Dec" /></th>
+                                    <th><input type="text" class="filter-input" data-column="17" placeholder="Filter Total" /></th>-->
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th><input type="text" class="filter-input" data-column="18" placeholder="Filter Composite Key" /></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <!-- Initially empty rows -->
                             </tbody>
+                            <tfoot>
+                            <tr id="page-total-row">
+                              <th>Current Page Total:</th>
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th>0</th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price --><th>0</th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Price -->
+                            </tr>
+                            <tr id="overall-total-row">
+                              <th>Overall Total:</th>
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th>0</th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price --><th>0</th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Quantity -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Price -->
+                              <th></th> <!-- Total Price -->
+                            </tr>
+                          </tfoot>
                         </table>
                         <br/>
                         <button type="button" onclick="collectInput()">Submit Changes</button>
@@ -198,18 +276,82 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                     <script>
                         function preFilterYear()
                         {
+                            $.fn.dataTable.ext.order['dom-input-numeric'] = function (settings, colIndex) {
+                                return this.api()
+                                    .column(colIndex, { order: 'index' })
+                                    .nodes()
+                                    .map(function (td, i) {
+                                        var input = $('input', td).val();
+                                        return parseFloat(input) || 0;
+                                    });
+                            };
                             var table = $('#customerTable').DataTable({
                                 orderCellsTop: true,
                                 fixedHeader: true,
                                 dom: '<"top"ilp>rt<"bottom"lpi><"clear">',
-                                pageLength: 100,
+                                columnDefs: [
+                                    {
+                                        targets: [5,6,7,8,9,10,11,12,13,14,15,16], // Jan to Dec
+                                        orderDataType: 'dom-input-numeric'
+                                    }
+                                ],
+                                pageLength: 10,
                                 initComplete: function () {
                                     // const api = this.api();
+                                    //
+                                    // // For each column, apply the filter
+                                    // api.columns().every(function () {
+                                    //     var that = this;
+                                    //
+                                    //     $('input', this.header()).on('keyup change', function () {
+                                    //         if (that.search() !== this.value) {
+                                    //             that.search(this.value).draw();
+                                    //         }
+                                    //     });
+                                    // });
+                                },
+                                footerCallback: function (row, data, start, end, display) {
+                                    const api = this.api();
+                                
+                                    const columnsToTotal = [5,6,7,8,9,10,11,12,13,14,15,16,17];
+                                
+                                    // Get both footer rows
+                                    const footerRows = $(api.table().footer()).find('tr');
+                                    // const pageTotalRow = $(footerRows[0]).find('th');
+                                    // const overallTotalRow = $(footerRows[1]).find('th');
+                                    
+                                    const pageTotalRow = $('#page-total-row th');
+                                    const overallTotalRow = $('#overall-total-row th');
+                                
+                                    columnsToTotal.forEach(function (colIdx) {
+                                        let pageTotal = 0;
+                                        let overallTotal = 0;
+                                
+                                        // Sum for current page
+                                        api.rows({ page: 'current' }).every(function () {
+                                            const row = this.node();
+                                            const $input = $('td:eq(' + colIdx + ') input', row);
+                                            const val = parseFloat($input.val()) || 0;
+                                            pageTotal += val;
+                                        });
+                                
+                                        // Sum for all pages
+                                        api.rows().every(function () {
+                                            const row = this.node();
+                                            const $input = $('td:eq(' + colIdx + ') input', row);
+                                            const val = parseFloat($input.val()) || 0;
+                                            overallTotal += val;
+                                        });
+                                
+                                        // Write to correct footer cells
+                                        pageTotalRow.eq(colIdx).html(pageTotal.toFixed(2));
+                                        overallTotalRow.eq(colIdx).html(overallTotal.toFixed(2));
+                                    });
                                 }
                             });
                             
                             $('#loadingModal').removeClass('hidden');
-                            $('#loadingModal').addClass('hidden');
+                            // $('#loadingModal').addClass('hidden');
                             // table = $('#customerTable').DataTable();
                             // table.clear().draw();
                             
@@ -222,14 +364,26 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                     data = JSON.parse(data);
                                     var tableRows = data.map(function(row) {
                                         return '<tr>' +
-                                            '<td>' + row.compositeKey + '</td>' +
-                                            '<td>' + row.year + '</td>' +
-                                            '<td>' + row.month + '</td>' +
                                             '<td>' + row.customerGroup + '</td>' +
                                             '<td>' + row.customer + '</td>' +
                                             '<td>' + row.consignee + '</td>' +
                                             '<td>' + row.grade + '</td>' +
-                                            '<td><input value=' + row.currQty + ' origvalue=' + row.currQty + ' type="number" name="' + row.compositeKey + '" style="width: 60px;" /></td>' +
+                                            '<td>' + row.city + '</td>' +
+                                            '<td><input value=' + row.month1 + ' origvalue=' + row.month1 + ' type="number" name="' + row.compositeKey+"_"+1 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month2 + ' origvalue=' + row.month2 + ' type="number" name="' + row.compositeKey+"_"+2 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month3 + ' origvalue=' + row.month3 + ' type="number" name="' + row.compositeKey+"_"+3 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month4 + ' origvalue=' + row.month4 + ' type="number" name="' + row.compositeKey+"_"+4 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month5 + ' origvalue=' + row.month5 + ' type="number" name="' + row.compositeKey+"_"+5 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month6+ ' origvalue=' + row.month6 + ' type="number" name="' + row.compositeKey+"_"+6 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month7 + ' origvalue=' + row.month7 + ' type="number" name="' + row.compositeKey+"_"+7 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month8 + ' origvalue=' + row.month8 + ' type="number" name="' + row.compositeKey+"_"+8 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month9 + ' origvalue=' + row.month9 + ' type="number" name="' + row.compositeKey+"_"+9 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month10 + ' origvalue=' + row.month10 + ' type="number" name="' + row.compositeKey+"_"+10 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month11 + ' origvalue=' + row.month11 + ' type="number" name="' + row.compositeKey+"_"+11 + '" style="width: 60px;" /></td>' +
+                                            '<td><input value=' + row.month12 + ' origvalue=' + row.month12 + ' type="number" name="' + row.compositeKey+"_"+12 + '" style="width: 60px;" /></td>' +
+                                            '<td><input disabled value=' + row.total + ' origvalue=' + row.total + ' type="number" name="' + row.compositeKey+"_"+"13" + '" style="width: 60px;" /></td>' +
+                                            
+                                            '<td>' + row.compositeKey + '</td>' +
                                         '</tr>';
                                     }).join('');
                                     
@@ -267,7 +421,8 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                             var table = $('#customerTable').DataTable();
                             var tableRows = table.rows().nodes(); // DataTables API
                         
-                            $(tableRows).find('input[type="number"]').each(function() {
+                            // $(tableRows).find('input[type="number"]').each(function() {
+                            $(tableRows).find('input[type="number"]:not([name$="_13"])').each(function() {
                                 const origValue = this.getAttribute('origvalue');
                                 const currentValue = this.value;
                                 if (origValue !== currentValue || (origValue==="0" && currentValue==="")) {
@@ -383,6 +538,77 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                         
                             
                         }
+                        
+                        // $('#customerTable').on('input', 'input[type="number"]', function () {
+                        //     console.log("handle input, recalc totals")
+                        //     var table = $('#customerTable').DataTable();
+                        //     table.draw(false); // false = don't reset pagination
+                        // });
+                        $('#customerTable').on('change', 'input[type="number"]', function () {
+                            
+                            const $input = $(this);
+                            const value = parseFloat($input.val()) || 0;
+                            const $row = $input.closest('tr');
+                            const colIndex = $input.closest('td').index();
+                            
+                            const name = this.name;
+                            
+                            console.log('Changed input name attribute:', name);
+                            var monthColListVals = 0;
+                            var relatedCols = name.split("_");
+                            
+                            if(relatedCols[relatedCols.length - 1] == "13")
+                            {
+                                return;                                
+                            }
+                            relatedCols = relatedCols.splice(0, relatedCols.length - 1);
+                            var relatedColsStr = relatedCols.join("_") + "_";
+                            
+                            var prefix = relatedColsStr;
+                            var inputs = $('input[name^="' + prefix + '"]');
+                            
+                            var total = 0;
+
+                            inputs.each(function () {
+                                if(this.name != relatedColsStr + "13")
+                                    {
+                                        total += parseFloat(this.value) || 0;                                        
+                                    }
+                                
+                            });
+                            
+                            console.log('Total: ' + total);
+                            
+                            $('input[name="'+ relatedColsStr + '13' + '"]').val(total).trigger("change");
+                            
+                            console.log('relatedColsStr:', relatedColsStr);
+                            // 6_500394_304827_188595_4
+                        
+                            console.log('Changed value:', value);
+                            console.log('Row index:', $row.index());
+                            console.log('Column index:', colIndex);
+                            
+                            const table = $('#customerTable').DataTable();
+                            table.draw(false);
+                        });
+                        // $('#customerTable').on('change', 'input[type="number"]', function () {
+                        //     const $input = $(this);
+                        //     const $row = $input.closest('tr');
+                        //
+                        //     // Recalculate the row total (columns 5 to 16 = indices 5 to 16)
+                        //     let rowTotal = 0;
+                        //     for (let colIdx = 5; colIdx <= 16; colIdx++) {
+                        //         const val = parseFloat($row.find('td:eq(' + colIdx + ') input').val()) || 0;
+                        //         rowTotal += val;
+                        //     }
+                        //
+                        //     // Set value in the 17th column (index 17) — Total column
+                        //     $row.find('td:eq(17)').text(rowTotal.toFixed(2));
+                        //
+                        //     // Re-draw the DataTable to trigger footer totals update
+                        //     const table = $('#customerTable').DataTable();
+                        //     table.draw(false);
+                        // });
                     </script>
                 </body>
                 </html>

@@ -175,7 +175,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 targetColumnId : "custcol_anc_equipment",
                                 //container: "custpage_flgroup_input",
                                 displayType : {
-                                    displayType: "entry"
+                                    displayType: "inline"
                                 }
                             },
                         ]
@@ -1116,83 +1116,83 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
 
 
 
-
-                                var targetColumnValue = scriptContext.request.parameters["custpage_tranlinetransittom"];
-
-                                var searchFilters = [
-                                    ["type","anyof","SalesOrd"],
-                                    "AND",
-                                    ["mainline","is","F"],
-                                    "AND",
-                                    ["taxline","is","F"],
-                                ];
-                                if(searchFilters)
-                                {
-                                    searchFilters.push("AND")
-                                    searchFilters.push(["internalid", "anyof", scriptContext.request.parameters.custpage_traninternalid])
-                                    searchFilters.push("AND")
-                                    searchFilters.push(["line", "equalto", scriptContext.request.parameters.custpage_tranlinenum])
-
-                                }
-
-
-                                log.debug("searchFilters", searchFilters);
-
-                                var post_searchObj = search.create({
-                                    type: "salesorder",
-                                    settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
-                                    filters : searchFilters,
-                                    columns : [
-                                        search.createColumn({
-                                            name : "location"
-                                        }),
-                                        search.createColumn({
-                                            name : "custrecord_alberta_ns_city",
-                                            join : "custcol_consignee",
-                                            label : "consignee city"
-                                        }),
-                                        search.createColumn({
-                                            name : "location"
-                                        }),
-                                    ],
-                                })
-
-                                var sr = getResults(post_searchObj.run());
-                                log.debug("sr", sr)
-                                var originloc = "";
-                                var destCity = "";
-                                for(var a = 0 ; a < sr.length ; a++)
-                                {
-                                    originloc = sr[a].getValue(search.createColumn({
-                                        name : "location"
-                                    }))
-
-                                    destCity = sr[a].getValue(search.createColumn({
-                                        name : "custrecord_alberta_ns_city",
-                                        join : "custcol_consignee",
-                                        label : "consignee city"
-                                    }))
-
-                                }
-
-                                log.debug("{targetColumnValue, originloc, destCity}", {targetColumnValue, originloc, destCity})
-                                var newLineDetails = resolveLane(targetColumnValue, originloc, destCity);
-
-                                log.debug("bodyFieldsList[a].targetColumnId", {colId : bodyFieldsList[a].targetColumnId, colVal : targetColumnValue})
-
-                                soRecObj.setSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_shippinglane",
-                                    value : newLineDetails.laneid,
-                                    line : targetIndex
-                                })
-
-                                soRecObj.setSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custcol_anc_equipment",
-                                    value : newLineDetails.eqid,
-                                    line : targetIndex
-                                })
+                                //05122025 - UE now handles optimization method
+                                // var targetColumnValue = scriptContext.request.parameters["custpage_tranlinetransittom"];
+                                //
+                                // var searchFilters = [
+                                //     ["type","anyof","SalesOrd"],
+                                //     "AND",
+                                //     ["mainline","is","F"],
+                                //     "AND",
+                                //     ["taxline","is","F"],
+                                // ];
+                                // if(searchFilters)
+                                // {
+                                //     searchFilters.push("AND")
+                                //     searchFilters.push(["internalid", "anyof", scriptContext.request.parameters.custpage_traninternalid])
+                                //     searchFilters.push("AND")
+                                //     searchFilters.push(["line", "equalto", scriptContext.request.parameters.custpage_tranlinenum])
+                                //
+                                // }
+                                //
+                                //
+                                // log.debug("searchFilters", searchFilters);
+                                //
+                                // var post_searchObj = search.create({
+                                //     type: "salesorder",
+                                //     settings:[{"name":"consolidationtype","value":"ACCTTYPE"}],
+                                //     filters : searchFilters,
+                                //     columns : [
+                                //         search.createColumn({
+                                //             name : "location"
+                                //         }),
+                                //         search.createColumn({
+                                //             name : "custrecord_alberta_ns_city",
+                                //             join : "custcol_consignee",
+                                //             label : "consignee city"
+                                //         }),
+                                //         search.createColumn({
+                                //             name : "location"
+                                //         }),
+                                //     ],
+                                // })
+                                //
+                                // var sr = getResults(post_searchObj.run());
+                                // log.debug("sr", sr)
+                                // var originloc = "";
+                                // var destCity = "";
+                                // for(var a = 0 ; a < sr.length ; a++)
+                                // {
+                                //     originloc = sr[a].getValue(search.createColumn({
+                                //         name : "location"
+                                //     }))
+                                //
+                                //     destCity = sr[a].getValue(search.createColumn({
+                                //         name : "custrecord_alberta_ns_city",
+                                //         join : "custcol_consignee",
+                                //         label : "consignee city"
+                                //     }))
+                                //
+                                // }
+                                //
+                                // log.debug("{targetColumnValue, originloc, destCity}", {targetColumnValue, originloc, destCity})
+                                // var newLineDetails = resolveLane(targetColumnValue, originloc, destCity);
+                                //
+                                // log.debug("bodyFieldsList[a].targetColumnId", {colId : bodyFieldsList[a].targetColumnId, colVal : targetColumnValue})
+                                //
+                                // soRecObj.setSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_shippinglane",
+                                //     value : newLineDetails.laneid,
+                                //     line : targetIndex
+                                // })
+                                //
+                                // soRecObj.setSublistValue({
+                                //     sublistId : "item",
+                                //     fieldId : "custcol_anc_equipment",
+                                //     value : newLineDetails.eqid,
+                                //     line : targetIndex
+                                // })
 
 
 

@@ -32,7 +32,22 @@ define(['N/query'],
                                 COMPOSITEKEY : "custrecord_anc_pf_compositekey",
                                 ALLOCATION : "custrecord_anc_pf_allocation",
                                 NAME : "name",
-                        }
+                        },
+                },
+                RECTYPES : {
+                        lane : {
+                                id:"customrecord_anc_shippinglanes",
+                                fields : {
+                                        destinationcity : "custrecord_anc_lane_destinationcity",
+                                        originwarehouse : "custrecord_anc_lane_originwarehouse",
+                                }
+                        },
+                        consignee : {
+                                id:"customrecord_alberta_ns_consignee_record",
+                                fields : {
+                                        city : "custrecord_alberta_ns_city",
+                                }
+                        },
                 }
         }
 
