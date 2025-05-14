@@ -12,7 +12,7 @@
  * version      :       1.0.0
  *
  */
-define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
+define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui/serverWidget', 'N/url'],
     /**
  * @param{https} https
  * @param{record} record
@@ -22,7 +22,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
  * @param{serverWidget} serverWidget
  * @param{url} url
  */
-    (https, record, runtime, dialog, message, serverWidget, url) => {
+    (ANC_lib, https, record, runtime, dialog, message, serverWidget, url) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -35,6 +35,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
         const beforeLoad = (scriptContext) => {
             try
             {
+                elemList = ANC_lib.MINIMIZE_UI.elemList;
                 hideColumns(scriptContext);
                 addElements(scriptContext);
             }
@@ -84,204 +85,14 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
         }
 
         //TODO MOVE TO LIBRARY
-        var elemList = [
-            {
-                name : "warehouse_and_logistics",
-                list : [],
-                title : "Logistics",
-                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG",
-                properties : [
-
-                ],
-                tdElemHtml : [
-                    `<td align="center"><p>Logistics<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-
-                    ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                ],
-                targetScriptId : "customscript_anc_sl_minimize_ui",
-                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Logistics",
-                rowTitle : "Logistics",
-                iconWidth : "50px",
-                iconHeight : "50px",
-                position : 9,
-                addtlParams : "&minimizeui=warehouse_and_logistics"
-            },
-            {
-                name : "orderquantity_and_inventorystatus",
-                list : [],
-                title : "Inventory",
-                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203538&c=1116623_SB2&h=GBFNo186_VXtycKD8lQ8h1BqLzd9c6FG3wq_rEZNvsLpQU9N",
-                properties : [
-
-                ],
-                tdElemHtml : [
-                    `<td align="center"><p>Qty&Status<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-
-                    ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                ],
-                targetScriptId : "customscript_anc_sl_minimize_ui",
-                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Inventory",
-                rowTitle : "Qty<br/>Status",
-                iconWidth : "50px",
-                iconHeight : "50px",
-                position : 9,
-                addtlParams : "&minimizeui=orderquantity_and_inventorystatus"
-            },
-            {
-                name : "product_and_packaging",
-                list : [],
-                title : "Packaging",
-                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203539&c=1116623_SB2&h=Al2AWzDaC39Xoch4LmAX2-WdvZ-DGfERnRBArgrJctLb72QV",
-                properties : [
-
-                ],
-                tdElemHtml : [
-                    `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-
-                    ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                ],
-                targetScriptId : "customscript_anc_sl_minimize_ui",
-                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Packaging",
-                rowTitle : "Packaging",
-                iconWidth : "50px",
-                iconHeight : "50px",
-                position : 9,
-                addtlParams : "&minimizeui=product_and_packaging"
-            },
-            {
-                name : "customer_and_shipping_information",
-                list : [],
-                title : "Customer & Shipping Information",
-                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
-                properties : [
-
-                ],
-                tdElemHtml : [
-                    `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-
-                    ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                ],
-                targetScriptId : "customscript_anc_sl_minimize_ui",
-                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Shipping",
-                rowTitle : "Shipping",
-                iconWidth : "50px",
-                iconHeight : "50px",
-                position : 9,
-                addtlParams : "&minimizeui=customer_and_shipping"
-            },
-            // {
-            //     name : "graderun_reservation",
-            //     list : [],
-            //     title : "Grade Run Reservation",
-            //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203558&c=1116623_SB2&h=pD37UzYzvN7o6bv03_Q0xtV7QvmUzmLnabI8wV-cDD8Qj-Hx",
-            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
-            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
-            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
-            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
-            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
-            //     properties : [
-            //
-            //     ],
-            //     tdElemHtml : [
-            //         `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-            //
-            //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-            //     ],
-            //     targetScriptId : "customscript_anc_sl_salesprocesses",
-            //     targetDeploymentId : "customdeploy_anc_sl_salesprocesses",
-            //     headerTitle : "Grade Run<br/>Reservation",
-            //     rowTitle : "",
-            //     iconWidth : "50px",
-            //     iconHeight : "50px",
-            //     position : 0,
-            //     addtlParams : "&processid=grreservation"
-            // },
-            {
-                name : "scheduling_and_keydates",
-                list : [],
-                title : "Key Dates",
-                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
-                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
-                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
-                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
-                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
-                properties : [
-
-                ],
-                tdElemHtml : [
-                    `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-
-                    ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                ],
-                targetScriptId : "customscript_anc_sl_minimize_ui",
-                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                headerTitle : "Key Dates",
-                rowTitle : "",
-                iconWidth : "50px",
-                iconHeight : "50px",
-                position : 9,
-                addtlParams : "&minimizeui=scheduling_and_keydates"
-            },
-            // {
-            //     name : "fitment_check",
-            //     list : [],
-            //     title : "Fitment Check",
-            //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203554&c=1116623_SB2&h=kTJFfuyMLg3xSqJ3X2VCVHc9OqW4GxxNPE8KEga83kzlgzYJ",
-            //     properties : [
-            //
-            //     ],
-            //     tdElemHtml : [
-            //         `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-            //
-            //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-            //     ],
-            //     // tdElementStart:`<td class="minimize_ui_elem_td0TEST" align="center"><p>TEST1<br/><img width="25px" height="25px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203519&c=1116623_SB2&h=LtlOhAYTLDyMXRBethELwZMrys0xDpb03GNVp9glCEtxUR3q" style="cursor: pointer;" onclick="nlExtOpenWindow(window.lineUrl_`,
-            //     // tdElementEnd:`', 'childdrecord', 700, 700, this, true,'');</p></td>`,
-            //     // tdElementStart:'<td class="minimize_ui_elem_td0fitment_check" align="center"><p>Fitment<br/>Check<br/><img width="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL" height="25px" src="25px" style="cursor: pointer;" onclick="window.open(window.lineUrl_',
-            //     // tdElementEnd:', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>',
-            //
-            //
-            //     targetScriptId : "customscript_anc_sl_fitmentchecking",
-            //     targetDeploymentId : "customdeploy_anc_sl_fitmentchecking",
-            //     headerTitle : "Fitment<br/>Check",
-            //     rowTitle : "",
-            //     iconWidth : "50px",
-            //     iconHeight : "50px",
-            //     position : 15,
-            //     addtlParams : ""
-            // }
-
-
-
-
-        ]
+        var elemList = [];
 
         const addElements = (scriptContext) => {
             try
             {
                 var lineUrls = [];
                 if (scriptContext.type == "view" /*|| scriptContext.type == "edit"*/) {
-                    // var elemList = [
-                    //     {
-                    //         warehouse_and_logistics : {
-                    //             list : [],
-                    //             title : "W&L",
-                    //             icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG",
-                    //             properties : [
-                    //
-                    //             ],
-                    //             tdElemHtml : [
-                    //                 `<td align="center"><p>W&L<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-                    //
-                    //                 ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                    //             ]
-                    //         }
-                    //     }
-                    // ]
+
 
                     elemList = elemList.sort(function(a,b){
                         return b.position - a.position
@@ -323,17 +134,10 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                         for(var a = 0  ; a < lineCount ; a++)
                         {
                             // var lastSubstituteId = scriptContext.newRecord.getSublistValue({sublistId : "item", fieldId : "custcol_r8l_itemsubstitution", line : a})
-                            var substitutionCount = scriptContext.newRecord.getSublistValue({sublistId : "item", fieldId : "custcol_r8l_substitutioncount", line : a});
+                            var doMinimizeUi = true;
 
 
-                            substitutionCount = Number(substitutionCount || 0);
-                            log.debug("substitutionCount", substitutionCount);
-                            if(substitutionCount > 0)
-                            {
-                                var substitutionUiUrl = "substituted";
-                                lineUrls.push(substitutionUiUrl);
-                            }
-                            else
+                            if(doMinimizeUi)
                             {
                                 var substitutionUiUrl = "" + base_fitmentAndReserveUiUrl;
                                 substitutionUiUrl += "&tranlinenum=" + scriptContext.newRecord.getSublistValue({sublistId : "item", fieldId : "line", line : a})
@@ -344,8 +148,6 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                                 // substitutionUiUrl += "&othercompf=" + JSON.stringify(filteredArr);
                                 lineUrls.push(substitutionUiUrl);
                             }
-
-
                         }
 
                         log.debug("lineUrls", lineUrls);
@@ -355,7 +157,6 @@ define(['N/https', 'N/record', 'N/runtime', 'N/ui/dialog', 'N/ui/message', 'N/ui
                         jQuery(document).ready(function() {
                             // alert(12345);
                             var anc_minimized_ui = false;
-                            
                             
                             var minimize_ui_tds = jQuery(".minimize_ui_elem_td0${groupElem.name}");
                             // console.log("anc_minimized_ui_${groupElem.name}", anc_minimized_ui)
