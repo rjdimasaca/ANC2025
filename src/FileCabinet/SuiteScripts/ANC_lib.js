@@ -1,6 +1,12 @@
 /**
  * @NApiVersion 2.1
  */
+
+//delete integration logs
+// var arr = nlapiSearchRecord(nlapiGetRecordType());
+// for(var a = 0 ; a < arr.length ; a++)
+// {
+//     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
 define(['N/query', 'N/record', 'N/runtime', 'N/search'],
     
     (query, record, runtime, search) => {
@@ -284,12 +290,23 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                                             value :scriptNumericInternalId
                                     })
                             }
+
+
+                            // var submittedRecId = recObj.save({
+                            //         ignoreMandatoryFields : true,
+                            //         allowSourcing : true
+                            // });
+
                             if(runtime.getCurrentScript().deploymentId)
                             {
+                                    var searchObj = search.create({
+                                            type : "scriptdeployment",
+                                            filters : ["scriptid","is",runtime.getCurrentScript().deploymentId]
+                                    });
 
                                     var deploymentNumericInternalId = "";
                                     searchObj.run().each(function(res){
-                                            scriptNumericInternalId = res.id;
+                                            deploymentNumericInternalId = res.id;
                                             return false;
                                     })
 
@@ -304,8 +321,18 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                                     allowSourcing : true
                             });
 
+                            // var submittedRecId1 = record.submitFields({
+                            //         type : recObj.type,
+                            //         id : submittedRecId,
+                            //         values : {
+                            //                 custrecord_anc_icl_deployment : deploymentNumericInternalId
+                            //         }
+                            // })
+                            //
+                            // log.debug("submitIntegrationLog submittedRecId1", submittedRecId1)
 
-                            log.debug("submitIntegrationLog", submittedRecId)
+
+                            log.debug("submitIntegrationLog submittedRecId", submittedRecId)
                     }
                     catch(e)
                     {
