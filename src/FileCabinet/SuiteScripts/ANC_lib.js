@@ -1,9 +1,9 @@
 /**
  * @NApiVersion 2.1
  */
-define(['N/query', 'N/record'],
+define(['N/query', 'N/record', 'N/runtime', 'N/search'],
     
-    (query, record) => {
+    (query, record, runtime, search) => {
 
         const foo = () => {
 
@@ -261,6 +261,41 @@ define(['N/query', 'N/record'],
                                     recObj.setValue({
                                             fieldId : "custrecord_anc_icl_response",
                                             value : integrationLogObj.response
+                                    })
+                            }
+
+
+                            if(runtime.getCurrentScript().id)
+                            {
+
+                                    var searchObj = search.create({
+                                            type : "script",
+                                            filters : ["scriptid","is",runtime.getCurrentScript().id]
+                                    });
+
+                                    var scriptNumericInternalId = "";
+                                    searchObj.run().each(function(res){
+                                            scriptNumericInternalId = res.id;
+                                            return false;
+                                    })
+
+                                    recObj.setValue({
+                                            fieldId : "custrecord_anc_icl_script",
+                                            value :scriptNumericInternalId
+                                    })
+                            }
+                            if(runtime.getCurrentScript().deploymentId)
+                            {
+
+                                    var deploymentNumericInternalId = "";
+                                    searchObj.run().each(function(res){
+                                            scriptNumericInternalId = res.id;
+                                            return false;
+                                    })
+
+                                    recObj.setValue({
+                                            fieldId : "custrecord_anc_icl_deployment",
+                                            value :deploymentNumericInternalId
                                     })
                             }
 

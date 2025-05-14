@@ -467,7 +467,6 @@ define(['N/query', 'N/record', 'N/task', 'N/file'], (query, record, task, file) 
             {
                 forecastByCompositeKey[`${existingForecast[a].custrecord_anc_pf_year}_${existingForecast[a].custrecord_anc_pf_month}_${existingForecast[a].custrecord_anc_pf_customer}_${existingForecast[a].custrecord_anc_pf_consignee}_${existingForecast[a].custrecord_anc_pf_grade}`] = {
                     vals:existingForecast[a],
-                    parent : existingForecast[a].custrecord_anc_pf_parent,
                     id : existingForecast[a].id,
                     qty : existingForecast[a].custrecord_anc_pf_allocation
                 };
