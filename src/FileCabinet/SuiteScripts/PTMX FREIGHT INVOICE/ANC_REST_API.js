@@ -14,6 +14,12 @@ BILL load
 {"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"transactionDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":true}
 */
 
+//delete integration logs
+// var arr = nlapiSearchRecord(nlapiGetRecordType());
+// for(var a = 0 ; a < arr.length ; a++)
+// {
+//     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
+
 define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
      * @param{https} https
