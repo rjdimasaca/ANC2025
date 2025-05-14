@@ -221,20 +221,32 @@ define(['N/query', 'N/record'],
                     "2050" : 31,
             }
 
-            function submitIntegrationLog(integrationLogObj)
+            function submitIntegrationLog(integrationLogId, integrationLogObj)
             {
                     var functionResult = {};
                     try
                     {
-                            var recObj = record.create({
-                                    type : "customrecord_anc_integrationlogs"
-                            });
+                            var recObj = null;
+                            if(integrationLogId)
+                            {
+                                    recObj = record.load({
+                                            type : "customrecord_anc_integration_config_logs",
+                                            // type : "customrecord_anc_integrationlogs",
+                                            id : integrationLogId
+                                    });
+                            }
+                            else
+                            {
+                                    recObj = record.create({
+                                            type : "customrecord_anc_integration_config_logs",
+                                            // type : "customrecord_anc_integrationlogs"
+                                    });
+                            }
 
 
-                            var submittedRecId = recObj.save({
-                                    ignoreMandatoryFields : true,
-                                    allowSourcing : true
-                            });
+                            log.debug("integrationLogObj", integrationLogObj)
+
+
 
                             if(integrationLogObj.request)
                             {
@@ -252,6 +264,11 @@ define(['N/query', 'N/record'],
                                     })
                             }
 
+                            var submittedRecId = recObj.save({
+                                    ignoreMandatoryFields : true,
+                                    allowSourcing : true
+                            });
+
 
                             log.debug("submitIntegrationLog", submittedRecId)
                     }
@@ -259,7 +276,8 @@ define(['N/query', 'N/record'],
                     {
                             log.error("ERROR in function submitIntegrationLog", e)
                     }
-                    return functionResult;
+                    return submittedRecId;
+                    // return functionResult;
             }
 
             var MINIMIZE_UI = {
