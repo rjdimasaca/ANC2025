@@ -1,9 +1,9 @@
 /**
  * @NApiVersion 2.1
  */
-define(['N/query'],
+define(['N/query', 'N/record'],
     
-    (query) => {
+    (query, record) => {
 
         const foo = () => {
 
@@ -221,6 +221,55 @@ define(['N/query'],
                     "2050" : 31,
             }
 
-        return {foo, bar, getRelatedForecasts, references, getForecastFilters, yearMapping}
+            function submitIntegrationLog(integrationLogObj)
+            {
+                    var functionResult = {};
+                    try
+                    {
+                            var recObj = record.create({
+                                    type : "customrecord_anc_integrationlogs"
+                            });
+
+
+                            var submittedRecId = recObj.save({
+                                    ignoreMandatoryFields : true,
+                                    allowSourcing : true
+                            });
+
+                            if(integrationLogObj.request)
+                            {
+                                    recObj.setValue({
+                                            fieldId : "custrecord_anc_icl_request",
+                                            value : integrationLogObj.request
+                                    })
+                            }
+
+                            if(integrationLogObj.response)
+                            {
+                                    recObj.setValue({
+                                            fieldId : "custrecord_anc_icl_response",
+                                            value : integrationLogObj.response
+                                    })
+                            }
+
+
+                            log.debug("submitIntegrationLog", submittedRecId)
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function submitIntegrationLog", e)
+                    }
+                    return functionResult;
+            }
+
+        return {
+                foo,
+                bar,
+                getRelatedForecasts,
+                references,
+                getForecastFilters,
+                yearMapping,
+                submitIntegrationLog
+        }
 
     });
