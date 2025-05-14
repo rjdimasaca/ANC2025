@@ -64,6 +64,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 log.debug("requestBody", requestBody);
 
+                //TODO
+                respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), nsRecordInternalId:integrationLogId, warnings : [], requestBody:requestBody};
+
             }
             catch(e)
             {
@@ -71,6 +74,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), requestBody};
             }
 
+            respMsg.integrationLogId = integrationLogId;
             var respMsgStr = JSON.stringify(respMsg);
 
             integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{response:respMsgStr});

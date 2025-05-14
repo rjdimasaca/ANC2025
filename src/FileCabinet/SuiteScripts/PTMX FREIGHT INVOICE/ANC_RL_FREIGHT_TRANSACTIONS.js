@@ -43,10 +43,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         }
 
         var mapping = {
-            "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
-            "Unknown Accessorial Line" : 188338
+            // "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
+            "Unknown Accessorial Line" : 188338,
+            "Detention Charge" : 27415
         }
 
+        var FUELSURCHARGE_item = 12231;
         var NF_item = 12493;
 
         /**
@@ -63,6 +65,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         }
 
 
+        var targetBol = "";
+        var targetCust = "";
+        var targetCons = "";
         var integrationLogId = null;
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
@@ -84,17 +89,223 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 var loadID = requestBody.loadID || requestBody.LoadID;
                 var IsFinalInvoice = requestBody.IsFinalInvoice || requestBody.isFinalInvoice;
                 log.debug("loadID", loadID)
+                targetBol = loadID
 
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
+
+
+                var salesorderSearchObj = search.create({
+                    type: "salesorder",
+                    filters:
+                        [
+                            ["type","anyof","SalesOrd"],
+                            "AND",
+                            ["custbody4","is",targetBol],
+                            "AND",
+                            ["mainline","is","T"]
+                        ],
+                    columns:
+                        [
+                            search.createColumn({name: "entity", label: "Name"}),
+                            search.createColumn({name: "custbody_consignee", label: "Consignee"})
+                        ]
+                });
+
+                salesorderSearchObj.run().each(function(res){
+                    targetCust = res.getValue({
+                        name: "entity", label: "Name"
+                    })
+                    targetCons = res.getValue({
+                        name: "custbody_consignee", label: "Consignee"
+                    })
+
+                    return false;
+                })
+                log.debug("{targetCust, targetCons, targetBol}",{targetCust, targetCons, targetBol})
+
+
+                //05122025 - JUST ALWAYS UPDATE THE PO, they will only send INVOICE WHEN IT's FINAL and it is not expected to change... cause it is final! - CODY
+                if(true/*!IsFinalInvoice*/)
+                {
+                    var lookupPo_result = lookupPo(loadID);
+                    log.debug("lookupPo_result", lookupPo_result);
+
+                    if(lookupPo_result.list && lookupPo_result.list.length > 0 && lookupPo_result.list[0].id)
+
+                    {
+                        log.debug("0")
+                        log.debug("lookupPo_result.list[0].status", lookupPo_result.list[0].status);
+
+                        if(lookupPo_result.list[0].status == "fullyBilled")
+                        {
+                            throw {message: "The PO is in the fully billed state, further changes are disallowed through integration."}
+                        }
+
+                        var poId = lookupPo_result.list[0].id;
+
+                        var poRecObj = record.load({
+                            type : "purchaseorder",
+                            id : poId,
+                        });
+
+                        if(targetCons)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody_ns_consignee",
+                                value : targetCons
+                            })
+                        }
+
+                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
+                        var transactionDate = new Date(transactionDateRaw);
+                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
+
+                        log.debug("transactionDateRaw", transactionDateRaw)
+                        log.debug("transactionDate", transactionDate)
+                        log.debug("transactionDateStr", transactionDateStr)
+
+                        poRecObj.setText({
+                            fieldId : "trandate",
+                            value :transactionDateStr,
+                            text :transactionDateStr
+                        })
+
+                        poRecObj.setValue({
+                            fieldId : "approvalstatus",
+                            value :"1",
+                        })
+
+                        clearSublist(poRecObj, requestBody);
+                        fillSublist(poRecObj, requestBody, lookupPo_result, true);
+
+                        poRecId = poRecObj.save({
+                            ignoreMandatoryFields : true,
+                            enableSourcing : true
+                        })
+
+                        log.debug("poRecId edit", poRecId);
+
+                        var respMsg = {success:true, errorcode : lookupPo_result.errorcode, message : "Successfully Updated NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
+                        if(lookupPo_result.list[0].errorcode)
+                        {
+                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            respMsg.errorcode = lookupPo_result.errorcode
+                        }
+
+                    }
+                    else
+                    {
+
+                        log.debug("1")
+                        if(lookupPo_result.list && lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
+                        {
+                            respMsgStr = JSON.stringify({success:false, errorcode:(lookupPo_result.list[0].errorcode), message : "Action Rejected for : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
+                        }
+
+                        log.debug("PO CREATE")
+                        // var poId = lookupPo(_result.list[0];
+                        var carrierId = requestBody.carrierID || requestBody.CarrierID;
+                        var carrierInternalid = "";
+                        var vendorSearchObj = search.create({
+                            type : "vendor",
+                            filters : [
+                                ["externalid", "anyof", [carrierId, "CAR"+carrierId]]
+                            ],
+                        })
+
+                        var sr = vendorSearchObj.run();
+
+                        sr.each(function(res){
+                            carrierInternalid = res.id;
+                            //no just get the first result
+                            return false;
+                        })
+
+                        if(!carrierInternalid)
+                        {
+                            respMsg ={success:false, message : "Cannot resolve Vendor/Carrier with externalid : " + carrierId, requestBody};
+                            throw respMsg;
+                        }
+
+                        var poRecObj = record.create({
+                            type : "purchaseorder",
+                            defaultValues : {
+                                entity : carrierInternalid
+                            }
+                        });
+
+                        if(targetCons)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody_ns_consignee",
+                                value : targetCons
+                            })
+                        }
+
+
+                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
+                        var transactionDate = new Date(transactionDateRaw);
+                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
+
+                        log.debug("transactionDateRaw", transactionDateRaw)
+                        log.debug("transactionDate", transactionDate)
+                        log.debug("transactionDateStr", transactionDateStr)
+
+                        poRecObj.setText({
+                            fieldId : "trandate",
+                            value :transactionDateStr,
+                            text :transactionDateStr
+                        })
+
+                        poRecObj.setValue({
+                            fieldId : "approvalstatus",
+                            value :"1",
+                        })
+                        poRecObj.setValue({
+                            fieldId : "externalid",
+                            value :loadID,
+                        })
+                        // poRecObj.setValue({
+                        //     fieldId : "custbody_work_order",
+                        //     value :loadID,
+                        // })
+                        poRecObj.setValue({
+                            fieldId : "custbody_purchase_order",
+                            value :loadID,
+                        })
+
+                        var currEntity = poRecObj.getValue({
+                            fieldId : "entity",
+                        });
+                        log.debug("currEntity", currEntity);
+
+                        clearSublist(poRecObj, requestBody);
+                        fillSublist(poRecObj, requestBody, lookupPo_result, true);
+
+                        poRecId = poRecObj.save({
+                            ignoreMandatoryFields : true,
+                            enableSourcing : true
+                        })
+
+                        log.debug("poRecId edit", poRecId);
+
+                        respMsg = {success:true, message : "Successfully Created NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
+                        if(lookupPo_result.list[0].errorcode)
+                        {
+                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
+                            respMsg.errorcode = lookupPo_result.list[0].errorcode
+                        }
+                    }
+                }
 
                 if(IsFinalInvoice)
                 {
                     var lookupPo_result = lookupPo_final(loadID);
                     log.debug("lookupPo_result", lookupPo_result);
 
-                    if(lookupPo_result.list && lookupPo_result.list.length > 0 && lookupPo_result.list[0] && !lookupPo_result.list[0].errorcode)
+                    if(lookupPo_result.list && lookupPo_result.list.length > 0 && lookupPo_result.list[0].id)
                     {
-                        var poId = lookupPo_result.list[0];
+                        var poId = lookupPo_result.list[0].id;
 
                         try
                         {
@@ -181,8 +392,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         })
 
 
-                        clearSublist(vbRecObj, requestBody);
-                        fillSublist(vbRecObj, requestBody, lookupPo_result);
+                        // clearSublist(vbRecObj, requestBody);
+                        // fillSublist(vbRecObj, requestBody, lookupPo_result);
 
 
 
@@ -208,160 +419,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
 
                 }
-                else if(!IsFinalInvoice)
-                {
-                    var lookupPo_result = lookupPo(loadID);
-                    log.debug("lookupPo_result", lookupPo_result);
-
-                    if(lookupPo_result.list && lookupPo_result.list.length > 0 && lookupPo_result.list[0] && !lookupPo_result.list[0].errorcode)
-                    {
-                        log.debug("0")
-                        var poId = lookupPo_result.list[0];
-
-                        var poRecObj = record.load({
-                            type : "purchaseorder",
-                            id : poId,
-                        });
-
-                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
-                        var transactionDate = new Date(transactionDateRaw);
-                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
-
-                        log.debug("transactionDateRaw", transactionDateRaw)
-                        log.debug("transactionDate", transactionDate)
-                        log.debug("transactionDateStr", transactionDateStr)
-
-                        poRecObj.setText({
-                            fieldId : "trandate",
-                            value :transactionDateStr,
-                            text :transactionDateStr
-                        })
-
-                        poRecObj.setValue({
-                            fieldId : "approvalstatus",
-                            value :"1",
-                        })
-
-                        clearSublist(poRecObj, requestBody);
-                        fillSublist(poRecObj, requestBody, lookupPo_result, true);
-
-                        poRecId = poRecObj.save({
-                            ignoreMandatoryFields : true,
-                            enableSourcing : true
-                        })
-
-                        log.debug("poRecId edit", poRecId);
-
-                        var respMsg = {success:true, errorcode : lookupPo_result.errorcode, message : "Successfully Updated NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
-                        if(lookupPo_result.list[0].errorcode)
-                        {
-                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
-                            respMsg.errorcode = lookupPo_result.errorcode
-                        }
-
-                    }
-                    else
-                    {
-
-                        log.debug("1")
-                        if(lookupPo_result.list && lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
-                        {
-                            respMsgStr = JSON.stringify({success:false, errorcode:(lookupPo_result.list[0].errorcode), message : "Action Rejected for : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
-                        }
-
-                        log.debug("PO CREATE")
-                        // var poId = lookupPo(_result.list[0];
-                        var carrierId = requestBody.carrierID || requestBody.CarrierID;
-                        var carrierInternalid = "";
-                        var vendorSearchObj = search.create({
-                            type : "vendor",
-                            filters : [
-                                ["externalid", "anyof", [carrierId, "CAR"+carrierId]]
-                            ],
-                        })
-
-                        var sr = vendorSearchObj.run();
-
-                        sr.each(function(res){
-                            carrierInternalid = res.id;
-                            //no just get the first result
-                            return false;
-                        })
-
-                        if(!carrierInternalid)
-                        {
-                            respMsg ={success:false, message : "Cannot resolve Vendor/Carrier with externalid : " + carrierId, requestBody};
-                            throw respMsg;
-                        }
-
-                        var poRecObj = record.create({
-                            type : "purchaseorder",
-                            defaultValues : {
-                                entity : carrierInternalid
-                            }
-                        });
-
-                        var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
-                        var transactionDate = new Date(transactionDateRaw);
-                        var transactionDateStr = (transactionDate.getMonth() + 1) + "/" + (transactionDate.getDate()) + "/" + (transactionDate.getFullYear());
-
-                        log.debug("transactionDateRaw", transactionDateRaw)
-                        log.debug("transactionDate", transactionDate)
-                        log.debug("transactionDateStr", transactionDateStr)
-
-                        poRecObj.setText({
-                            fieldId : "trandate",
-                            value :transactionDateStr,
-                            text :transactionDateStr
-                        })
-
-                        poRecObj.setValue({
-                            fieldId : "approvalstatus",
-                            value :"1",
-                        })
-                        poRecObj.setValue({
-                            fieldId : "externalid",
-                            value :loadID,
-                        })
-                        // poRecObj.setValue({
-                        //     fieldId : "custbody_work_order",
-                        //     value :loadID,
-                        // })
-                        poRecObj.setValue({
-                            fieldId : "custbody_purchase_order",
-                            value :loadID,
-                        })
-
-                        var currEntity = poRecObj.getValue({
-                            fieldId : "entity",
-                        });
-                        log.debug("currEntity", currEntity);
-
-                        clearSublist(poRecObj, requestBody);
-                        fillSublist(poRecObj, requestBody, lookupPo_result, true);
-
-                        poRecId = poRecObj.save({
-                            ignoreMandatoryFields : true,
-                            enableSourcing : true
-                        })
-
-                        log.debug("poRecId edit", poRecId);
-
-                        respMsg = {success:true, message : "Successfully Created NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
-                        if(lookupPo_result.list[0].errorcode)
-                        {
-                            // respMsg.errorcode = lookupPo_result.list[0].errorcode
-                            respMsg.errorcode = lookupPo_result.errorcode
-                        }
-                    }
-                }
             }
             catch(e)
             {
                 log.error("ERROR in function post", e)
                 respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), requestBody};
             }
-
+            respMsg.integrationLogId = integrationLogId;
             respMsgStr = JSON.stringify(respMsg);
 
             integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{response:respMsgStr});
@@ -421,6 +485,134 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         line : 0,
                         value : 82
                     })
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody_wmid",
+                            line : 0,
+                            value : targetBol
+                        })
+                    }
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody_purchase_order",
+                            line : 0,
+                            value : targetBol
+                        })
+                    }
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody4",
+                            line : 0,
+                            value : targetBol
+                        })
+                    }
+
+                    if(targetCust)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custcol_wm_customer",
+                            line : 0,
+                            value : targetCust
+                        })
+                    }
+                    if(targetCons)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custcol_consignee",
+                            line : 0,
+                            value : targetCons
+                        })
+                    }
+                }
+
+                if(requestBody.FuelSurcharge)
+                {
+                    nsRecObj.setSublistValue({
+                        sublistId : "item",
+                        fieldId : "item",
+                        line : 1,
+                        value : FUELSURCHARGE_item
+                    })
+                    nsRecObj.setSublistValue({
+                        sublistId : "item",
+                        fieldId : "rate",
+                        line : 1,
+                        value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                    })
+                    nsRecObj.setSublistValue({
+                        sublistId : "item",
+                        fieldId : "quantity",
+                        line : 1,
+                        value : 1
+                    })
+                    nsRecObj.setSublistValue({
+                        sublistId : "item",
+                        fieldId : "amount",
+                        line : 1,
+                        value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                    })
+
+                    nsRecObj.setSublistValue({
+                        sublistId : "item",
+                        fieldId : "taxcode",
+                        line : 1,
+                        value : 82
+                    })
+
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody_wmid",
+                            line : 1,
+                            value : targetBol
+                        })
+                    }
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody_purchase_order",
+                            line : 1,
+                            value : targetBol
+                        })
+                    }
+                    if(targetBol)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custbody4",
+                            line : 1,
+                            value : targetBol
+                        })
+                    }
+
+                    if(targetCust)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custcol_wm_customer",
+                            line : 1,
+                            value : targetCust
+                        })
+                    }
+                    if(targetCons)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "custcol_consignee",
+                            line : 1,
+                            value : targetCons
+                        })
+                    }
                 }
 
 
@@ -457,7 +649,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         log.debug("targetItemInternalId", targetItemInternalId)
 
-                        if(mapping[accessorial_qualifier] && accessorial_qualifier && accessorial_charge)
+                        //do this to default to unknown accessorials
+                        // if(mapping[accessorial_qualifier] && accessorial_qualifier && accessorial_charge)
+                        if(targetItemInternalId && accessorial_qualifier && accessorial_charge)
                         {
                             if(targetItemInternalId)
                             {
@@ -497,12 +691,59 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 value : accessorial_charge
                             })
 
+                            //TODO, setup a rule when or when not to add tax
                             nsRecObj.setSublistValue({
                                 sublistId : "item",
                                 fieldId : "taxcode",
                                 line : targetLine,
                                 value : 82
                             })
+                            if(targetBol)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custbody_wmid",
+                                    line : targetLine,
+                                    value : targetBol
+                                })
+                            }
+                            if(targetBol)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custbody_purchase_order",
+                                    line : targetLine,
+                                    value : targetBol
+                                })
+                            }
+                            if(targetBol)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custbody4",
+                                    line : targetLine,
+                                    value : targetBol
+                                })
+                            }
+
+                            if(targetCust)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_wm_customer",
+                                    line : targetLine,
+                                    value : targetCust
+                                })
+                            }
+                            if(targetCons)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_consignee",
+                                    line : targetLine,
+                                    value : targetCons
+                                })
+                            }
                         }
 
 
@@ -548,13 +789,15 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value : true
                         })
                     }
+                    //just receive all - Cody said he spoke with Mike and accepted PO,IR,BILL to be created all at the same time.
                     else if(itemId != NF_item)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "itemreceive",
                             line : a-1,
-                            value : false
+                            // value : false,
+                            value : true
                         })
                     }
                 }
@@ -578,22 +821,22 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         line : a-1
                     })
                     log.debug("clearSublist itemId", itemId)
-                    if(itemId == NF_item)
-                    {
-                        nsRecObj.setSublistValue({
-                            sublistId : "item",
-                            fieldId : "rate",
-                            line : a-1,
-                            value : NF_rate
-                        })
-                    }
-                    else if(itemId != NF_item)
-                    {
-                        nsRecObj.removeLine({
-                            sublistId : "item",
-                            line : a-1
-                        })
-                    }
+                    // if(itemId == NF_item)
+                    // {
+                    //     nsRecObj.setSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : "rate",
+                    //         line : a-1,
+                    //         value : NF_rate
+                    //     })
+                    // }
+                    // else if(itemId != NF_item)
+                    // {
+                    nsRecObj.removeLine({
+                        sublistId : "item",
+                        line : a-1
+                    })
+                    // }
                 }
 
             }
@@ -679,10 +922,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 var sr = purchaseorderSearchObj.run();
 
                 sr.each(function(res){
-                    lookupPo_result.list.push(res.id);
-                    if(res.getValue({name:"status"}))
+                    lookupPo_result.list.push({id:res.id});
+                    if(res.getValue({name:"status"}) == "fullyBilled")
                     {
-                        lookupPo_result.errorcode = "Warning, the PO have related records that may be affected."
+                        lookupPo_result.list[0].errorcode = "Warning, the PO have related records that may be affected."
+                        lookupPo_result.list[0].status = res.getValue({name:"status"})
                     }
                     //no just get the first result
                     return false;
@@ -726,10 +970,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 sr.each(function(res){
                     log.debug("res", res)
-                    lookupPo_result.list.push(res.id);
+                    lookupPo_result.list.push({id:res.id});
                     if(res.getValue({name:"status"}) == "fullyBilled")
                     {
-                        lookupPo_result.errorcode = "Warning, the PO have related records that may be affected."
+                        lookupPo_result.list[0].errorcode = "Warning, the PO have related records that may be affected."
+                        lookupPo_result.list[0].status = res.getValue({name:"status"})
                     }
                     //no just get the first result
                     //no just get the first result
