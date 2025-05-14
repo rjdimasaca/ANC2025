@@ -520,6 +520,16 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                 ]
             }
 
+            var FREIGHTINVOICE = {
+                        accessorial_mapping : {
+                            // "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
+                            "Unknown Accessorial Line" : 188338,
+                            "Detention Charge" : 27415
+                        },
+                        "FUELSURCHARGE_item" : 12231,
+                        "NF_item" : "12493"
+                }
+
         return {
                 foo,
                 bar,
@@ -528,7 +538,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                 getForecastFilters,
                 yearMapping,
                 submitIntegrationLog,
-                MINIMIZE_UI
+                MINIMIZE_UI,
+                FREIGHTINVOICE
         }
 
     });

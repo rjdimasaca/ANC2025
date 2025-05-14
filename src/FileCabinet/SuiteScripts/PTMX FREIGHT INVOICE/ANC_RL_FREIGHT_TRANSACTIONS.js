@@ -42,14 +42,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
         }
 
-        var mapping = {
-            // "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
-            "Unknown Accessorial Line" : 188338,
-            "Detention Charge" : 27415
-        }
-
-        var FUELSURCHARGE_item = 12231;
-        var NF_item = 12493;
+        var accessorial_mapping = {}
+        var FUELSURCHARGE_item = "";
+        var NF_item = "";
 
         /**
          * Defines the function that is executed when a PUT request is sent to a RESTlet.
@@ -80,6 +75,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
          */
         const post = (requestBody) =>
         {
+            accessorial_mapping = ANC_lib.FREIGHTINVOICE.accessorial_mapping;
+            FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item;
+            NF_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item;
             try
             {
                 var poRecId = ""
@@ -186,7 +184,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("poRecId edit", poRecId);
 
                         var respMsg = {success:true, errorcode : lookupPo_result.errorcode, message : "Successfully Updated NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
-                        if(lookupPo_result.list[0].errorcode)
+                        if(lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
                         {
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.errorcode
@@ -287,10 +285,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             enableSourcing : true
                         })
 
-                        log.debug("poRecId edit", poRecId);
+                        log.debug("poRecId create", poRecId);
 
                         respMsg = {success:true, message : "Successfully Created NetSuite PO for load : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody};
-                        if(lookupPo_result.list[0].errorcode)
+                        if(lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
                         {
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.list[0].errorcode
@@ -409,7 +407,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     else
                     {
                         var respMsg = {success:false, message : "Cannot resolve load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody}
-                        if(lookupPo_result.list[0].errorcode)
+                        if(lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
                         {
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.errorcode
@@ -637,9 +635,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         var accessorial_charge = accessorial.charge;
                         var accessorial_qualifier = accessorial.qualifier;
                         var targetItemInternalId = "";
-                        if(accessorial_qualifier && mapping[accessorial_qualifier])
+                        if(accessorial_qualifier && accessorial_mapping[accessorial_qualifier])
                         {
-                            targetItemInternalId = mapping[accessorial_qualifier]
+                            targetItemInternalId = accessorial_mapping[accessorial_qualifier]
                         }
 
                         if(!targetItemInternalId)
@@ -650,7 +648,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("targetItemInternalId", targetItemInternalId)
 
                         //do this to default to unknown accessorials
-                        // if(mapping[accessorial_qualifier] && accessorial_qualifier && accessorial_charge)
+                        // if(accessorial_mapping[accessorial_qualifier] && accessorial_qualifier && accessorial_charge)
                         if(targetItemInternalId && accessorial_qualifier && accessorial_charge)
                         {
                             if(targetItemInternalId)
@@ -668,7 +666,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                     sublistId : "item",
                                     fieldId : "item",
                                     line : targetLine,
-                                    value : mapping["Unknown Accessorial Line"]
+                                    value : accessorial_mapping["Unknown Accessorial Line"]
                                 })
                             }
 
