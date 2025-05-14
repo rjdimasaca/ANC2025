@@ -14,7 +14,7 @@ BILL load
 {"CarrierParentId":null,"NetAmount":1500,"HarmonizedSalesAmount":0,"NonassignedCarrierAccessorials":null,"transactionDate":"2025-04-16T14:46:01.8697052-06:00","AcctCode":null,"ControlCustomerNumber":"6170","LoadID":"F0428XX1","Rate":1500,"RateQualifier":"FC","GoodsServicesAmount":0,"MethodOfPayment":"P","LineHaul":1300,"MinimumCharge":0,"InvoiceNumber":null,"Currency":"CAD","Accessorials":null,"CarrierID":"1127","ProvincialSalesAmount":0,"FuelSurcharge":0,"FuelSurchargeQualifier":"NC","ApiType":"INVOICE_UPDATE","IsFinalInvoice":true}
 */
 
-define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
+define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
      * @param{https} https
      * @param{record} record
@@ -22,7 +22,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
      * @param{search} search
      * @param{url} url
      */
-    (https, record, runtime, search, url) => {
+    (ANC_lib, https, record, runtime, search, url) => {
         /**
          * Defines the function that is executed when a GET request is sent to a RESTlet.
          * @param {Object} requestParams - Parameters from HTTP request URL; parameters passed as an Object (for all supported
@@ -56,6 +56,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
         }
 
+
+        var integrationLogId = null;
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
          * @param {string | Object} requestBody - The HTTP request body; request body is passed as a string when request
@@ -76,6 +78,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                 var loadID = requestBody.loadID || requestBody.LoadID;
                 var IsFinalInvoice = requestBody.IsFinalInvoice || requestBody.isFinalInvoice;
                 log.debug("loadID", loadID)
+
+                integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
 
                 if(IsFinalInvoice)
                 {
@@ -138,7 +142,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                             log.debug("irRecId", irRecId);
 
-                            // return JSON.stringify({success:true, message : "Successfully Submitted NetSuite Vendor Bill for load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody});
+                            // respMsgStr = JSON.stringify({success:true, message : "Successfully Submitted NetSuite Vendor Bill for load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody});
                         }
                         catch(e)
                         {
@@ -183,7 +187,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                         log.debug("vbRecId", vbRecId);
 
-                        return JSON.stringify({success:true, message : "Successfully Submitted NetSuite Vendor Bill for load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody});
+                        respMsg = ({success:true, message : "Successfully Submitted NetSuite Vendor Bill for load : " + loadID, NS_RECORD_INTERNALID:vbRecId, requestBody});
                     }
                     else
                     {
@@ -193,7 +197,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.errorcode
                         }
-                        return JSON.stringify(respMsg);
+                        throw (respMsg);
                     }
 
 
@@ -248,7 +252,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.errorcode
                         }
-                        return JSON.stringify(respMsg);
+
                     }
                     else
                     {
@@ -256,7 +260,7 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                         log.debug("1")
                         if(lookupPo_result.list && lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
                         {
-                            return JSON.stringify({success:false, errorcode:(lookupPo_result.list[0].errorcode), message : "Action Rejected for : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
+                            respMsgStr = JSON.stringify({success:false, errorcode:(lookupPo_result.list[0].errorcode), message : "Action Rejected for : " + loadID, NS_RECORD_INTERNALID:poRecId, requestBody});
                         }
 
                         log.debug("PO CREATE")
@@ -280,7 +284,8 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
 
                         if(!carrierInternalid)
                         {
-                            return JSON.stringify({success:false, message : "Cannot resolve Vendor/Carrier with externalid : " + carrierId, requestBody});
+                            respMsg ={success:false, message : "Cannot resolve Vendor/Carrier with externalid : " + carrierId, requestBody};
+                            throw respMsg;
                         }
 
                         var poRecObj = record.create({
@@ -342,16 +347,20 @@ define(['N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
                             // respMsg.errorcode = lookupPo_result.list[0].errorcode
                             respMsg.errorcode = lookupPo_result.errorcode
                         }
-                        return JSON.stringify(respMsg);
                     }
                 }
             }
             catch(e)
             {
                 log.error("ERROR in function post", e)
-                return JSON.stringify({success:false, message: "ERROR caught: " + JSON.stringify(e), requestBody});
+                respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), requestBody};
             }
 
+            respMsgStr = JSON.stringify(respMsg);
+
+            integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{response:respMsgStr});
+            log.debug(integrationLogId, integrationLogId)
+            return respMsgStr
         }
 
         function fillSublist(nsRecObj, requestBody, lookupPo_result, initializeMainItem)
