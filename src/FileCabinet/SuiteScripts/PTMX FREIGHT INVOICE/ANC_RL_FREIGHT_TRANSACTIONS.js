@@ -19,7 +19,7 @@ BILL load
 // for(var a = 0 ; a < arr.length ; a++)
 // {
 //     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
-
+//UI dont error out because it resolve tascode, but scripting does, is it because of static vs dynamic mode?
 //TODO different handling for truck to customer vs truck WHS-WHS - cody, rod
 //TODO different handling for taxcode, US carriers dont tax anc, CA carriers is questionable
 //TODO ... because LOBLAW taxes, but BISON does not based on PROD samples - cody, rod
@@ -518,15 +518,15 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     // })
                     // log.debug("currentLineItem", currentLineItem);
                     //TODO, setup a rule when or when not to add tax
-                    // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
-                    // {
-                    //     nsRecObj.setSublistValue({
-                    //         sublistId : "item",
-                    //         fieldId : "taxcode",
-                    //         line : 0,
-                    //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
-                    //     })
-                    // }
+                    if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "taxcode",
+                            line : 0,
+                            value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                        })
+                    }
 
                     if(targetBol)
                     {
@@ -616,15 +616,15 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     // })
                     // log.debug("currentLineItem", currentLineItem);
                     //TODO, setup a rule when or when not to add tax
-                    // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
-                    // {
-                    //     nsRecObj.setSublistValue({
-                    //         sublistId : "item",
-                    //         fieldId : "taxcode",
-                    //         line : 1,
-                    //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
-                    //     })
-                    // }
+                    if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "taxcode",
+                            line : 1,
+                            value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                        })
+                    }
 
                     if(targetBol)
                     {
@@ -763,15 +763,15 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             // })
                             // log.debug("currentLineItem", currentLineItem);
                             //TODO, setup a rule when or when not to add tax
-                            // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
-                            // {
-                            //     nsRecObj.setSublistValue({
-                            //         sublistId : "item",
-                            //         fieldId : "taxcode",
-                            //         line : targetLine,
-                            //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
-                            //     })
-                            // }
+                            if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "taxcode",
+                                    line : targetLine,
+                                    value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                                })
+                            }
 
                             if(targetBol)
                             {
