@@ -929,7 +929,18 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
 
                 // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
                 // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
-                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
+                //you want to group it by equipment, because the optimization method is at line level.
+                //this means it can be different equipments
+                //if you dont do this, you end up with shipments with different vehicles
+                //which is fine, but at fitment perspective, you will end up trying to fit 2 lines predefined with diff equips, to a single equips
+                //example
+                //orderline1 = equip1
+                //orderline2 = equip2
+                //if you dont group by equip, then you send this over as 1 group...
+                //you can only define 1 vhicle on the fitment api. so which one are you going to use.
+                //script will assume equip1 because it is index0 on the ordered group
+                //you then end up fitting orderline2 to equip1
+                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_equipmenttext", "line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
                 log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
 
@@ -1203,7 +1214,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
                             else
                             {
                                 itemStats[responseItemId] = {};
-                                itemStats[responseItemId].shipmentNumbers = [];
+                                itemStats[responseItemId].shipmentNumbers = [fitmentResponse_body_shipments[shipCtr].shipmentNumber];
                                 itemStats[responseItemId].truckCount = 1;
                             }
                         }

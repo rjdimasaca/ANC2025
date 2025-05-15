@@ -36,7 +36,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
             try
             {
                 elemList = ANC_lib.MINIMIZE_UI.elemList;
-                hideColumns(scriptContext);
+                // hideColumns(scriptContext);
                 addElements(scriptContext);
             }
             catch(e)
