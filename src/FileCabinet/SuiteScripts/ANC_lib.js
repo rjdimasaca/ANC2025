@@ -522,12 +522,18 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
 
             var FREIGHTINVOICE = {
                         accessorial_mapping : {
+                                //FUEL SURCHARGE IS NOT AN ACCESSORIAL
                             // "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
                             "Unknown Accessorial Line" : 188338,
                             "Detention Charge" : 27415
                         },
                         "FUELSURCHARGE_item" : 12231,
-                        "NF_item" : "12493"
+                        "NF_item" : "12493",
+                        "FUELSURCHARGE_item_truck_to_whs" : 12231,
+                        "FUELSURCHARGE_item_truck_to_cust" : 12231,
+                        TAXCODES : {
+                                "TAXCODE_NONTAXABLE82" : 82
+                        }
                 }
 
         return {

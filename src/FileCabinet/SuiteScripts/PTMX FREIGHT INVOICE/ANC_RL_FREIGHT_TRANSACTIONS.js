@@ -20,6 +20,9 @@ BILL load
 // {
 //     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
 
+//TODO different handling for truck to customer vs truck WHS-WHS - cody, rod
+//TODO different handling for taxcode, US carriers dont tax anc, CA carriers is questionable
+//TODO ... because LOBLAW taxes, but BISON does not based on PROD samples - cody, rod
 define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
      * @param{https} https
@@ -42,9 +45,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
         }
 
-        var accessorial_mapping = {}
-        var FUELSURCHARGE_item = "";
-        var NF_item = "";
 
         /**
          * Defines the function that is executed when a PUT request is sent to a RESTlet.
@@ -60,10 +60,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         }
 
 
+        var accessorial_mapping = {}
+        var NF_item = "";
         var targetBol = "";
         var targetCust = "";
         var targetCons = "";
         var integrationLogId = null;
+        var FUELSURCHARGE_item = "";
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
          * @param {string | Object} requestBody - The HTTP request body; request body is passed as a string when request
@@ -76,8 +79,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         const post = (requestBody) =>
         {
             accessorial_mapping = ANC_lib.FREIGHTINVOICE.accessorial_mapping;
-            FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item;
-            NF_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item;
+            NF_item = ANC_lib.FREIGHTINVOICE.NF_item;
+            FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
             try
             {
                 var poRecId = ""
@@ -116,6 +119,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     targetCons = res.getValue({
                         name: "custbody_consignee", label: "Consignee"
                     })
+
+                    FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
 
                     return false;
                 })
@@ -161,16 +166,20 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("transactionDateRaw", transactionDateRaw)
                         log.debug("transactionDate", transactionDate)
                         log.debug("transactionDateStr", transactionDateStr)
+                        log.debug("requestBody.NetAmount", requestBody.NetAmount)
 
                         poRecObj.setText({
                             fieldId : "trandate",
                             value :transactionDateStr,
                             text :transactionDateStr
                         })
-
                         poRecObj.setValue({
                             fieldId : "approvalstatus",
                             value :"1",
+                        })
+                        poRecObj.setValue({
+                            fieldId : "custbody_anc_integ_origamt",
+                            value : requestBody.NetAmount,
                         })
 
                         clearSublist(poRecObj, requestBody);
@@ -248,6 +257,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("transactionDateRaw", transactionDateRaw)
                         log.debug("transactionDate", transactionDate)
                         log.debug("transactionDateStr", transactionDateStr)
+                        log.debug("requestBody.NetAmount", requestBody.NetAmount)
 
                         poRecObj.setText({
                             fieldId : "trandate",
@@ -259,6 +269,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "approvalstatus",
                             value :"1",
                         })
+                        poRecObj.setValue({
+                            fieldId : "custbody_anc_integ_origamt",
+                            value : requestBody.NetAmount,
+                        })
+
                         poRecObj.setValue({
                             fieldId : "externalid",
                             value :loadID,
@@ -377,6 +392,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("transactionDateRaw", transactionDateRaw)
                         log.debug("transactionDate", transactionDate)
                         log.debug("transactionDateStr", transactionDateStr)
+                        log.debug("requestBody.NetAmount", requestBody.NetAmount)
 
                         vbRecObj.setText({
                             fieldId : "trandate",
@@ -389,6 +405,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value :"1",
                         })
 
+                        poRecObj.setValue({
+                            fieldId : "externalid",
+                            value :loadID,
+                        })
+                        // poRecObj.setValue({
+                        //     fieldId : "custbody_work_order",
+                        //     value :loadID,
+                        // })
+                        poRecObj.setValue({
+                            fieldId : "custbody_purchase_order",
+                            value :loadID,
+                        })
 
                         // clearSublist(vbRecObj, requestBody);
                         // fillSublist(vbRecObj, requestBody, lookupPo_result);
@@ -477,12 +505,29 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         value : requestBody.rate || requestBody.Rate
                     })
 
-                    nsRecObj.setSublistValue({
-                        sublistId : "item",
-                        fieldId : "taxcode",
-                        line : 0,
-                        value : 82
-                    })
+                    // var currentLineTaxcode = nsRecObj.getSublistValue({
+                    //     sublistId : "item",
+                    //     fieldId : "taxcode",
+                    //     line : 0
+                    // })
+                    // log.debug("currentLineTaxcode", currentLineTaxcode);
+                    // var currentLineItem = nsRecObj.getSublistValue({
+                    //     sublistId : "item",
+                    //     fieldId : "item",
+                    //     line : targetLine
+                    // })
+                    // log.debug("currentLineItem", currentLineItem);
+                    //TODO, setup a rule when or when not to add tax
+                    // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    // {
+                    //     nsRecObj.setSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : "taxcode",
+                    //         line : 0,
+                    //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                    //     })
+                    // }
+
                     if(targetBol)
                     {
                         nsRecObj.setSublistValue({
@@ -558,12 +603,28 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
                     })
 
-                    nsRecObj.setSublistValue({
-                        sublistId : "item",
-                        fieldId : "taxcode",
-                        line : 1,
-                        value : 82
-                    })
+                    // var currentLineTaxcode = nsRecObj.getSublistValue({
+                    //     sublistId : "item",
+                    //     fieldId : "taxcode",
+                    //     line : 1
+                    // })
+                    // log.debug("currentLineTaxcode", currentLineTaxcode);
+                    // var currentLineItem = nsRecObj.getSublistValue({
+                    //     sublistId : "item",
+                    //     fieldId : "item",
+                    //     line : targetLine
+                    // })
+                    // log.debug("currentLineItem", currentLineItem);
+                    //TODO, setup a rule when or when not to add tax
+                    // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    // {
+                    //     nsRecObj.setSublistValue({
+                    //         sublistId : "item",
+                    //         fieldId : "taxcode",
+                    //         line : 1,
+                    //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                    //     })
+                    // }
 
                     if(targetBol)
                     {
@@ -689,13 +750,29 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 value : accessorial_charge
                             })
 
+                            // var currentLineTaxcode = nsRecObj.getSublistValue({
+                            //     sublistId : "item",
+                            //     fieldId : "taxcode",
+                            //     line : targetLine
+                            // })
+                            // log.debug("currentLineTaxcode", currentLineTaxcode);
+                            // var currentLineItem = nsRecObj.getSublistValue({
+                            //     sublistId : "item",
+                            //     fieldId : "item",
+                            //     line : targetLine
+                            // })
+                            // log.debug("currentLineItem", currentLineItem);
                             //TODO, setup a rule when or when not to add tax
-                            nsRecObj.setSublistValue({
-                                sublistId : "item",
-                                fieldId : "taxcode",
-                                line : targetLine,
-                                value : 82
-                            })
+                            // if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                            // {
+                            //     nsRecObj.setSublistValue({
+                            //         sublistId : "item",
+                            //         fieldId : "taxcode",
+                            //         line : targetLine,
+                            //         value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                            //     })
+                            // }
+
                             if(targetBol)
                             {
                                 nsRecObj.setSublistValue({
