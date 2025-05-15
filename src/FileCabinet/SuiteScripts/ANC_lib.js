@@ -227,7 +227,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                     "2050" : 31,
             }
 
-            function submitIntegrationLog(integrationLogId, integrationLogObj)
+            function submitIntegrationLog(integrationLogId, integrationLogObj, ignoreTags)
             {
                     var functionResult = {};
                     try
@@ -316,6 +316,103 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                                     })
                             }
 
+                            //TAGS
+                            if(runtime.getCurrentScript().deploymentId)
+                            {
+                                    var searchObj = search.create({
+                                            type : "scriptdeployment",
+                                            filters : ["scriptid","is",runtime.getCurrentScript().deploymentId]
+                                    });
+
+                                    var deploymentNumericInternalId = "";
+                                    searchObj.run().each(function(res){
+                                            deploymentNumericInternalId = res.id;
+                                            return false;
+                                    })
+
+                                    recObj.setValue({
+                                            fieldId : "custrecord_anc_icl_deployment",
+                                            value :deploymentNumericInternalId
+                                    })
+                            }
+
+
+                            try
+                            {
+                                    if(ignoreTags)
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                            if(integrationLogObj.request)
+                                            {
+                                                    var searchFilter = [];
+                                                    var tagArray = [];
+
+                                                    log.debug("integrationLogObj.request", integrationLogObj.request);
+
+                                                    var requestObj = (typeof integrationLogObj.request == "object") ? integrationLogObj.request : JSON.parse(integrationLogObj.request);
+
+                                                    if(requestObj.integrationLogTags)
+                                                    {
+                                                            if(typeof requestObj.integrationLogTags == "object")
+                                                            {
+                                                                    if(Array.isArray(requestObj.integrationLogTags))
+                                                                    {
+                                                                            tagArray = requestObj.integrationLogTags
+                                                                    }
+                                                            }
+                                                            else if(typeof requestObj.integrationLogTags == "string")
+                                                            {
+                                                                    tagArray = requestObj.integrationLogTags.split(",")
+                                                            }
+
+                                                            var tagArrayQuoted = tagArray.map(function(tag){
+                                                                    return `'${tag}'`
+                                                            })
+                                                            var tagArrayStr = tagArrayQuoted.join(",");
+                                                            var searchFilter = [`formulanumeric: CASE WHEN {name} IN (${tagArrayStr}) THEN 1 ELSE 0 END`,"equalto","1"]
+
+                                                            var searchTags_results = searchTags(searchFilter);
+
+                                                            var tagFieldValues = [];
+                                                            for(var a = 0 ; a < tagArray.length ; a++)
+                                                            {
+                                                                    if(searchTags_results.byName[tagArray[a]])
+                                                                    {
+                                                                            tagFieldValues.push(searchTags_results.byName[tagArray[a]].id);
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                            var tagRecObj = record.create({
+                                                                                    type : "customrecord_anc_tags"
+                                                                            });
+                                                                            tagRecObj.setValue({
+                                                                                    fieldId : "name",
+                                                                                    value : tagArray[a]
+                                                                            });
+                                                                            var newTagRecId = tagRecObj.save()
+                                                                            tagFieldValues.push(newTagRecId);
+                                                                    }
+
+                                                            }
+                                                            log.debug("tagFieldValues", tagFieldValues)
+                                                            recObj.setValue({
+                                                                    fieldId : "custrecord_anc_icl_tags",
+                                                                    value :tagFieldValues
+                                                            })
+
+                                                    }
+                                            }
+                                    }
+                            }
+                            catch(e)
+                            {
+                                    log.error("ERROR (acceptable) in function submitIntegrationLogs", e)
+                            }
+
+
                             var submittedRecId = recObj.save({
                                     ignoreMandatoryFields : true,
                                     allowSourcing : true
@@ -340,6 +437,44 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                     }
                     return submittedRecId;
                     // return functionResult;
+            }
+
+            function searchTags(filters, cols)
+            {
+                    cols = cols ? cols : [];
+                    var searchTags_results = {byId:{}, byName:{},list:[]};
+                    var nameCol = search.createColumn({name: "name", label: "Name"});
+                    cols = cols.concat([nameCol])
+                    var customrecord_anc_tagsSearchObj = search.create({
+                            type: "customrecord_anc_tags",
+                            filters:
+                                [
+                                        filters
+                                ],
+                            columns:
+                                cols
+                    });
+                    var searchResultCount = customrecord_anc_tagsSearchObj.runPaged().count;
+                    log.debug("customrecord_anc_tagsSearchObj result count",searchResultCount);
+                    customrecord_anc_tagsSearchObj.run().each(function(result){
+                            // .run().each has a limit of 4,000 results
+
+                            var resObj = {};
+                            resObj.id = result.id;
+                            for(var a = 0 ; a < cols.length ; a++)
+                            {
+                                    resObj[cols[a].label] = result.getValue(nameCol)
+                            }
+                            searchTags_results.byName[result.getValue(nameCol)] = resObj
+                            searchTags_results.byId[result.id] = resObj
+                            return true;
+                    });
+
+                    log.debug("searchTags_results", searchTags_results);
+
+                    searchTags_results
+
+                    return searchTags_results
             }
 
             var MINIMIZE_UI = {
