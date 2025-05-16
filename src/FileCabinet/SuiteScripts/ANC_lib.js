@@ -54,6 +54,28 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                         city : "custrecord_alberta_ns_city",
                                 }
                         },
+                        production_forecast : {
+                                id: "customrecord_production_forecast",
+                                fields: {
+                                        month: "custrecord_prodfc_month",
+                                        quantity: "custrecord_prodfc_plannedprodpmcap",
+                                        year: "custrecord_prodfc_year",
+                                        name: "name",
+                                },
+                        },
+                        production_year : {
+                                id:"customrecord_anc_pf_years",
+                                fields : {
+                                        month : "name",
+                                        quantity : "name",
+                                        year : "custrecord_prodfc_year",
+                                        name : "name",
+                                },
+                                sublists : {
+                                        salesforecast : "recmachcustrecord_anc_pf_year",
+                                        productionforecast : "recmachcustrecord_prodfc_year"
+                                }
+                        }
                 }
         }
 
@@ -1087,6 +1109,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             }
 
 
+
+
         return {
                 groupBy,
                 groupByKeys,
@@ -1103,7 +1127,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 PTMX,
                 getFitmentResponse,
                 generateShipments,
-                groupOrderLinesForShipmentGeneration
+                groupOrderLinesForShipmentGeneration,
         }
 
     });

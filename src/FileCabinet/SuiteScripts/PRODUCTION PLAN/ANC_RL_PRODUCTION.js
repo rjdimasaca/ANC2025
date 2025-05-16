@@ -45,6 +45,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         }
 
 
+        var prodCapYearMonthSublist = "recmachcustrecord_prodfc_year";
         var integrationLogId = null;
         var yearRecObj = null;
         /**
@@ -65,7 +66,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 if(typeof requestBody == "object")
                 {
-                    var getWeekResults = {};
+                    var getWeeksResults = {};
 
                     var yearRecId = "";
                     var yearSearch = search.create({
@@ -107,9 +108,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         var submittedYearRecObj = yearRecObj.save();
                         log.debug("submittedYearRecObj multimonth", submittedYearRecObj)
-                        getWeekResults = getWeeks(requestBody.year, requestBody.months[0].monthNumber, false)
 
-                        log.debug("getWeekResults", getWeekResults)
+
+                        updateTargetYearMonths(requestBody.year, requestBody.months, submittedYearRecObj)
+
                     }
                     else
                     {
@@ -121,8 +123,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         var submittedYearRecObj = yearRecObj.save();
                         log.debug("submittedYearRecObj single month", submittedYearRecObj)
 
-                        getWeekResults = getWeeks(requestBody.year, requestBody.months, false)
-                        log.debug("getWeekResults", getWeekResults)
+                        updateTargetYearMonths(requestBody.year, [requestBody.months], submittedYearRecObj)
+
                     }
                 }
                 log.debug("requestBody", requestBody);
@@ -142,6 +144,98 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             return respMsgStr
         }
 
+        function updateTargetYearMonths(year, monthsFromRequest, submittedYearRecObj)
+        {
+            try
+            {
+                yearRecObj = record.load({
+                    type : "customrecord_anc_pf_years",
+                    id : submittedYearRecObj
+                })
+
+                var yearMonthsLineCount = yearRecObj.getLineCount({
+                    sublistId : prodCapYearMonthSublist
+                })
+                log.debug("yearMonthsLineCount", yearMonthsLineCount);
+                for(var a = 0 ; a < yearMonthsLineCount ; a++)
+                {
+                    var monthCap_id = yearRecObj.getSublistValue({
+                        sublistId : prodCapYearMonthSublist,
+                        fieldId : "id",
+                        line : a
+                    });
+
+                    log.debug("monthCap_id", monthCap_id);
+
+                    var monthCapRecObj = record.load({
+                        type : ANC_lib.references.RECTYPES.production_forecast.id,
+                        id : monthCap_id
+                    })
+
+                    var monthCapRecObj_monthNumber = monthCapRecObj.getValue({
+                        fieldId : ANC_lib.references.RECTYPES.production_forecast.fields.month
+                    })
+                    var monthCapRecObj_quantity = monthCapRecObj.getValue({
+                        fieldId : ANC_lib.references.RECTYPES.production_forecast.fields.quantity
+                    }) || 0
+                    var weeklyDistributionQty = monthCapRecObj_quantity / 4;
+
+                    log.debug("weeklyDistributionQty", weeklyDistributionQty)
+                    var getWeeksResults = getWeeks(year, monthCapRecObj_monthNumber, null)
+                    log.debug("getWeeksResults", getWeeksResults);
+
+                    for(var b = 0 ; b < getWeeksResults.length ; b++)
+                    {
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "custrecord_prodfcw_weeknumber",
+                            line : b,
+                            value : getWeeksResults[b].week
+                        })
+
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "custrecord_prodfcw_daterangestart",
+                            line : b,
+                            value : new Date(getWeeksResults[b].start)
+                        })
+
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "custrecord_prodfcw_daterangeend",
+                            line : b,
+                            value : new Date(getWeeksResults[b].end)
+                        })
+
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "custrecord_prodfcw_capacity",
+                            line : b,
+                            value : weeklyDistributionQty
+                        })
+
+                        var monthWithLeadingZero = monthCapRecObj_monthNumber < 10 ? `0${monthCapRecObj_monthNumber}` : `${monthCapRecObj_monthNumber}`;
+
+
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "name",
+                            line : b,
+                            value : `${year}|${monthWithLeadingZero}|WEEK${getWeeksResults[b].week}`
+                        })
+                    }
+
+                    var submittedMonthCapacityRecId = monthCapRecObj.save();
+                    log.debug("submittedMonthCapacityRecId", submittedMonthCapacityRecId)
+                }
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function updateTargetYearMonths", e);
+            }
+        }
+
         function fillProdMonthSublist(a, requestBody)
         {
             for(var b = 0 ; b < requestBody.months.length ; b++)
@@ -154,19 +248,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 {
                     var monthWithLeadingZero = monthNumber < 10 ? `0${monthNumber}` : `${monthNumber}`;
                     yearRecObj.setSublistValue({
-                        sublistId : "recmachcustrecord_prodfc_year",
+                        sublistId : prodCapYearMonthSublist,
                         fieldId : "custrecord_prodfc_month",
                         line : a,
                         value : monthNumber
                     })
                     yearRecObj.setSublistValue({
-                        sublistId : "recmachcustrecord_prodfc_year",
+                        sublistId : prodCapYearMonthSublist,
                         fieldId : "custrecord_prodfc_plannedprodpmcap",
                         line : a,
                         value :requestBody.months[b].quantity
                     })
                     yearRecObj.setSublistValue({
-                        sublistId : "recmachcustrecord_prodfc_year",
+                        sublistId : prodCapYearMonthSublist,
                         fieldId : "name",
                         line : a,
                         value : monthWithLeadingZero + "|" + requestBody.year
@@ -178,19 +272,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     var monthWithLeadingZero = newLineMonthId < 10 ? `0${newLineMonthId}` : `${newLineMonthId}`;
 
                     yearRecObj.setSublistValue({
-                        sublistId : "recmachcustrecord_prodfc_year",
+                        sublistId : prodCapYearMonthSublist,
                         fieldId : "custrecord_prodfc_month",
                         line : a,
                         value : a+1
                     })
                     // yearRecObj.setSublistValue({
-                    //     sublistId : "recmachcustrecord_prodfc_year",
+                    //     sublistId : prodCapYearMonthSublist,
                     //     fieldId : "custrecord_prodfc_plannedprodpmcap",
                     //     line : a,
                     //     value :requestBody.months[b].quantity
                     // })
                     yearRecObj.setSublistValue({
-                        sublistId : "recmachcustrecord_prodfc_year",
+                        sublistId : prodCapYearMonthSublist,
                         fieldId : "name",
                         line : a,
                         value : monthWithLeadingZero + "|" + requestBody.year
