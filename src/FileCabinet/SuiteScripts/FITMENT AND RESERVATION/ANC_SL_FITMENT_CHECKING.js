@@ -3,13 +3,13 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
+define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
     /**
      * @param{runtime} runtime
      * @param{search} search
      * @param{url} url
      */
-    (https, record, redirect, runtime, search, url, uiSw) => {
+    (ANC_lib, https, record, redirect, runtime, search, url, uiSw) => {
 
         var globalrefs = {};
         var orderLineLimit = 0;
@@ -762,175 +762,15 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
             try
             {
 
+                var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(scriptContext.request.parameters["traninternalid"])
 
 
-
-
-
-
-
-
-
-                var filters = [
-                    ["type","anyof","SalesOrd"],
-                    "AND",
-                    ["mainline","is","F"],
-                    "AND",
-                    ["taxline","is","F"],
-                ];
 
 
                 // globalrefs.tranBodyVals.location
                 // globalrefs.tranItemVals.deliverydate
                 // globalrefs.tranItemVals.destination
-                if(scriptContext.request.parameters["traninternalid"])
-                {
-                    filters.push("AND")
-                    filters.push(["internalid","anyof",scriptContext.request.parameters["traninternalid"]])
-                }
-                // if(globalrefs.tranBodyVals.location)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["location","anyof",globalrefs.tranBodyVals.location])
-                // }
-                // if(globalrefs.tranItemVals.deliverydate)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["trandate","on",globalrefs.tranItemVals.deliverydate])
-                // }
-                // if(globalrefs.tranItemVals.destinationid)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["line.cseg_anc_dstnation","anyof",globalrefs.tranItemVals.destinationid])
-                // }
 
-                log.debug("filters", filters)
-
-                var salesorderSearchObj = search.create({
-                    type: "salesorder",
-                    filters: filters,
-                    columns:
-                        [
-                            search.createColumn({name: "internalid", label: "internalid"}),
-                            search.createColumn({name: "statusref", label: "status"}),
-                            search.createColumn({name: "mainname", label: "entity"}),
-                            search.createColumn({name: "item", label: "line_item"}),
-                            search.createColumn({
-                                name: "parent",
-                                join: "item",
-                                label: "line_item_parent"
-                            }),
-                            search.createColumn({name: "quantity", label: "line_quantity"}),
-                            search.createColumn({name: "location", label: "line_location"}),
-                            search.createColumn({name: "line", label: "line_id"}),
-                            search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
-                            search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
-                            search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
-                            search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
-                            //TODO you dont need it as result, only as filter, you need to join to line
-                            // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
-                            search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
-                            search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
-                            search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
-                            search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
-                            search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
-                            // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
-                            search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
-                            search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
-                            search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
-                            search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
-                            search.createColumn({
-                                name: "custitem_anc_rolldiameter",
-                                join: "item",
-                                label: "line_item_rolldiameter"
-                            }),
-                            search.createColumn({
-                                name: "custitem_anc_rollwidth",
-                                join: "item",
-                                label: "line_item_rollwidth"
-                            }),
-                            search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
-                            search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
-                            search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
-                            search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
-                            search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
-                            search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
-                            search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
-                        ]
-                });
-                var searchResultCount = salesorderSearchObj.runPaged().count;
-                log.debug("salesorderSearchObj result count",searchResultCount);
-                // salesorderSearchObj.run().each(function(result){
-                //     // .run().each has a limit of 4,000 results
-                //     return true;
-                // });
-
-                var sr = getResults(salesorderSearchObj.run());
-
-                var firstLocationId = "";
-                var firstLocationText = "";
-                var srToObjects = sr.map(function(res){
-                    // var res = sr[a];
-
-                    var columns = res.columns;
-
-                    var resObjByColumnKey = {}
-                    columns.forEach(function(column) {
-                        var label = column.label || column.name; // Fallback to name if label is unavailable
-                        var value = res.getValue(column);
-
-                        // if(label == "line_deliverydate")
-                        // {
-                        //     resObjByColumnKey.line_deliverydatetext = res.getText(column);
-                        // }
-
-                        resObjByColumnKey[label] = value;
-
-
-                        if(label == "line_location")
-                        {
-                            if(!firstLocationId)
-                            {
-                                firstLocationId = res.getValue(column);
-                            }
-                            if(!firstLocationText)
-                            {
-                                firstLocationText = res.getText(column);
-                            }
-
-                            resObjByColumnKey.line_location = firstLocationId;
-                            resObjByColumnKey.line_locationtext = firstLocationText;
-                        }
-                        if(label == "line_consignee")
-                        {
-                            resObjByColumnKey.line_consigneetext = res.getText(column);
-                        }
-                        if(label == "line_equipment")
-                        {
-                            resObjByColumnKey.line_equipmenttext = res.getText(column);
-                        }
-                        if(label == "line_item_rollwidth")
-                        {
-                            resObjByColumnKey.line_item_rollwidthtext = res.getText(column);
-                        }
-                        if(label == "line_item_rolldiameter")
-                        {
-                            resObjByColumnKey.line_item_rolldiametertext = res.getText(column);
-                        }
-                    });
-
-                    resObjByColumnKey.id = res.id
-
-
-
-                    return resObjByColumnKey;
-                })
-                log.debug("srToObjects", srToObjects)
-
-                // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
-                // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
-                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
-                log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
 
                 var sublistSettings = {
@@ -1177,7 +1017,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
 
 
 
-                    var fitmentResponse = getFitmentResponse(srGroupedByDeliveryDate[date]);
+                    var fitmentResponse = ANC_lib.getFitmentResponse(srGroupedByDeliveryDate[date]);
 
                     log.debug("fitmentResponse", fitmentResponse)
 
@@ -1461,39 +1301,6 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
 
 
 
-
-                            // if(fitmentResponse.list[b] && fitmentResponse.list[b].loadid)
-                            // {
-                            //     fitmentReservationSublist.setSublistValue({
-                            //         id : "custpage_ifr_loadid",
-                            //         line : multiGradeIndex || b,
-                            //         value : fitmentResponse.list[b].loadid
-                            //     })
-                            // }
-                            // if(fitmentResponse.list[b] && fitmentResponse.list[b].loadnumber)
-                            // {
-                            //     fitmentReservationSublist.setSublistValue({
-                            //         id : "custpage_ifr_loadnum",
-                            //         line : multiGradeIndex || b,
-                            //         value : fitmentResponse.list[b].loadnumber
-                            //     })
-                            // }
-                            // if(fitmentResponse.list[b] && fitmentResponse.list[b].weightplanned)
-                            // {
-                            //     fitmentReservationSublist.setSublistValue({
-                            //         id : "custpage_ifr_weightplanned",
-                            //         line : multiGradeIndex || b,
-                            //         value : fitmentResponse.list[b].weightplanned
-                            //     })
-                            // }
-                            // if(fitmentResponse.list[b] && fitmentResponse.list[b].percentage)
-                            // {
-                            //     fitmentReservationSublist.setSublistValue({
-                            //         id : "custpage_ifr_percentage",
-                            //         line : multiGradeIndex || b,
-                            //         value : fitmentResponse.list[b].percentage
-                            //     })
-                            // }
                             if(allowMultiGrade)
                             {
                                 multiGradeIndex++;
@@ -1511,111 +1318,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
             }
         }
 
-        function groupBy(objectArray, property) {
-            return objectArray.reduce(function (acc, obj) {
-                var key = obj[property];
-                if (!acc[key]) {
-                    acc[key] = [];
-                }
-                acc[key].push(obj);
-                return acc;
-            }, {});
-        }
 
-        function groupByKeys(objectArray, property) {
-            return objectArray.reduce(function (acc, obj) {
-
-                // var separator = " | ";
-                var separator = " > ";
-                var key = "";
-                var origkeys = "";
-                var isCrossDock = true;
-                var isCrossDock = obj.custrecord_anc_crossdockeligible;
-                if(!isCrossDock || isCrossDock == "F")
-                {
-                    var obj1 = JSON.parse(JSON.stringify(obj))
-                    for(var a = 0 ; a < property.length; a++)
-                    {
-                        obj1["orig_"+property[a]] = obj1[""+property[a]];
-                        origkeys += separator + (obj1[property[a]] || "");
-                        key +=  separator + (obj1[property[a]] || "");
-                    }
-
-                    obj1["orig_custrecord_anc_lane_destinationcity"] = obj1["custrecord_anc_lane_destinationcity"];
-                    obj1["orig_line_location"] = obj1["line_location"];
-                    obj1.origkeys = origkeys;
-                    // key += "|"
-
-                    if (!acc[key]) {
-                        acc[key] = [];
-                    }
-                    acc[key].push(obj1);
-                }
-                else/* if(isCrossDock)*/
-                {
-                    //LEG1
-
-                    var obj1 = JSON.parse(JSON.stringify(obj))
-                    for(var a = 0 ; a < property.length; a++)
-                    {
-                        origkeys += separator + (obj1[property[a]] || "");
-                        if(property[a] == "custrecord_anc_lane_destinationcity")
-                        {
-                            obj1["orig_"+property[a]] = obj1["custrecord_anc_lane_destinationcity"];
-                            obj1[property[a]] = obj1["custrecord_anc_lane_crossdockcity"];
-                        }
-                        key +=  separator + (obj1[property[a]] || "");
-                    }
-                    obj1["orig_line_location"] = obj1["line_location"];
-                    obj1.custpage_ifr_leg = "1";
-                    obj1.subtabname = obj1["line_uniquekey"];
-                    obj1.origkeys = origkeys;
-                    // key += "|"
-
-                    if (!acc[key]) {
-                        acc[key] = [];
-                    }
-                    acc[key].push(obj1);
-
-                    key = "";
-                    origkeys = "";
-
-                    //LEG2
-
-                    var obj2 = JSON.parse(JSON.stringify(obj))
-                    for(var a = 0 ; a < property.length; a++)
-                    {
-                        origkeys += separator + (obj2[property[a]] || "");
-                        if(property[a] == "line_locationtext")
-                        {
-                            obj2["orig_"+property[a]] = obj2["line_locationtext"];
-                            obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
-                        }
-                        key +=  separator + (obj2[property[a]] || "");
-                    }
-                    obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
-                    obj2["orig_line_location"] = obj2["line_location"];
-                    obj2.custpage_ifr_leg = "2";
-                    obj2.subtabname = obj2["line_uniquekey"];
-                    obj2.origkeys = origkeys;
-                    // key += "|"
-
-                    if (!acc[key]) {
-                        acc[key] = [];
-                    }
-                    acc[key].push(obj2);
-                }
-
-                return acc;
-            }, {});
-        }
-
-        // var groupBy = function(xs, key) {
-        //     return xs.reduce(function(rv, x) {
-        //         (rv[x[key]] ??= []).push(x);
-        //         return rv;
-        //     }, {});
-        // };
 
 
         function fillSublist(scriptContext)
@@ -1656,133 +1359,7 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
         //     return fitmentResponse;
         // }
 
-        function getFitmentResponse(rawRequestData)
-        {
-            log.debug("getFitmentResponse rawRequestData", rawRequestData)
-            var fitmentResponse = {
-                list : []
-            };
-            var fitmentRequestData = {};
-            // fitmentRequestData.country = "Canada"; //TODO
-            fitmentRequestData.JurisdictionName = "Canada"; //TODO
-            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext || "TRTAMDV53"; //TODO REMOVE THIS FALLBACK DEFAULT
-            fitmentRequestData.transportationMode = "TRUCK"; //TODO
-            fitmentRequestData.orderItems = [];
-            try
-            {
-                // fitmentRequestData.orderItems.push(
-                //     {
-                //         ItemId : "188522",
-                //         Diameter : 127, //TODO
-                //         Width : 85.09,
-                //         Weight : 645.2,
-                //         Nb : 70,
-                //         Type : 1,
-                //         RPP : 1,
-                //     }
-                // )
-                // fitmentRequestData.orderItems.push(
-                //     {
-                //         ItemId : "188537",
-                //         Diameter : 127, //TODO
-                //         Width : 88.90,
-                //         Weight : 673.1,
-                //         Nb : 28,
-                //         Type : 1,
-                //         RPP : 1,
-                //     }
-                // )
-                //TODO
-                for(var a = 0 ; a < rawRequestData.length ; a++)
-                {
-                    fitmentRequestData.orderItems.push(
-                        {
-                            ItemId : rawRequestData[a].line_uniquekey,
-                            Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
-                            Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
-                            Weight : rawRequestData[a].line_item_basis_weight || 673.1,
-                            Nb : rawRequestData[a].line_quantity,
-                            Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
-                            RPP : rawRequestData[a].line_item_rollsperpack || 1,
-                        }
-                    )
 
-                    // fitmentRequestData.orderItems.push(
-                    //     {
-                    //         ItemId : rawRequestData[a].line_uniquekey,
-                    //         Diameter : 127, //TODO
-                    //         Width : 88.90,
-                    //         Weight : 673.1,
-                    //         Nb : 28,
-                    //         Type : 1,
-                    //         RPP : 1,
-                    //     }
-                    // )
-                }
-
-                log.debug("fitmentRequestData", fitmentRequestData)
-
-                fitmentRequestData = JSON.stringify(fitmentRequestData)
-
-                var connection_timeStamp_start = new Date().getTime();
-
-                var rawResp = https.post({
-                    url: "https://loadfitting.anchub.ca/loadfitting/generateshipments",
-                    body : fitmentRequestData,
-                    headers : {
-                        "Authorization" : "Bearer 67afba48c5e94f0689dc4f9cb18afed2",
-                        "Content-Type" : "application/json",
-                        "accept": "*/*"
-                    }
-                });
-
-                var connection_timeStamp_end = new Date().getTime();
-
-                log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
-
-                log.debug("rawResp.body", rawResp.body)
-
-
-                return rawResp;
-
-                // var fitmentObj = {
-                //     equipment: "1",
-                //     ftlcount: "1",
-                //     ftlavetonnage: "1",
-                //     ftlavecostperton: "1",
-                //     ftlavepercentutil: "1",
-                //     ltltonnage: "1",
-                //     ltlpercentutil: "1",
-                //     ltlrolls: "1",
-                //     loadid: "1",
-                //     loadnumber: "1",
-                //     weightplanned: "weight planned",
-                //     percentage: "10",
-                // };
-                // fitmentResponse.list.push(fitmentObj)
-                //
-                // var fitmentObj = {
-                //     equipment: "1",
-                //     ftlcount: "2",
-                //     ftlavetonnage: "2",
-                //     ftlavecostperton: "2",
-                //     ftlavepercentutil: "2",
-                //     ltltonnage: "2",
-                //     ltlpercentutil: "2",
-                //     ltlrolls: "2",
-                //     loadid: "2",
-                //     loadnumber: "2",
-                //     weightplanned: "weight planned",
-                //     percentage: "10",
-                // };
-                // fitmentResponse.list.push(fitmentObj)
-            }
-            catch(e)
-            {
-                log.error("ERROR in function getFitmentResponse", e);
-            }
-            return fitmentResponse;
-        }
 
         const toMDY = (dateVal) => {
             var retVal = dateVal;
@@ -1822,31 +1399,6 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
         }
 
 
-        function groupBy(array, key) {
-            return array.reduce(function (acc, obj) {
-                let groupKey = obj[key];
-                acc[groupKey] = acc[groupKey] || [];
-                acc[groupKey].push(obj);
-                return acc;
-            }, {});
-        }
-
-        var getResults = function getResults(set) {
-            var holder = [];
-            var i = 0;
-            while (true) {
-                var result = set.getRange({
-                    start: i,
-                    end: i + 1000
-                });
-                if (!result) break;
-                holder = holder.concat(result);
-                if (result.length < 1000) break;
-                i += 1000;
-            }
-            return holder;
-        };
-
         function convertArrayToConcat(arr, headerquantity)
         {
             var str = "";
@@ -1869,3 +1421,65 @@ define(['N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', '
 
 
 
+/*
+sample payload
+{"JurisdictionName":"Canada","vehicleName":"TRTAMHTR53","transportationMode":"TRUCK","orderItems":[{"ItemId":"69348155","Diameter":100,"Width":100,"Weight":"673.1","Nb":"40","Type":1,"RPP":1}]}
+ */
+
+/*
+sample response
+{
+  "isSuccess": true,
+  "errorMessage": "",
+  "shipments": [
+    {
+      "shipmentNumber": 1,
+      "shipmentItems": [
+        {
+          "itemId": "69348155",
+          "nb": 24
+        }
+      ],
+      "base64Image": "",
+      "loadingPattern": null
+    },
+    {
+      "shipmentNumber": 2,
+      "shipmentItems": [
+        {
+          "itemId": "69348154",
+          "nb": 8
+        },
+        {
+          "itemId": "69348155",
+          "nb": 16
+        }
+      ],
+      "base64Image": "",
+      "loadingPattern": null
+    },
+    {
+      "shipmentNumber": 3,
+      "shipmentItems": [
+        {
+          "itemId": "69348154",
+          "nb": 24
+        }
+      ],
+      "base64Image": "",
+      "loadingPattern": null
+    },
+    {
+      "shipmentNumber": 4,
+      "shipmentItems": [
+        {
+          "itemId": "69348154",
+          "nb": 8
+        }
+      ],
+      "base64Image": "",
+      "loadingPattern": null
+    }
+  ]
+}
+ */
