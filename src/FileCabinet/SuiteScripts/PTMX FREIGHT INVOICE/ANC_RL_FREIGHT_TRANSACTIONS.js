@@ -65,8 +65,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         var targetBol = "";
         var targetCust = "";
         var targetCons = "";
+        var targetEquip = "";
+        var targetEquipType = "";
         var integrationLogId = null;
         var FUELSURCHARGE_item = "";
+        var legNum = "";
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
          * @param {string | Object} requestBody - The HTTP request body; request body is passed as a string when request
@@ -79,8 +82,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         const post = (requestBody) =>
         {
             accessorial_mapping = ANC_lib.FREIGHTINVOICE.accessorial_mapping;
-            NF_item = ANC_lib.FREIGHTINVOICE.NF_item;
-            FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
+            // NF_item = ANC_lib.FREIGHTINVOICE.NF_item_to_whs;
+            // FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
             try
             {
                 var poRecId = ""
@@ -94,12 +97,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
 
-
                 var salesorderSearchObj = search.create({
-                    type: "salesorder",
+                    type: "transaction",
                     filters:
                         [
-                            ["type","anyof","SalesOrd"],
+                            ["type","anyof","CuTrSale108"],
                             "AND",
                             ["custbody4","is",targetBol],
                             "AND",
@@ -108,23 +110,30 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     columns:
                         [
                             search.createColumn({name: "entity", label: "Name"}),
-                            search.createColumn({name: "custbody_consignee", label: "Consignee"})
+                            search.createColumn({name: "custbody_consignee", label: "Consignee"}),
+                            search.createColumn({name: "custbody_anc_equipment", label: "Equipment"}),
+                            search.createColumn({name: "custrecord_anc_transportmode", join:"custbody_anc_equipment", label: "Transport Mode"}),
+                            search.createColumn({name: "custbody_anc_shipment_leg", label: "Leg"})
                         ]
                 });
 
+                log.debug("salesorderSearchObj", salesorderSearchObj)
+                log.debug("salesorderSearchObj.filters", JSON.stringify(salesorderSearchObj.filters))
                 salesorderSearchObj.run().each(function(res){
+                    log.debug("res", res)
+                    legNum = res.getValue({name: "custbody_anc_shipment_leg", label: "Leg"})
                     targetCust = res.getValue({
                         name: "entity", label: "Name"
                     })
                     targetCons = res.getValue({
                         name: "custbody_consignee", label: "Consignee"
                     })
-
-                    FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
+                    targetEquip = res.getValue({name: "custbody_anc_equipment", label: "Equipment"})
+                    targetEquipType = res.getValue({name: "custrecord_anc_transportmode", join:"custbody_anc_equipment", label: "Transport Mode"})
 
                     return false;
                 })
-                log.debug("{targetCust, targetCons, targetBol}",{targetCust, targetCons, targetBol})
+                log.debug("{targetCust, targetCons, targetBol, targetEquip, targetEquipType, legNum}",{targetCust, targetCons, targetBol, targetEquip, targetEquipType, legNum})
 
 
                 //05122025 - JUST ALWAYS UPDATE THE PO, they will only send INVOICE WHEN IT's FINAL and it is not expected to change... cause it is final! - CODY
@@ -156,6 +165,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             poRecObj.setValue({
                                 fieldId : "custbody_ns_consignee",
                                 value : targetCons
+                            })
+                        }
+                        if(targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody4",
+                                value : targetBol
                             })
                         }
 
@@ -286,6 +302,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
+                        if(targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody4",
+                                value : targetBol
+                            })
+                        }
 
                         var currEntity = poRecObj.getValue({
                             fieldId : "entity",
@@ -417,6 +440,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
+                        if(targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody4",
+                                value : targetBol
+                            })
+                        }
 
                         // clearSublist(vbRecObj, requestBody);
                         // fillSublist(vbRecObj, requestBody, lookupPo_result);
@@ -469,6 +499,41 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             // {
             //     log.audit("key" + key, nsRecObj[key]);
             // }
+
+            if(legNum == 2 && targetEquipType == "2") //2 is truck //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
+            }
+            else if(legNum != 2 && targetEquipType == "2") //2 is truck //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_whs;
+            }
+            else if(legNum == 2 && targetEquipType == "1") //2 is cust //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_rail_to_cust;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_rail_to_cust
+            }
+            else if(legNum != 2 && targetEquipType == "1") //1 is rail //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_rail_to_whs;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_rail_to_whs;
+            }
+            else if(legNum == 2 && targetEquipType == "3") //2 is intermodal //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
+            }
+            else if(legNum != 2 && targetEquipType == "3") //1 is intermodal //TODO add this to library
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_whs;
+            }
+
+            // driven consignee - but if US consignee, then no tax
+            // whs - whs - destination warehouse's state
+
 
 
 
@@ -541,16 +606,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
-                            fieldId : "custbody_purchase_order",
-                            line : 0,
-                            value : targetBol
-                        })
-                    }
-                    if(targetBol)
-                    {
-                        nsRecObj.setSublistValue({
-                            sublistId : "item",
-                            fieldId : "custbody4",
+                            fieldId : "custcol_wm_bol",
                             line : 0,
                             value : targetBol
                         })
@@ -639,16 +695,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
-                            fieldId : "custbody_purchase_order",
-                            line : 1,
-                            value : targetBol
-                        })
-                    }
-                    if(targetBol)
-                    {
-                        nsRecObj.setSublistValue({
-                            sublistId : "item",
-                            fieldId : "custbody4",
+                            fieldId : "custcol_wm_bol",
                             line : 1,
                             value : targetBol
                         })
@@ -786,16 +833,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             {
                                 nsRecObj.setSublistValue({
                                     sublistId : "item",
-                                    fieldId : "custbody_purchase_order",
-                                    line : targetLine,
-                                    value : targetBol
-                                })
-                            }
-                            if(targetBol)
-                            {
-                                nsRecObj.setSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custbody4",
+                                    fieldId : "custcol_wm_bol",
                                     line : targetLine,
                                     value : targetBol
                                 })

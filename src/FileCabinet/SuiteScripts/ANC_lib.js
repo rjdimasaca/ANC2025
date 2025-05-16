@@ -684,10 +684,15 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                             "Unknown Accessorial Line" : 188338,
                             "Detention Charge" : 27415
                         },
-                        "FUELSURCHARGE_item" : 12231,
-                        "NF_item" : "12493",
-                        "FUELSURCHARGE_item_truck_to_whs" : 12231,
-                        "FUELSURCHARGE_item_truck_to_cust" : 12231,
+                        "DEFAULT_FUELSURCHARGE_item" : 12231,
+                        "NF_item_truck_to_cust" : "12493", //Newsprint Freight
+                        "NF_item_truck_to_whs" : "68403", //Prepaid Newsprint Freight
+                        "NF_item_rail_to_cust" : "12493", //Newsprint Freight
+                        "NF_item_rail_to_whs" : "68403", //Prepaid Newsprint Freight
+                        "FUELSURCHARGE_item_truck_to_cust" : 12231, //Fuel Surcharge (Truck - Percent of Freight)
+                        "FUELSURCHARGE_item_truck_to_whs" : 68407, //Prepaid Fuel Surcharge (Truck - Percent of Freight)
+                        "FUELSURCHARGE_item_rail_to_cust" : 12232, //Fuel Surcharge (Rail - $/mile)
+                        "FUELSURCHARGE_item_rail_to_whs" : 68406, //Prepaid Fuel Surcharge (Rail - $/mile)
                         TAXCODES : {
                                 "TAXCODE_NONTAXABLE82" : 82
                         }
