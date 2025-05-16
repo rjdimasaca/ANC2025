@@ -48,9 +48,13 @@ define(['N/https', 'N/record', 'N/search'],
             {
                 if(scriptContext.newRecord.type == "customrecord_alberta_ns_consignee_record")
                 {
-                    var consigneeOldCity = scriptContext.oldRecord.getValue({
-                        fieldId : "custrecord_alberta_ns_city"
-                    })
+                    var consigneeOldCity = "";
+                    if(scriptContext.type == "edit")
+                    {
+                        consigneeOldCity = scriptContext.oldRecord.getValue({
+                            fieldId : "custrecord_alberta_ns_city"
+                        })
+                    }
                     var consigneeNewCity = scriptContext.newRecord.getValue({
                         fieldId : "custrecord_alberta_ns_city"
                     })
@@ -142,10 +146,19 @@ define(['N/https', 'N/record', 'N/search'],
                 });
                 var searchResultCount = customrecord_anc_shippinglanesSearchObj.runPaged().count;
                 log.debug("customrecord_anc_shippinglanesSearchObj result count",searchResultCount);
-                // customrecord_anc_shippinglanesSearchObj.run().each(function(result){
-                //     // .run().each has a limit of 4,000 results
-                //     return true;
-                // });
+                var originLoc = {};
+                customrecord_anc_shippinglanesSearchObj.run().each(function(result){
+                    origLocCity = result.getValue({name: "custrecord_anc_lane_originwarehousecity", label: "Origin Warehouse City"})
+                    origLocCity = origLocCity.toLowerCase();
+                    originLoc[origLocCity] = {};
+                    // .run().each has a limit of 4,000 results
+                    return true;
+                });
+
+                //if you have lanes going FROM required warehouses to that consignee city already, then you dont want to create a new lanes for those whs-cons
+                //this means, its not enough checking the result
+                //you need to actually check which whs-conscity already exist, skip the existing ones, create new ones
+                //thus actually go through the result and extract the origins
                 if(searchResultCount > 0)
                 {
                     doUpdateLanes = true;
@@ -163,12 +176,19 @@ define(['N/https', 'N/record', 'N/search'],
                     for(var a = 0 ; a < locIds.length ; a++)
                     {
                         var locCity = locIdsById[locIds[a]].city;
-                        var locIndex = consigneeRecObj.findSublistLineWithValue({
+                        locCity = locCity.toLowerCase();
+                         var locIndex = consigneeRecObj.findSublistLineWithValue({
                             sublistId : "recmachcustrecord_anc_lane_destination",
                             fieldId : "custrecord_anc_lane_originwarehouse",
                             value : locIds[a]
                         })
 
+                        //skip it if there already a lane from this CITY.
+                        if(originLoc[locCity])
+                        {
+                            log.debug("skip this origLoc city", locCity)
+                            continue;
+                        }
                         if(locIndex == -1)
                         {
                             targetIndex = currLine;
