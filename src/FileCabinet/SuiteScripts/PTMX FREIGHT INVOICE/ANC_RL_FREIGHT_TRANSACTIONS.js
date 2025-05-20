@@ -60,6 +60,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         }
 
 
+        var PAYLOAD_VALUES_INCLUSIVE_OF_TAX = false;
         var accessorial_mapping = {}
         var targets = {
             targetBol : "",
@@ -257,6 +258,38 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 value : targets.targetCons
                             })
                         }
+                        //TODO do you need to specify currency? the payload sample has currency
+                        var payloadCurrencyText = requestBody.Currency || requestBody.currency
+                        var payloadCurrencyId = "";
+
+                        if(payloadCurrencyText == "CAD")
+                        {
+                            payloadCurrencyId = 1;
+                        }
+                        else if(payloadCurrencyText == "USD")
+                        {
+                            payloadCurrencyId = 2;
+                        }
+                        else
+                        {
+                            payloadCurrencyId = "";
+                        }
+
+                        try
+                        {
+                            if(payloadCurrencyId)
+                            {
+                                poRecObj.setValue({
+                                    fieldId : "currency",
+                                    value : payloadCurrencyId
+                                })
+                            }
+                        }
+                        catch(e)
+                        {
+                            log.emergency("ERROR in ANC_RL_FREIGHT_TRANSACTION.js, cannot resolve currency", e)
+                        }
+
                         if(targets.targetBol)
                         {
                             poRecObj.setValue({
@@ -687,12 +720,25 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         line : 0,
                         value : NF_item
                     })
-                    nsRecObj.setSublistValue({
-                        sublistId : "item",
-                        fieldId : "rate",
-                        line : 0,
-                        value : requestBody.rate || requestBody.Rate
-                    })
+                    if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "rate",
+                            line : 0,
+                            value : requestBody.rate || requestBody.Rate
+                        })
+                    }
+                    else
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "rate",
+                            line : 0,
+                            value : requestBody.rate || requestBody.Rate
+                        })
+                    }
+
                     nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "quantity",
@@ -767,12 +813,25 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         line : 1,
                         value : FUELSURCHARGE_item
                     })
-                    nsRecObj.setSublistValue({
-                        sublistId : "item",
-                        fieldId : "rate",
-                        line : 1,
-                        value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
-                    })
+                    if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "rate",
+                            line : 1,
+                            value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                        })
+                    }
+                    else
+                    {
+                        nsRecObj.setSublistValue({
+                            sublistId : "item",
+                            fieldId : "rate",
+                            line : 1,
+                            value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                        })
+                    }
+
                     nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "quantity",
@@ -871,6 +930,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             targetItemInternalId = 188338 //"Unknown Accessorial Line"
                         }
 
+                        //05202025 Mike wants fixed accessorial
+                        targetItemInternalId = 188338 //"Unknown Accessorial Line"
+
                         log.debug("targetItemInternalId", targetItemInternalId)
 
                         //do this to default to unknown accessorials
@@ -896,12 +958,25 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 })
                             }
 
-                            nsRecObj.setSublistValue({
-                                sublistId : "item",
-                                fieldId : "rate",
-                                line : targetLine,
-                                value : accessorial_charge
-                            })
+                            if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "rate",
+                                    line : targetLine,
+                                    value : accessorial_charge
+                                })
+                            }
+                            else
+                            {
+                                nsRecObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "rate",
+                                    line : targetLine,
+                                    value : accessorial_charge
+                                })
+                            }
+
                             nsRecObj.setSublistValue({
                                 sublistId : "item",
                                 fieldId : "quantity",
@@ -913,6 +988,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 fieldId : "amount",
                                 line : targetLine,
                                 value : accessorial_charge
+                            })
+
+
+                            nsRecObj.setSublistValue({
+                                sublistId : "item",
+                                fieldId : "description",
+                                line : targetLine,
+                                value : accessorial_qualifier
                             })
 
                             // var currentLineTaxcode = nsRecObj.getSublistValue({
