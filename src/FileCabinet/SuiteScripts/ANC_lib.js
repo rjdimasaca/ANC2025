@@ -750,20 +750,18 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                             list : []
                     };
 
-                    for(var a = 0 ; a < srGroupedByDeliveryDate[date].length ; a++)
+                    for(var a = 0 ; a < rawRequestData[date]; a++)
                     {
                             if(srGroupedByDeliveryDate[date][a].line_usecrossdock && srGroupedByDeliveryDate[date][a].line_usecrossdock != "F")
                             {
                                     var fitmentRequestData = {};
-                                    fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[a].lane_originloc_country; //TODO
+                                    fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
 
-                                    fitmentRequestData.vehicleName = rawRequestData[a].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                                    fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
                                     // fitmentRequestData.transportationMode = "TRUCK"; //TODO
                                     //TODO DEFAULTS to TRUCK if not configured
-                                    fitmentRequestData.transportationMode = rawRequestData[a].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                                    fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
                                     fitmentRequestData.orderItems = [];
-
-
                                     try
                                     {
                                             // fitmentRequestData.orderItems.push(
@@ -1447,8 +1445,152 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return getLoadDetails_result;
             }
 
+            function prepLoad(loadID)
+            {
+                    var prepShipmentRecId = "";
+                    var assumeLoadIsMissing = true;
+                    try
+                    {
+                            if(assumeLoadIsMissing)
+                            {
+                                    var searchObj = search.create({
+                                            type : "customsale_anc_shipment",
+                                            filters : [
+                                                ["custbody4", "is", loadID]
+                                            ]
+                                    });
+
+                                    var searchResultCount = searchObj.runPaged().count;
+                                    if(searchResultCount <= 0)
+                                    {
+                                        log.debug("no result for " + loadID, searchObj.filters)
+                                    }
+                                    else
+                                    {
+                                            return prepShipmentRecId;
+                                    }
 
 
+                                    var shipmentRecObj = record.create({
+                                            type : "customsale_anc_shipment",
+                                    });
+                                    shipmentRecObj.setValue({
+                                            fieldId : "entity",
+                                    //         value: 106127,
+                                    // //Lee BHM Corp (Parent) : Arizona Daily Sun
+                                    // // WM5845	6477-WM5845_DUP_1
+                                    //         value: 492090,
+                                    // //Mittera Albertson's
+                                    //         value: 498581,
+                                    // //Midland Paper Company (Parent) : Midland PRH All Star Book
+                                            value: 330177,
+                                    //Friesens Corporation - MB CAN
+                                    })
+
+                                    shipmentRecObj.setValue({
+                                            fieldId : "custbody_consignee",
+                                    //         value: 305730,
+                                    // // Lee BHM Corp (Parent) : Arizona Daily Sun // Arizona Daily Sun TEST Second Consignee
+                                    // //AZ US
+                                    //         value: 300725,
+                                    // //BC Coast 2000 Terminals Ltd.
+                                    // // Lulu Island	BC	CAN
+                                    //         //WM6040
+                                    //         value: 304127,
+                                    // // Friesens Corporation - MB CAN
+                                            value: 302826,
+                                    //Active Warehouse 9	Mittera (Parent) : Mittera Kroger - AB CAN
+                                    })
+
+
+                                    shipmentRecObj.setValue({
+                                            fieldId : "custbody_anc_shipment_leg",
+                                            value: "2"
+                                    })
+                                    shipmentRecObj.setValue({
+                                            fieldId : "custbody4",
+                                            value: loadID
+                                    })
+                                    shipmentRecObj.setValue({
+                                            fieldId : "custbody_anc_equipment",
+                                            value: 6 //TRTAMDV53
+                                    })
+                                    shipmentRecObj.setValue({
+                                            fieldId : "location",
+                                            value: 9 //ANS Paper (Summary) : ANC Whitecourt Warehouse
+                                    });
+
+                                    shipmentRecObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "item",
+                                            line : 0,
+                                            value : 188748
+                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                            //Not Shipped
+                                    })
+                                    shipmentRecObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "quantity",
+                                            line : 0,
+                                            value : 10
+                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                            //Not Shipped
+                                    })
+                                    shipmentRecObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "custcol_anc_relatedlineuniquekey",
+                                            line : 0,
+                                            value : 969350858
+                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                            //Not Shipped
+                                    })
+                                    shipmentRecObj.setSublistValue({
+                                            sublistId : "item",
+                                            fieldId : "custcol_anc_relatedtransaction",
+                                            line : 0,
+                                            value : 61243742
+                                            //Sales Order #SO62862
+                                    });
+
+
+                                    prepShipmentRecId = shipmentRecObj.save({
+                                            ignoreMandatoryFields : true,
+                                            enableSourcing : true
+                                    })
+
+                                    log.debug("prepShipmentRecId", prepShipmentRecId);
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function prepLoad", e)
+                    }
+                    return prepShipmentRecId;
+            }
+
+
+            const CA_TAXCODE_MAPPING_BY_STATE_CODE = {
+                    AB : 11,
+                    BC : 92,
+                    MB : 38,
+                    NB : 42,
+                    NL : 45,
+                    NONTAXABLE : 82,
+                    NS : 63,
+                    NT : 69,
+                    NU : 51,
+                    ON : 54,
+                    NONTAXABLE : 82,
+                    PEI : 60,
+                    QC : 57,
+                    SK : 20,
+                    YT : 66,
+                    // NU : 51,
+                    // ON : 54,
+                    // NT : 69,
+                    // NU : 51,
+                    // ON : 54,
+            }
 
         return {
                 groupBy,
@@ -1468,7 +1610,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 generateShipments,
                 groupOrderLinesForShipmentGeneration,
                 getFitmentObj,
-                getLoadDetails
+                getLoadDetails,
+                prepLoad,
+                CA_TAXCODE_MAPPING_BY_STATE_CODE
         }
 
     });

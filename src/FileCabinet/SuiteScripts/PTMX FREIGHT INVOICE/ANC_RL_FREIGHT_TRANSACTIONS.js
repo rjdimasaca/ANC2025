@@ -61,15 +61,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
 
         var accessorial_mapping = {}
+        var targets = {
+            targetBol : "",
+            targetCust : "",
+            targetCons : "",
+            targetEquip : "",
+            targetEquipType : "",
+            legNum : ""
+        };
         var NF_item = "";
-        var targetBol = "";
-        var targetCust = "";
-        var targetCons = "";
-        var targetEquip = "";
-        var targetEquipType = "";
         var integrationLogId = null;
         var FUELSURCHARGE_item = "";
-        var legNum = "";
         /**
          * Defines the function that is executed when a POST request is sent to a RESTlet.
          * @param {string | Object} requestBody - The HTTP request body; request body is passed as a string when request
@@ -93,9 +95,20 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 var loadID = requestBody.loadID || requestBody.LoadID;
                 var IsFinalInvoice = requestBody.IsFinalInvoice || requestBody.isFinalInvoice;
                 log.debug("loadID", loadID)
-                targetBol = loadID
+                targets.targetBol = loadID
+
+
 
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
+
+
+
+                var prepLoad_result = ANC_lib.prepLoad(loadID)
+                log.debug("prepLoad_result", prepLoad_result);
+
+
+                var loadDetails_result = ANC_lib.getLoadDetails(loadID);
+                log.debug("loadDetails_result", loadDetails_result);
 
                 var salesorderSearchObj = search.create({
                     type: "transaction",
@@ -103,7 +116,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         [
                             ["type","anyof","CuTrSale108"],
                             "AND",
-                            ["custbody4","is",targetBol],
+                            ["custbody4","is",targets.targetBol],
                             "AND",
                             ["mainline","is","T"]
                         ],
@@ -113,28 +126,105 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             search.createColumn({name: "custbody_consignee", label: "Consignee"}),
                             search.createColumn({name: "custbody_anc_equipment", label: "Equipment"}),
                             search.createColumn({name: "custrecord_anc_transportmode", join:"custbody_anc_equipment", label: "Transport Mode"}),
-                            search.createColumn({name: "custbody_anc_shipment_leg", label: "Leg"})
+                            search.createColumn({name: "custbody_anc_shipment_leg", label: "Leg"}),
+                            search.createColumn({name: "shipstate", label: "Ship State"}),
+                            targets.custrecord_alberta_ns_ship_addrprovince = search.createColumn({
+                                name: "custrecord_alberta_ns_ship_addrprovince",
+                                join: "CUSTBODY_CONSIGNEE",
+                                label: "Consignee Address Province"
+                            }),
+                            targets.custrecord_alberta_ns_country = search.createColumn({
+                                name: "custrecord_alberta_ns_country",
+                                join: "CUSTBODY_CONSIGNEE",
+                                label: "Country"
+                            })
                         ]
                 });
 
-                log.debug("salesorderSearchObj", salesorderSearchObj)
+                log.debug("salesorderSearchObj", salesorderSearchObj);
+
+                salesorderSearchObj.title = "shipment search " + new Date().getTime();
+                salesorderSearchObj.save()
                 log.debug("salesorderSearchObj.filters", JSON.stringify(salesorderSearchObj.filters))
                 salesorderSearchObj.run().each(function(res){
                     log.debug("res", res)
-                    legNum = res.getValue({name: "custbody_anc_shipment_leg", label: "Leg"})
-                    targetCust = res.getValue({
+                    targets.legNum = res.getValue({name: "custbody_anc_shipment_leg", label: "Leg"})
+                    targets.targetCust = res.getValue({
                         name: "entity", label: "Name"
                     })
-                    targetCons = res.getValue({
+                    targets.targetCons = res.getValue({
                         name: "custbody_consignee", label: "Consignee"
                     })
-                    targetEquip = res.getValue({name: "custbody_anc_equipment", label: "Equipment"})
-                    targetEquipType = res.getValue({name: "custrecord_anc_transportmode", join:"custbody_anc_equipment", label: "Transport Mode"})
-
+                    targets.targetEquip = res.getValue({name: "custbody_anc_equipment", label: "Equipment"})
+                    targets.targetEquipType = res.getValue({name: "custrecord_anc_transportmode", join:"custbody_anc_equipment", label: "Transport Mode"})
+                    targets.shipstate = res.getValue({name: "shipstate", label: "Ship State"})
+                    targets.custrecord_alberta_ns_postal_code = res.getValue({name: "custrecord_alberta_ns_postal_code", join: "custbody_consignee", label: "Consignee Postal Code"})
+                    targets.custrecord_alberta_ns_ship_addrprovince = res.getValue({
+                        name: "custrecord_alberta_ns_ship_addrprovince",
+                        join: "custbody_consignee",
+                        label: "Consignee Address Province"
+                    })
+                    targets.custrecord_alberta_ns_country = res.getValue({
+                        name: "custrecord_alberta_ns_country",
+                        join: "custbody_consignee",
+                        label: "Country"
+                    })
                     return false;
                 })
-                log.debug("{targetCust, targetCons, targetBol, targetEquip, targetEquipType, legNum}",{targetCust, targetCons, targetBol, targetEquip, targetEquipType, legNum})
 
+                if(!targets.custrecord_alberta_ns_ship_addrprovince || !targets.custrecord_alberta_ns_country)
+                {
+                    var consigneeLookup = search.lookupFields({
+                        type : "customrecord_alberta_ns_consignee_record",
+                        id : targets.targetCons,
+                        columns : [
+                            "custrecord_alberta_ns_ship_addrprovince",
+                            "custrecord_alberta_ns_country"
+                        ]
+                    })
+
+                    log.debug("consigneeLookup", consigneeLookup)
+                    targets.custrecord_alberta_ns_ship_addrprovince = consigneeLookup.custrecord_alberta_ns_ship_addrprovince
+                    targets.custrecord_alberta_ns_country = consigneeLookup.custrecord_alberta_ns_country
+                }
+
+                targets.targetTaxcodeId =  ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                log.debug("targets", targets)
+
+                if(targets.custrecord_alberta_ns_country && targets.custrecord_alberta_ns_country.toUpperCase() != "CANADA" && targets.custrecord_alberta_ns_country.toUpperCase() != "CAN")
+                {
+                    log.debug("what's the taxcode1", targets)
+                    targets.targetTaxcodeId = ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82;
+                }
+                else
+                {
+                    if(targets.custrecord_alberta_ns_ship_addrprovince)
+                    {
+                        log.debug("what's the taxcode3", targets)
+                        log.debug("what's the taxcode3.4 ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE", ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE)
+                        log.debug("what's the taxcode3.5 ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE[x]", ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE[targets.custrecord_alberta_ns_ship_addrprovince])
+
+                        if(ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE[targets.custrecord_alberta_ns_ship_addrprovince])
+                        {
+                            log.debug("what's the taxcode4", targets)
+                            targets.targetTaxcodeId = ANC_lib.CA_TAXCODE_MAPPING_BY_STATE_CODE[targets.custrecord_alberta_ns_ship_addrprovince];
+                        }
+                        else
+                        {
+
+                            log.debug("what's the taxcode5", targets)
+                            targets.targetTaxcodeId = ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                        }
+                    }
+                    else
+                    {
+
+                        log.debug("what's the taxcode6", targets)
+                        targets.targetTaxcodeId =  ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                    }
+                }
+
+                log.debug("targets after taxcode", targets)
 
                 //05122025 - JUST ALWAYS UPDATE THE PO, they will only send INVOICE WHEN IT's FINAL and it is not expected to change... cause it is final! - CODY
                 if(true/*!IsFinalInvoice*/)
@@ -160,20 +250,28 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             id : poId,
                         });
 
-                        if(targetCons)
+                        if(targets.targetCons)
                         {
                             poRecObj.setValue({
                                 fieldId : "custbody_ns_consignee",
-                                value : targetCons
+                                value : targets.targetCons
                             })
                         }
-                        if(targetBol)
+                        if(targets.targetBol)
                         {
                             poRecObj.setValue({
                                 fieldId : "custbody4",
-                                value : targetBol
+                                value : targets.targetBol
                             })
                         }
+                        if(targets.targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody_wmid",
+                                value : targets.targetBol
+                            })
+                        }
+
 
                         var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
                         var transactionDate = new Date(transactionDateRaw);
@@ -184,10 +282,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("transactionDateStr", transactionDateStr)
                         log.debug("requestBody.NetAmount", requestBody.NetAmount)
 
-                        poRecObj.setText({
+                        poRecObj.setValue({
                             fieldId : "trandate",
-                            value :transactionDateStr,
-                            text :transactionDateStr
+                            // value :new Date(),
+                            // text :transactionDateStr,
+                            value :new Date(transactionDateRaw),
                         })
                         poRecObj.setValue({
                             fieldId : "approvalstatus",
@@ -257,11 +356,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             }
                         });
 
-                        if(targetCons)
+                        if(targets.targetCons)
                         {
                             poRecObj.setValue({
                                 fieldId : "custbody_ns_consignee",
-                                value : targetCons
+                                value : targets.targetCons
                             })
                         }
 
@@ -275,10 +374,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         log.debug("transactionDateStr", transactionDateStr)
                         log.debug("requestBody.NetAmount", requestBody.NetAmount)
 
-                        poRecObj.setText({
-                            fieldId : "trandate",
-                            value :transactionDateStr,
-                            text :transactionDateStr
+                        // poRecObj.setText({
+                        //     fieldId : "trandate",
+                        //     value :transactionDateStr,
+                        //     text :transactionDateStr
+                        // })
+
+                        poRecObj.setValue({
+                            fieldId: "trandate",
+                            // value :new Date(),
+                            // text :transactionDateStr,
+                            value: new Date(transactionDateRaw),
                         })
 
                         poRecObj.setValue({
@@ -302,11 +408,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
-                        if(targetBol)
+                        if(targets.targetBol)
                         {
                             poRecObj.setValue({
                                 fieldId : "custbody4",
-                                value : targetBol
+                                value : targets.targetBol
+                            })
+                        }
+                        if(targets.targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody_wmid",
+                                value : targets.targetBol
                             })
                         }
 
@@ -374,10 +487,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             log.debug("transactionDate", transactionDate)
                             log.debug("transactionDateStr", transactionDateStr)
 
-                            irRecObj.setText({
-                                fieldId : "trandate",
-                                value :transactionDateStr,
-                                text :transactionDateStr
+                            // irRecObj.setText({
+                            //     fieldId : "trandate",
+                            //     value :transactionDateStr,
+                            //     text :transactionDateStr
+                            // })
+                            poRecObj.setValue({
+                                fieldId: "trandate",
+                                // value :new Date(),
+                                // text :transactionDateStr,
+                                value: new Date(transactionDateRaw),
                             })
 
 
@@ -440,11 +559,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
-                        if(targetBol)
+                        if(targets.targetBol)
                         {
                             poRecObj.setValue({
                                 fieldId : "custbody4",
-                                value : targetBol
+                                value : targets.targetBol
+                            })
+                        }
+                        if(targets.targetBol)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "custbody_wmid",
+                                value : targets.targetBol
                             })
                         }
 
@@ -500,35 +626,45 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             //     log.audit("key" + key, nsRecObj[key]);
             // }
 
-            if(legNum == 2 && targetEquipType == "2") //2 is truck //TODO add this to library
+            if(targets.legNum == 2 && targets.targetEquipType == "2") //2 is truck //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
             }
-            else if(legNum != 2 && targetEquipType == "2") //2 is truck //TODO add this to library
+            else if(targets.legNum != 2 && targets.targetEquipType == "2") //2 is truck //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_whs;
             }
-            else if(legNum == 2 && targetEquipType == "1") //2 is cust //TODO add this to library
+            else if(targets.legNum == 2 && targets.targetEquipType == "1") //2 is cust //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_rail_to_cust;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_rail_to_cust
             }
-            else if(legNum != 2 && targetEquipType == "1") //1 is rail //TODO add this to library
+            else if(targets.legNum != 2 && targets.targetEquipType == "1") //1 is rail //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_rail_to_whs;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_rail_to_whs;
             }
-            else if(legNum == 2 && targetEquipType == "3") //2 is intermodal //TODO add this to library
+            else if(targets.legNum == 2 && targets.targetEquipType == "3") //2 is intermodal //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
             }
-            else if(legNum != 2 && targetEquipType == "3") //1 is intermodal //TODO add this to library
+            else if(targets.legNum != 2 && targets.targetEquipType == "3") //1 is intermodal //TODO add this to library
             {
                 FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_whs;
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_whs;
+            }
+
+            //TODO these are based on shipments, since we are testing with shipments not yet working, then use default items
+            if(!FUELSURCHARGE_item)
+            {
+                FUELSURCHARGE_item = ANC_lib.FREIGHTINVOICE.FUELSURCHARGE_item_truck_to_cust;
+            }
+            if(!NF_item)
+            {
+                NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
             }
 
             // driven consignee - but if US consignee, then no tax
@@ -583,51 +719,42 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     // })
                     // log.debug("currentLineItem", currentLineItem);
                     //TODO, setup a rule when or when not to add tax
-                    if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    if(targets.targetTaxcodeId)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "taxcode",
                             line : 0,
-                            value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                            value : targets.targetTaxcodeId
                         })
                     }
 
-                    if(targetBol)
-                    {
-                        nsRecObj.setSublistValue({
-                            sublistId : "item",
-                            fieldId : "custbody_wmid",
-                            line : 0,
-                            value : targetBol
-                        })
-                    }
-                    if(targetBol)
+                    if(targets.targetBol)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_bol",
                             line : 0,
-                            value : targetBol
+                            value : targets.targetBol
                         })
                     }
 
-                    if(targetCust)
+                    if(targets.targetCust)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_customer",
                             line : 0,
-                            value : targetCust
+                            value : targets.targetCust
                         })
                     }
-                    if(targetCons)
+                    if(targets.targetCons)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_consignee",
                             line : 0,
-                            value : targetCons
+                            value : targets.targetCons
                         })
                     }
                 }
@@ -672,51 +799,42 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     // })
                     // log.debug("currentLineItem", currentLineItem);
                     //TODO, setup a rule when or when not to add tax
-                    if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                    if(targets.targetTaxcodeId)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "taxcode",
                             line : 1,
-                            value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                            value : targets.targetTaxcodeId
                         })
                     }
 
-                    if(targetBol)
-                    {
-                        nsRecObj.setSublistValue({
-                            sublistId : "item",
-                            fieldId : "custbody_wmid",
-                            line : 1,
-                            value : targetBol
-                        })
-                    }
-                    if(targetBol)
+                    if(targets.targetBol)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_bol",
                             line : 1,
-                            value : targetBol
+                            value : targets.targetBol
                         })
                     }
 
-                    if(targetCust)
+                    if(targets.targetCust)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_customer",
                             line : 1,
-                            value : targetCust
+                            value : targets.targetCust
                         })
                     }
-                    if(targetCons)
+                    if(targets.targetCons)
                     {
                         nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_consignee",
                             line : 1,
-                            value : targetCons
+                            value : targets.targetCons
                         })
                     }
                 }
@@ -810,51 +928,42 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             // })
                             // log.debug("currentLineItem", currentLineItem);
                             //TODO, setup a rule when or when not to add tax
-                            if(ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82)
+                            if(targets.targetTaxcodeId)
                             {
                                 nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "taxcode",
                                     line : targetLine,
-                                    value : ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
+                                    value : targets.targetTaxcodeId
                                 })
                             }
 
-                            if(targetBol)
-                            {
-                                nsRecObj.setSublistValue({
-                                    sublistId : "item",
-                                    fieldId : "custbody_wmid",
-                                    line : targetLine,
-                                    value : targetBol
-                                })
-                            }
-                            if(targetBol)
+                            if(targets.targetBol)
                             {
                                 nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_wm_bol",
                                     line : targetLine,
-                                    value : targetBol
+                                    value : targets.targetBol
                                 })
                             }
 
-                            if(targetCust)
+                            if(targets.targetCust)
                             {
                                 nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_wm_customer",
                                     line : targetLine,
-                                    value : targetCust
+                                    value : targets.targetCust
                                 })
                             }
-                            if(targetCons)
+                            if(targets.targetCons)
                             {
                                 nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_consignee",
                                     line : targetLine,
-                                    value : targetCons
+                                    value : targets.targetCons
                                 })
                             }
                         }
