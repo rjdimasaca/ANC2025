@@ -98,15 +98,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 log.debug("loadID", loadID)
                 targets.targetBol = loadID
 
-
-
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
-
-
 
                 var prepLoad_result = ANC_lib.prepLoad(loadID)
                 log.debug("prepLoad_result", prepLoad_result);
-
 
                 var loadDetails_result = ANC_lib.getLoadDetails(loadID);
                 log.debug("loadDetails_result", loadDetails_result);
@@ -144,8 +139,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 log.debug("salesorderSearchObj", salesorderSearchObj);
 
-                salesorderSearchObj.title = "shipment search " + new Date().getTime();
-                salesorderSearchObj.save()
+                // salesorderSearchObj.title = "shipment search " + new Date().getTime();
+                // salesorderSearchObj.save()
                 log.debug("salesorderSearchObj.filters", JSON.stringify(salesorderSearchObj.filters))
                 salesorderSearchObj.run().each(function(res){
                     log.debug("res", res)
@@ -234,7 +229,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     log.debug("lookupPo_result", lookupPo_result);
 
                     if(lookupPo_result.list && lookupPo_result.list.length > 0 && lookupPo_result.list[0].id)
-
                     {
                         log.debug("0")
                         log.debug("lookupPo_result.list[0].status", lookupPo_result.list[0].status);
@@ -350,7 +344,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     }
                     else
                     {
-
                         log.debug("1")
                         if(lookupPo_result.list && lookupPo_result.list[0] && lookupPo_result.list[0].errorcode)
                         {
@@ -396,7 +389,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 value : targets.targetCons
                             })
                         }
-
 
                         var transactionDateRaw = requestBody.invoiceDate || requestBody.InvoiceDate
                         var transactionDate = new Date(transactionDateRaw);
@@ -610,8 +602,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         // clearSublist(vbRecObj, requestBody);
                         // fillSublist(vbRecObj, requestBody, lookupPo_result);
 
-
-
                         vbRecId = vbRecObj.save({
                             ignoreMandatoryFields : true,
                             enableSourcing : true
@@ -654,10 +644,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             var nsRecObj_stringified = JSON.stringify(nsRecObj);
             log.debug("nsRecObj_stringified", nsRecObj_stringified);
             var nsRecObj_stringified_lineFields = nsRecObj.lineFields;
-            // for(var key in nsRecObj)
-            // {
-            //     log.audit("key" + key, nsRecObj[key]);
-            // }
 
             if(targets.legNum == 2 && targets.targetEquipType == "2") //2 is truck //TODO add this to library
             {
@@ -700,18 +686,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 NF_item = ANC_lib.FREIGHTINVOICE.NF_item_truck_to_cust;
             }
 
-            // driven consignee - but if US consignee, then no tax
-            // whs - whs - destination warehouse's state
-
-
-
-
+            // FIXME driven consignee - but if US consignee, then no tax
+            // FIXME whs - whs - destination warehouse's state
             log.debug("nsRecObj_stringified_items", nsRecObj_stringified_lineFields);
-            // var nsRecObj_stringified_items = JSON.stringify(nsRecObj.lineFields.item);
 
             try
             {
-
                 if(initializeMainItem)
                 {
                     nsRecObj.setSublistValue({
@@ -752,6 +732,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         value : requestBody.rate || requestBody.Rate
                     })
 
+                    //TODO clear this, it's just for testing standard defaultings
                     // var currentLineTaxcode = nsRecObj.getSublistValue({
                     //     sublistId : "item",
                     //     fieldId : "taxcode",
@@ -794,6 +775,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value : targets.targetCust
                         })
                     }
+
                     if(targets.targetCons)
                     {
                         nsRecObj.setSublistValue({
@@ -845,6 +827,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
                     })
 
+                    //TODO clear this, it's just for testing standard defaultings
                     // var currentLineTaxcode = nsRecObj.getSublistValue({
                     //     sublistId : "item",
                     //     fieldId : "taxcode",
@@ -998,6 +981,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 value : accessorial_qualifier
                             })
 
+                            //TODO clear this, it's just for testing standard defaultings
                             // var currentLineTaxcode = nsRecObj.getSublistValue({
                             //     sublistId : "item",
                             //     fieldId : "taxcode",
@@ -1051,7 +1035,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             }
                         }
 
-
                         targetLine++;
                     }
 
@@ -1068,10 +1051,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
         function clearSublist(nsRecObj, requestBody)
         {
-
             if(nsRecObj.type == "itemreceipt")
             {
-
                 var nsRecObj_itemSublist_count = nsRecObj.getLineCount({
                     sublistId : "item"
                 })
@@ -1143,58 +1124,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     })
                     // }
                 }
-
             }
-
-
             return nsRecObj;
-        }
-
-
-        var sample = {
-            "carrierParentId": "string",
-            "distance": 0,
-            "fuelSurchargeQualifier": "string",
-            "controlCustomerNumber": "string",
-            "rateType": "string",
-            "loadID": "string",
-            "rate": 0.1,
-            "goodsServicesAmount": 0.1,
-            "invoiceNumber": "string",
-            "currency": "string",
-            "carrierID": "string",
-            "isFinalInvoice": true,
-            "netAmount": 0.1,
-            "harmonizedSalesAmount": 0.1,
-            "nonassignedCarrierAccessorials": [
-                {
-                    "carrier": "string",
-                    "charge": 0.1,
-                    "qualifier": "string",
-                    "acctCode": "string"
-                }
-            ],
-            "transactionDate": "2019-08-24T14:15:22Z",
-            "acctCode": "string",
-            "refs": [
-                {
-                    "referenceNumber": "string",
-                    "referenceType": "string"
-                }
-            ],
-            "methodOfPayment": "string",
-            "lineHaul": 0.1,
-            "minimumCharge": 0.1,
-            "rateQualifier": "string",
-            "accessorials": [
-                {
-                    "charge": 0.1,
-                    "qualifier": "string"
-                }
-            ],
-            "provincialSalesAmount": 0.1,
-            "fuelSurcharge": 0.1,
-            "apiType": "string"
         }
 
         function lookupPo_final(loadID)
@@ -1304,6 +1235,96 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
          */
         const doDelete = (requestParams) => {
 
+        }
+
+        //TODO
+        var sample = {
+            "carrierParentId": "string",
+            "distance": 0,
+            "fuelSurchargeQualifier": "string",
+            "controlCustomerNumber": "string",
+            "rateType": "string",
+            "loadID": "string",
+            "rate": 0.1,
+            "goodsServicesAmount": 0.1,
+            "invoiceNumber": "string",
+            "currency": "string",
+            "carrierID": "string",
+            "isFinalInvoice": true,
+            "netAmount": 0.1,
+            "harmonizedSalesAmount": 0.1,
+            "nonassignedCarrierAccessorials": [
+                {
+                    "carrier": "string",
+                    "charge": 0.1,
+                    "qualifier": "string",
+                    "acctCode": "string"
+                }
+            ],
+            "transactionDate": "2019-08-24T14:15:22Z",
+            "acctCode": "string",
+            "refs": [
+                {
+                    "referenceNumber": "string",
+                    "referenceType": "string"
+                }
+            ],
+            "methodOfPayment": "string",
+            "lineHaul": 0.1,
+            "minimumCharge": 0.1,
+            "rateQualifier": "string",
+            "accessorials": [
+                {
+                    "charge": 0.1,
+                    "qualifier": "string"
+                }
+            ],
+            "provincialSalesAmount": 0.1,
+            "fuelSurcharge": 0.1,
+            "apiType": "string"
+        }
+        var sample1 = {
+            "integrationLogTags" : "test,postman,t",
+            "CarrierParentId": null,
+            "NetAmount": 3450.01082,
+            "HarmonizedSalesAmount": 0,
+            "NonassignedCarrierAccessorials": null,
+            "InvoiceDate": "2025-04-16T13:59:49.8635151-06:00",
+            "AcctCode": null,
+            "ControlCustomerNumber": "6170",
+            "LoadID": "F0425XZ9",
+            "Rate": 3400,
+            "RateQualifier": "FC",
+            "GoodsServicesAmount": 0,
+            "MethodOfPayment": "P",
+            "LineHaul": 3400,
+            "MinimumCharge": 0,
+            "InvoiceNumber": null,
+            "Currency": "CAD",
+            "Accessorials": [
+                {
+                    "qualifier": "Detention Chargee",
+                    "charge": 50
+                },
+                {
+                    "qualifier": "Detention Charge",
+                    "charge": 20
+                },
+                {
+                    "qualifier": "Detention Charge",
+                    "charge": 20
+                },
+                {
+                    "qualifier": "Detention Chargesss",
+                    "charge": 33
+                }
+            ],
+            "CarrierID": "1366",
+            "ProvincialSalesAmount": 0,
+            "FuelSurcharge": 50.01082,
+            "FuelSurchargeQualifier": "FC",
+            "ApiType": "INVOICE_UPDATE",
+            "IsFinalInvoice": false
         }
 
         return {get, put, post, delete: doDelete}
