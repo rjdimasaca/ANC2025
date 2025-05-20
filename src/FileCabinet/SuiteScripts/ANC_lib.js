@@ -717,60 +717,196 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     generateShipments : generateShipments
             }
 
+            function getFitmentObj(rawRequestData)
+            {
+                    log.debug("getFitmentObj rawRequestData", rawRequestData)
+                    var fitmentResponse = {
+                            list : []
+                    };
+                    try
+                    {
+                            if(rawRequestData[0].line_usecrossdock && rawRequestData[0].line_usecrossdock != "F")
+                            {
+                                    var fitmentRequestData = {};
+                                    fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
+
+                                    fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                                    // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                                    //TODO DEFAULTS to TRUCK if not configured
+                                    fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                                    fitmentRequestData.orderItems = [];
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getFitmentObj", e);
+                    }
+            }
+
             function getFitmentResponse(rawRequestData)
             {
                     log.debug("getFitmentResponse rawRequestData", rawRequestData)
                     var fitmentResponse = {
                             list : []
                     };
-                    var fitmentRequestData = {};
-                    // fitmentRequestData.country = "Canada"; //TODO
-                    fitmentRequestData.JurisdictionName = "Canada"; //TODO
-                    fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext || "TRTAMDV53"; //TODO REMOVE THIS FALLBACK DEFAULT
-                    fitmentRequestData.transportationMode = "TRUCK"; //TODO
-                    fitmentRequestData.orderItems = [];
-                    try
-                    {
-                            // fitmentRequestData.orderItems.push(
-                            //     {
-                            //         ItemId : "188522",
-                            //         Diameter : 127, //TODO
-                            //         Width : 85.09,
-                            //         Weight : 645.2,
-                            //         Nb : 70,
-                            //         Type : 1,
-                            //         RPP : 1,
-                            //     }
-                            // )
-                            // fitmentRequestData.orderItems.push(
-                            //     {
-                            //         ItemId : "188537",
-                            //         Diameter : 127, //TODO
-                            //         Width : 88.90,
-                            //         Weight : 673.1,
-                            //         Nb : 28,
-                            //         Type : 1,
-                            //         RPP : 1,
-                            //     }
-                            // )
-                            //TODO
-                            for(var a = 0 ; a < rawRequestData.length ; a++)
-                            {
-                                    fitmentRequestData.orderItems.push(
-                                        {
-                                                ItemId : rawRequestData[a].line_uniquekey,
-                                                Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
-                                                Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
-                                                Weight : rawRequestData[a].line_item_basis_weight || 673.1,
-                                                Nb : rawRequestData[a].line_quantity,
-                                                Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
-                                                RPP : rawRequestData[a].line_item_rollsperpack || 1,
-                                        }
-                                    )
 
+                    for(var a = 0 ; a < srGroupedByDeliveryDate[date].length ; a++)
+                    {
+                            if(srGroupedByDeliveryDate[date][a].line_usecrossdock && srGroupedByDeliveryDate[date][a].line_usecrossdock != "F")
+                            {
+                                    var fitmentRequestData = {};
+                                    fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[a].lane_originloc_country; //TODO
+
+                                    fitmentRequestData.vehicleName = rawRequestData[a].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                                    // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                                    //TODO DEFAULTS to TRUCK if not configured
+                                    fitmentRequestData.transportationMode = rawRequestData[a].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                                    fitmentRequestData.orderItems = [];
+
+
+                                    try
+                                    {
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : "188522",
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 85.09,
+                                            //         Weight : 645.2,
+                                            //         Nb : 70,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : "188537",
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 88.90,
+                                            //         Weight : 673.1,
+                                            //         Nb : 28,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                            //TODO
+                                            for(var a = 0 ; a < rawRequestData.length ; a++)
+                                            {
+                                                    fitmentRequestData.orderItems.push(
+                                                        {
+                                                                ItemId : rawRequestData[a].line_uniquekey,
+                                                                Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                                                                Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
+                                                                Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                                                                Nb : rawRequestData[a].line_quantity,
+                                                                Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                                                                RPP : rawRequestData[a].line_item_rollsperpack || 1,
+                                                        }
+                                                    )
+
+                                                    // fitmentRequestData.orderItems.push(
+                                                    //     {
+                                                    //         ItemId : rawRequestData[a].line_uniquekey,
+                                                    //         Diameter : 127, //TODO
+                                                    //         Width : 88.90,
+                                                    //         Weight : 673.1,
+                                                    //         Nb : 28,
+                                                    //         Type : 1,
+                                                    //         RPP : 1,
+                                                    //     }
+                                                    // )
+                                            }
+
+                                            log.debug("fitmentRequestData", fitmentRequestData)
+
+                                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                                            var connection_timeStamp_start = new Date().getTime();
+
+                                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                                            var connection_timeStamp_end = new Date().getTime();
+
+                                            log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                                            log.debug("rawResp.body", rawResp.body)
+
+                                            fitmentResponse.list.push(rawResp)
+                                            // return rawResp;
+
+                                            // var fitmentObj = {
+                                            //     equipment: "1",
+                                            //     ftlcount: "1",
+                                            //     ftlavetonnage: "1",
+                                            //     ftlavecostperton: "1",
+                                            //     ftlavepercentutil: "1",
+                                            //     ltltonnage: "1",
+                                            //     ltlpercentutil: "1",
+                                            //     ltlrolls: "1",
+                                            //     loadid: "1",
+                                            //     loadnumber: "1",
+                                            //     weightplanned: "weight planned",
+                                            //     percentage: "10",
+                                            // };
+                                            // fitmentResponse.list.push(fitmentObj)
+                                            //
+                                            // var fitmentObj = {
+                                            //     equipment: "1",
+                                            //     ftlcount: "2",
+                                            //     ftlavetonnage: "2",
+                                            //     ftlavecostperton: "2",
+                                            //     ftlavepercentutil: "2",
+                                            //     ltltonnage: "2",
+                                            //     ltlpercentutil: "2",
+                                            //     ltlrolls: "2",
+                                            //     loadid: "2",
+                                            //     loadnumber: "2",
+                                            //     weightplanned: "weight planned",
+                                            //     percentage: "10",
+                                            // };
+                                            // fitmentResponse.list.push(fitmentObj)
+
+                                            //FOR LEG2
+                                    }
+                                    catch(e)
+                                    {
+                                            log.error("ERROR in function getFitmentResponse leg2", e);
+                                    }
+                            }
+                    }
+                    // if(srGroupedByDeliveryDate[date].line_usecrossdock && srGroupedByDeliveryDate[date].line_usecrossdock != "F")
+                    // {
+                    //         srGroupedByDeliveryDate[date].line_usecrossdock
+                    //
+                    // }
+                    // fitmentRequestData.country = "Canada"; //TODO
+
+                    //first leg, if it requires cross dock expect 2 legs already
+                    if(rawRequestData[0].line_usecrossdock && rawRequestData[0].line_usecrossdock != "F")
+                    {
+                            var fitmentRequestData = {};
+                            fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
+
+                            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                            // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                            //TODO DEFAULTS to TRUCK if not configured
+                            fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                            fitmentRequestData.orderItems = [];
+                            try
+                            {
                                     // fitmentRequestData.orderItems.push(
                                     //     {
-                                    //         ItemId : rawRequestData[a].line_uniquekey,
+                                    //         ItemId : "188522",
+                                    //         Diameter : 127, //TODO
+                                    //         Width : 85.09,
+                                    //         Weight : 645.2,
+                                    //         Nb : 70,
+                                    //         Type : 1,
+                                    //         RPP : 1,
+                                    //     }
+                                    // )
+                                    // fitmentRequestData.orderItems.push(
+                                    //     {
+                                    //         ItemId : "188537",
                                     //         Diameter : 127, //TODO
                                     //         Width : 88.90,
                                     //         Weight : 673.1,
@@ -779,61 +915,209 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     //         RPP : 1,
                                     //     }
                                     // )
+                                    //TODO
+                                    for(var a = 0 ; a < rawRequestData.length ; a++)
+                                    {
+                                            fitmentRequestData.orderItems.push(
+                                                {
+                                                        ItemId : rawRequestData[a].line_uniquekey,
+                                                        Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                                                        Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
+                                                        Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                                                        Nb : rawRequestData[a].line_quantity,
+                                                        Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                                                        RPP : rawRequestData[a].line_item_rollsperpack || 1,
+                                                }
+                                            )
+
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : rawRequestData[a].line_uniquekey,
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 88.90,
+                                            //         Weight : 673.1,
+                                            //         Nb : 28,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                    }
+
+                                    log.debug("fitmentRequestData", fitmentRequestData)
+
+                                    fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                                    var connection_timeStamp_start = new Date().getTime();
+
+                                    var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                                    var connection_timeStamp_end = new Date().getTime();
+
+                                    log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                                    log.debug("rawResp.body", rawResp.body)
+
+                                    fitmentResponse.list.push(rawResp)
+                                    // return rawResp;
+
+                                    // var fitmentObj = {
+                                    //     equipment: "1",
+                                    //     ftlcount: "1",
+                                    //     ftlavetonnage: "1",
+                                    //     ftlavecostperton: "1",
+                                    //     ftlavepercentutil: "1",
+                                    //     ltltonnage: "1",
+                                    //     ltlpercentutil: "1",
+                                    //     ltlrolls: "1",
+                                    //     loadid: "1",
+                                    //     loadnumber: "1",
+                                    //     weightplanned: "weight planned",
+                                    //     percentage: "10",
+                                    // };
+                                    // fitmentResponse.list.push(fitmentObj)
+                                    //
+                                    // var fitmentObj = {
+                                    //     equipment: "1",
+                                    //     ftlcount: "2",
+                                    //     ftlavetonnage: "2",
+                                    //     ftlavecostperton: "2",
+                                    //     ftlavepercentutil: "2",
+                                    //     ltltonnage: "2",
+                                    //     ltlpercentutil: "2",
+                                    //     ltlrolls: "2",
+                                    //     loadid: "2",
+                                    //     loadnumber: "2",
+                                    //     weightplanned: "weight planned",
+                                    //     percentage: "10",
+                                    // };
+                                    // fitmentResponse.list.push(fitmentObj)
+
+                                    //FOR LEG2
+                            }
+                            catch(e)
+                            {
+                                    log.error("ERROR in function getFitmentResponse leg2", e);
                             }
 
-                            log.debug("fitmentRequestData", fitmentRequestData)
+                            //LEG2
+                            var fitmentRequestData = {};
+                            fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
 
-                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+                            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                            // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                            //TODO DEFAULTS to TRUCK if not configured
+                            fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                            fitmentRequestData.orderItems = [];
+                            try
+                            {
+                                    // fitmentRequestData.orderItems.push(
+                                    //     {
+                                    //         ItemId : "188522",
+                                    //         Diameter : 127, //TODO
+                                    //         Width : 85.09,
+                                    //         Weight : 645.2,
+                                    //         Nb : 70,
+                                    //         Type : 1,
+                                    //         RPP : 1,
+                                    //     }
+                                    // )
+                                    // fitmentRequestData.orderItems.push(
+                                    //     {
+                                    //         ItemId : "188537",
+                                    //         Diameter : 127, //TODO
+                                    //         Width : 88.90,
+                                    //         Weight : 673.1,
+                                    //         Nb : 28,
+                                    //         Type : 1,
+                                    //         RPP : 1,
+                                    //     }
+                                    // )
+                                    //TODO
+                                    for(var a = 0 ; a < rawRequestData.length ; a++)
+                                    {
+                                            fitmentRequestData.orderItems.push(
+                                                {
+                                                        ItemId : rawRequestData[a].line_uniquekey,
+                                                        Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                                                        Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
+                                                        Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                                                        Nb : rawRequestData[a].line_quantity,
+                                                        Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                                                        RPP : rawRequestData[a].line_item_rollsperpack || 1,
+                                                }
+                                            )
 
-                            var connection_timeStamp_start = new Date().getTime();
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : rawRequestData[a].line_uniquekey,
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 88.90,
+                                            //         Weight : 673.1,
+                                            //         Nb : 28,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                    }
 
-                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+                                    log.debug("fitmentRequestData", fitmentRequestData)
 
-                            var connection_timeStamp_end = new Date().getTime();
+                                    fitmentRequestData = JSON.stringify(fitmentRequestData)
 
-                            log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+                                    var connection_timeStamp_start = new Date().getTime();
 
-                            log.debug("rawResp.body", rawResp.body)
+                                    var rawResp = PTMX.generateShipments(fitmentRequestData);
 
+                                    var connection_timeStamp_end = new Date().getTime();
 
-                            return rawResp;
+                                    log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
 
-                            // var fitmentObj = {
-                            //     equipment: "1",
-                            //     ftlcount: "1",
-                            //     ftlavetonnage: "1",
-                            //     ftlavecostperton: "1",
-                            //     ftlavepercentutil: "1",
-                            //     ltltonnage: "1",
-                            //     ltlpercentutil: "1",
-                            //     ltlrolls: "1",
-                            //     loadid: "1",
-                            //     loadnumber: "1",
-                            //     weightplanned: "weight planned",
-                            //     percentage: "10",
-                            // };
-                            // fitmentResponse.list.push(fitmentObj)
-                            //
-                            // var fitmentObj = {
-                            //     equipment: "1",
-                            //     ftlcount: "2",
-                            //     ftlavetonnage: "2",
-                            //     ftlavecostperton: "2",
-                            //     ftlavepercentutil: "2",
-                            //     ltltonnage: "2",
-                            //     ltlpercentutil: "2",
-                            //     ltlrolls: "2",
-                            //     loadid: "2",
-                            //     loadnumber: "2",
-                            //     weightplanned: "weight planned",
-                            //     percentage: "10",
-                            // };
-                            // fitmentResponse.list.push(fitmentObj)
+                                    log.debug("rawResp.body", rawResp.body)
+
+                                    fitmentResponse.list.push(rawResp)
+                                    // return rawResp;
+
+                                    // var fitmentObj = {
+                                    //     equipment: "1",
+                                    //     ftlcount: "1",
+                                    //     ftlavetonnage: "1",
+                                    //     ftlavecostperton: "1",
+                                    //     ftlavepercentutil: "1",
+                                    //     ltltonnage: "1",
+                                    //     ltlpercentutil: "1",
+                                    //     ltlrolls: "1",
+                                    //     loadid: "1",
+                                    //     loadnumber: "1",
+                                    //     weightplanned: "weight planned",
+                                    //     percentage: "10",
+                                    // };
+                                    // fitmentResponse.list.push(fitmentObj)
+                                    //
+                                    // var fitmentObj = {
+                                    //     equipment: "1",
+                                    //     ftlcount: "2",
+                                    //     ftlavetonnage: "2",
+                                    //     ftlavecostperton: "2",
+                                    //     ftlavepercentutil: "2",
+                                    //     ltltonnage: "2",
+                                    //     ltlpercentutil: "2",
+                                    //     ltlrolls: "2",
+                                    //     loadid: "2",
+                                    //     loadnumber: "2",
+                                    //     weightplanned: "weight planned",
+                                    //     percentage: "10",
+                                    // };
+                                    // fitmentResponse.list.push(fitmentObj)
+
+                                    //FOR LEG2
+                            }
+                            catch(e)
+                            {
+                                    log.error("ERROR in function getFitmentResponse", e);
+                            }
                     }
-                    catch(e)
-                    {
-                            log.error("ERROR in function getFitmentResponse", e);
-                    }
+
+
                     return fitmentResponse;
             }
 
@@ -897,10 +1181,29 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
                                     search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
                                     search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                                    search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
+                                    search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
+                                    search.createColumn({
+                                            name: "custrecord_anc_lane_originwarehousecntry",
+                                            join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                            label: "lane_originloc_country"
+                                    }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
                                     // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
                                     search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
+                                    search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
                                     search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
                                     search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
+                                    search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
                                     search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
                                     search.createColumn({
                                             name: "custitem_anc_rolldiameter",
@@ -971,6 +1274,20 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                 if(label == "line_equipment")
                                 {
                                         resObjByColumnKey.line_equipmenttext = res.getText(column);
+                                }
+                                if(label == "line_crossdock_country")
+                                {
+                                        resObjByColumnKey.line_crossdock_countrytext = res.getText(column);
+                                        // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
+                                }
+                                if(label == "lane_originloc_country")
+                                {
+                                        resObjByColumnKey.lane_originloc_countrytext = res.getText(column);
+                                        // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
+                                }
+                                if(label == "line_equipment_type")
+                                {
+                                        resObjByColumnKey.line_equipment_typetext = res.getText(column);
                                 }
                                 if(label == "line_item_rollwidth")
                                 {
@@ -1113,6 +1430,23 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }, {});
             }
 
+            function getLoadDetails(loadId)
+            {
+                    var getLoadDetails_result = {};
+                    getLoadDetails_result.loadId = loadId;
+                    try
+                    {
+
+                            getLoadDetails_result.taxId = 82;
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getLoadDetails", e)
+                    }
+
+                    return getLoadDetails_result;
+            }
+
 
 
 
@@ -1133,6 +1467,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 getFitmentResponse,
                 generateShipments,
                 groupOrderLinesForShipmentGeneration,
+                getFitmentObj,
+                getLoadDetails
         }
 
     });
