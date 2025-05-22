@@ -107,8 +107,9 @@ define(['N/runtime', 'N/search', 'N/url', 'N/ui/message', 'N/currentRecord'],
             }
         }
 
+
+
         return {
-            // fieldChanged: fieldChanged,
             pageInit : pageInit,
             saveRecord : saveRecord
         };

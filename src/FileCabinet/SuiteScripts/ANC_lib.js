@@ -368,6 +368,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     else
                                     {
                                             if(integrationLogObj.request)
+
                                             {
                                                     var searchFilter = [];
                                                     var tagArray = [];
@@ -1447,6 +1448,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
             function prepLoad(loadID)
             {
+                    var OVERRIDE_LOAD_FOR_TESTING = true;
                     var prepShipmentRecId = "";
                     var assumeLoadIsMissing = true;
                     try
@@ -1467,7 +1469,104 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     }
                                     else
                                     {
-                                            return prepShipmentRecId;
+                                             searchObj.run().each(function(res){
+                                                     prepShipmentRecId = res.id;
+                                                    return false;
+                                            })
+                                            if(OVERRIDE_LOAD_FOR_TESTING)
+                                            {
+                                                    var shipmentRecObj = record.load({
+                                                            type : "customsale_anc_shipment",
+                                                            id : prepShipmentRecId
+                                                    });
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "entity",
+                                                            //         value: 106127,
+                                                            // //Lee BHM Corp (Parent) : Arizona Daily Sun
+                                                            // // WM5845	6477-WM5845_DUP_1
+                                                                    value: 492090,
+                                                            // //Mittera Albertson's
+                                                            //         value: 498581,
+                                                            // //Midland Paper Company (Parent) : Midland PRH All Star Book
+                                                            // value: 330177,
+                                                            //Friesens Corporation - MB CAN
+                                                    })
+
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "custbody_consignee",
+                                                            //         value: 305730,
+                                                            // // Lee BHM Corp (Parent) : Arizona Daily Sun // Arizona Daily Sun TEST Second Consignee
+                                                            // //AZ US
+                                                                    value: 300725,
+                                                            // //BC Coast 2000 Terminals Ltd.
+                                                            // // Lulu Island	BC	CAN
+                                                            //         //WM6040
+                                                            //         value: 304127,
+                                                            // // Friesens Corporation - MB CAN
+                                                            // value: 302826,
+                                                            //Active Warehouse 9	Mittera (Parent) : Mittera Kroger - AB CAN
+                                                    })
+
+
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "custbody_anc_shipment_leg",
+                                                            value: "2"
+                                                    })
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "custbody4",
+                                                            value: loadID
+                                                    })
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "custbody_anc_equipment",
+                                                            value: 6 //TRTAMDV53
+                                                    })
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "location",
+                                                            value: 9 //ANS Paper (Summary) : ANC Whitecourt Warehouse
+                                                    });
+
+                                                    shipmentRecObj.setSublistValue({
+                                                            sublistId : "item",
+                                                            fieldId : "item",
+                                                            line : 0,
+                                                            value : 188748
+                                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                                            //Not Shipped
+                                                    })
+                                                    shipmentRecObj.setSublistValue({
+                                                            sublistId : "item",
+                                                            fieldId : "quantity",
+                                                            line : 0,
+                                                            value : 10
+                                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                                            //Not Shipped
+                                                    })
+                                                    shipmentRecObj.setSublistValue({
+                                                            sublistId : "item",
+                                                            fieldId : "custcol_anc_relatedlineuniquekey",
+                                                            line : 0,
+                                                            value : 969350858
+                                                            //NPL79RO : D100cm/40in-W100cm/40in-BNLD
+                                                            //Not Shipped
+                                                    })
+                                                    shipmentRecObj.setSublistValue({
+                                                            sublistId : "item",
+                                                            fieldId : "custcol_anc_relatedtransaction",
+                                                            line : 0,
+                                                            value : 61243742
+                                                            //Sales Order #SO62862
+                                                    });
+
+
+                                                    prepShipmentRecId = shipmentRecObj.save({
+                                                            ignoreMandatoryFields : true,
+                                                            enableSourcing : true
+                                                    })
+
+                                                    log.debug("prepShipmentRecId", prepShipmentRecId);
+
+                                                    return prepShipmentRecId;
+                                            }
                                     }
 
 

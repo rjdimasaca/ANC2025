@@ -46,6 +46,8 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
         }
 
 
+        var csv_rows = [];
+        var csv_text = "";
         var linesToHighlight_yellow = [];
         var linesToHighlight_orange = [];
         function showReqForecastButton()
@@ -127,80 +129,82 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
         function eval_requestforecastadj(scriptContext)
         {
             // salesAllocRecType
-
             var eval_requestforecastadj_res = {};
 
-            var itemGradeList = [];
-            var lineCount = scriptContext.newRecord.getLineCount({
-                sublistId : "item"
-            });
-
-            var itemIdList = [];
-            var itemGradeIdList = [];
-            var gradeLineMapping = {};
-            var lineGradeMapping = {};
-            var orderLinesByConsignee = {};
-
-            var sqlFilters = [];
-            var sqlFilters_text = "";
-
-
-            var compositeKeys = {};
-
-            for(var a = 0 ; a < lineCount ; a++)
+            try
             {
-                var lineGradeId = scriptContext.newRecord.getSublistValue({
-                    sublistId : "item",
-                    fieldId : "custcol_anc_grade",
-                    line : a
-                });
-                var lineQty = scriptContext.newRecord.getSublistValue({
-                    sublistId : "item",
-                    fieldId : "quantity",
-                    line : a
-                });
-                var lineConsignee = scriptContext.newRecord.getSublistValue({
-                    sublistId : "item",
-                    fieldId : "custcol_consignee",
-                    line : a
-                });
-                var lineDate = scriptContext.newRecord.getSublistValue({
-                    sublistId : "item",
-                    fieldId : "custcol_anc_deliverydate",
-                    line : a
+                var newRecord = scriptContext.newRecord;
+                var itemGradeList = [];
+                var lineCount = newRecord.getLineCount({
+                    sublistId : "item"
                 });
 
+                var itemIdList = [];
+                var itemGradeIdList = [];
+                var gradeLineMapping = {};
+                var lineGradeMapping = {};
+                var orderLinesByConsignee = {};
 
-                log.debug("lineDate", lineDate)
+                var sqlFilters = [];
+                var sqlFilters_text = "";
 
-                if(typeof lineDate != "object" && lineDate != "null" && lineDate)
+
+                var compositeKeys = {};
+
+                for(var a = 0 ; a < lineCount ; a++)
                 {
-                    log.debug("NON date blineDate", lineDate)
-                    lineDate = new Date(lineDate);
-                    log.debug("NON date alineDate", lineDate)
-                }
-                else
-                {
-                    log.debug("alrd date blineDate", lineDate)
-                    lineDate = lineDate ? new Date(lineDate) : new Date();
-                    log.debug("alrd date alineDate", lineDate)
-                }
-
-                var lineDate_year = lineDate.getFullYear();
-                var lineDate_year_plain = lineDate.getFullYear();
-
-                log.debug("lineDate_year fullyear", lineDate_year)
-
-                lineDate_year = `'${lineDate_year}'`
-                log.debug("lineDate_yearlineDate_year", lineDate_year)
-
-
-                var lineDate_month = lineDate.getMonth() + 1;
-
-                log.debug("lineDate_month", lineDate_month)
+                    var lineGradeId = scriptContext.newRecord.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "custcol_anc_grade",
+                        line : a
+                    });
+                    var lineQty = scriptContext.newRecord.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "quantity",
+                        line : a
+                    });
+                    var lineConsignee = scriptContext.newRecord.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "custcol_consignee",
+                        line : a
+                    });
+                    var lineDate = scriptContext.newRecord.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "custcol_anc_deliverydate",
+                        line : a
+                    });
 
 
-                sqlFilters.push(`(
+                    log.debug("lineDate", lineDate)
+
+                    if(typeof lineDate != "object" && lineDate != "null" && lineDate)
+                    {
+                        log.debug("NON date blineDate", lineDate)
+                        lineDate = new Date(lineDate);
+                        log.debug("NON date alineDate", lineDate)
+                    }
+                    else
+                    {
+                        log.debug("alrd date blineDate", lineDate)
+                        lineDate = lineDate ? new Date(lineDate) : new Date();
+                        log.debug("alrd date alineDate", lineDate)
+                    }
+
+                    var lineDate_year = lineDate.getFullYear();
+                    var lineDate_year_plain = lineDate.getFullYear();
+
+                    log.debug("lineDate_year fullyear", lineDate_year)
+
+                    lineDate_year = `'${lineDate_year}'`
+                    log.debug("lineDate_yearlineDate_year", lineDate_year)
+
+
+                    var lineDate_month = lineDate.getMonth() + 1;
+
+                    log.debug("lineDate_month", lineDate_month)
+
+
+                    sqlFilters.push(`(
                 sf.custrecord_anc_pf_grade = ${lineGradeId} 
                 AND 
                 y.name = ${lineDate_year} 
@@ -211,69 +215,69 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                 )`)
 
 
-                var compositeKey = `${lineGradeId}_${lineConsignee}_${lineDate_month}_${lineDate_year_plain}`
-                //make month the last part of the compositeKey to make it easy for the salesforecasting piece
-                // var compositeKey = `${lineDate_year_plain}_${lineGradeId}_${lineConsignee}_${lineDate_month}`
+                    var compositeKey = `${lineGradeId}_${lineConsignee}_${lineDate_month}_${lineDate_year_plain}`
+                    //make month the last part of the compositeKey to make it easy for the salesforecasting piece
+                    // var compositeKey = `${lineDate_year_plain}_${lineGradeId}_${lineConsignee}_${lineDate_month}`
 
-                log.debug("compositeKey", compositeKey)
+                    log.debug("compositeKey", compositeKey)
 
-                sqlFilters_text = sqlFilters.join( " OR " )
+                    sqlFilters_text = sqlFilters.join( " OR " )
 
-                log.debug("sqlFilters_text", sqlFilters_text);
+                    log.debug("sqlFilters_text", sqlFilters_text);
 
-                if(gradeLineMapping[lineGradeId])
-                {
-                    gradeLineMapping[lineGradeId].lines.push(a);
-                    gradeLineMapping[lineGradeId].totalQty += lineQty;
+                    if(gradeLineMapping[lineGradeId])
+                    {
+                        gradeLineMapping[lineGradeId].lines.push(a);
+                        gradeLineMapping[lineGradeId].totalQty += lineQty;
+                    }
+                    else
+                    {
+                        gradeLineMapping[lineGradeId] = {};
+                        gradeLineMapping[lineGradeId].lines = [a];
+                        gradeLineMapping[lineGradeId].totalQty = lineQty;
+                    }
+
+                    if(lineGradeMapping[lineGradeId])
+                    {
+                        lineGradeMapping[a].grades.push(lineGradeId);
+                        lineGradeMapping[a].totalQty += lineQty;
+                    }
+                    else
+                    {
+                        lineGradeMapping[a] = {};
+                        lineGradeMapping[a].grades = [lineGradeId];
+                        lineGradeMapping[a].totalQty = lineQty;
+                    }
+
+
+                    if(compositeKeys[compositeKey])
+                    {
+                        compositeKeys[compositeKey].lines.push(a);
+                        compositeKeys[compositeKey].totalQty += lineQty;
+                    }
+                    else
+                    {
+                        compositeKeys[compositeKey] = {};
+                        compositeKeys[compositeKey].lines = [a];
+                        compositeKeys[compositeKey].totalQty = lineQty;
+                    }
+
+                    itemGradeIdList.push(`'${lineGradeId}'`);
                 }
-                else
-                {
-                    gradeLineMapping[lineGradeId] = {};
-                    gradeLineMapping[lineGradeId].lines = [a];
-                    gradeLineMapping[lineGradeId].totalQty = lineQty;
-                }
 
-                if(lineGradeMapping[lineGradeId])
-                {
-                    lineGradeMapping[a].grades.push(lineGradeId);
-                    lineGradeMapping[a].totalQty += lineQty;
-                }
-                else
-                {
-                    lineGradeMapping[a] = {};
-                    lineGradeMapping[a].grades = [lineGradeId];
-                    lineGradeMapping[a].totalQty = lineQty;
-                }
+                log.debug("itemGradeIdList", itemGradeIdList);
+                log.debug("lineGradeMapping", lineGradeMapping);
+                log.debug("gradeLineMapping", gradeLineMapping);
+                log.debug("compositeKeys", compositeKeys);
+
+                var itemGradeIdList_joined = `(${itemGradeIdList.join(",")})`;
 
 
-                if(compositeKeys[compositeKey])
-                {
-                    compositeKeys[compositeKey].lines.push(a);
-                    compositeKeys[compositeKey].totalQty += lineQty;
-                }
-                else
-                {
-                    compositeKeys[compositeKey] = {};
-                    compositeKeys[compositeKey].lines = [a];
-                    compositeKeys[compositeKey].totalQty = lineQty;
-                }
-
-                itemGradeIdList.push(`'${lineGradeId}'`);
-            }
-
-            log.debug("itemGradeIdList", itemGradeIdList);
-            log.debug("lineGradeMapping", lineGradeMapping);
-            log.debug("gradeLineMapping", gradeLineMapping);
-            log.debug("compositeKeys", compositeKeys);
-
-            var itemGradeIdList_joined = `(${itemGradeIdList.join(",")})`;
+                log.debug("itemGradeIdList_joined", itemGradeIdList_joined);
 
 
-            log.debug("itemGradeIdList_joined", itemGradeIdList_joined);
-
-
-            var sql =
-            `Select
+                var sql =
+                    `Select
                  sf.custrecord_anc_pf_grade as sf_grade,
                  sf.custrecord_anc_pf_allocation as sf_allocation,
                  sf.custrecord_anc_pf_year as sf_year,
@@ -293,69 +297,69 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                  ${sqlFilters_text}
                  `
 
-            log.debug("sql", sql)
+                log.debug("sql", sql)
 
-            const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+                const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
 
-            log.debug("sqlResults", sqlResults)
+                log.debug("sqlResults", sqlResults)
 
-            var sqlResults_byKey = groupByKeys(sqlResults, ["sf_grade", "sf_consignee", "sf_month", "y_name"]);
+                var sqlResults_byKey = groupByKeys(sqlResults, ["sf_grade", "sf_consignee", "sf_month", "y_name"]);
 
-            eval_requestforecastadj_res.sqlResults = sqlResults;
-            eval_requestforecastadj_res.sqlResults_byKey = sqlResults_byKey;
-            eval_requestforecastadj_res.gradeLineMapping = gradeLineMapping;
-            eval_requestforecastadj_res.lineGradeMapping = lineGradeMapping;
-            eval_requestforecastadj_res.itemGradeIdList = itemGradeIdList;
+                eval_requestforecastadj_res.sqlResults = sqlResults;
+                eval_requestforecastadj_res.sqlResults_byKey = sqlResults_byKey;
+                eval_requestforecastadj_res.gradeLineMapping = gradeLineMapping;
+                eval_requestforecastadj_res.lineGradeMapping = lineGradeMapping;
+                eval_requestforecastadj_res.itemGradeIdList = itemGradeIdList;
 
-            log.debug("eval_requestforecastadj_res", eval_requestforecastadj_res);
+                log.debug("eval_requestforecastadj_res", eval_requestforecastadj_res);
 
-            log.debug("sqlResults_byKey", sqlResults_byKey);
+                log.debug("sqlResults_byKey", sqlResults_byKey);
 
-            for(var compositeKey in compositeKeys)
-            {
-                if(sqlResults_byKey[compositeKey] && sqlResults_byKey[compositeKey][0])
+                for(var compositeKey in compositeKeys)
                 {
-                    //TODO you need to look at other orders, not just this salesorder
-                    if(sqlResults_byKey[compositeKey][0].sf_allocation < compositeKeys[compositeKey].totalQty)
+                    if(sqlResults_byKey[compositeKey] && sqlResults_byKey[compositeKey][0])
                     {
-                        log.debug("detected forecast issue on lines", compositeKeys[compositeKey].lines)
-                        linesToHighlight_yellow = linesToHighlight_yellow.concat(compositeKeys[compositeKey].lines)
+                        //TODO you need to look at other orders, not just this salesorder
+                        if(sqlResults_byKey[compositeKey][0].sf_allocation < compositeKeys[compositeKey].totalQty)
+                        {
+                            log.debug("detected forecast issue on lines", compositeKeys[compositeKey].lines)
+                            linesToHighlight_yellow = linesToHighlight_yellow.concat(compositeKeys[compositeKey].lines)
+                        }
+                        else
+                        {
+                            log.debug("NO forecast issue on lines", compositeKeys[compositeKey].lines)
+                        }
                     }
                     else
                     {
-                        log.debug("NO forecast issue on lines", compositeKeys[compositeKey].lines)
+                        log.debug("detected forecast issue on lines, no forcast found", compositeKeys[compositeKey].lines)
+                        linesToHighlight_orange = linesToHighlight_orange.concat(compositeKeys[compositeKey].lines)
                     }
                 }
-                else
+
+                log.debug("linesToHighlight_orange", linesToHighlight_orange)
+                log.debug("linesToHighlight_yellow", linesToHighlight_yellow)
+
+                var yellowHtml = "";
+                if(linesToHighlight_orange.length > 0)
                 {
-                    log.debug("detected forecast issue on lines, no forcast found", compositeKeys[compositeKey].lines)
-                    linesToHighlight_orange = linesToHighlight_orange.concat(compositeKeys[compositeKey].lines)
+                    // highlightItemSplitsSpecificRows(linesToHighlight_orange, 'orange');
+                    yellowHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_orange)}, 'orange');`
                 }
-            }
+                var orangeHtml = "";
+                if(linesToHighlight_yellow.length > 0)
+                {
+                    // highlightItemSplitsSpecificRows(linesToHighlight_yellow, 'yellow')
+                    orangeHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_yellow)}, 'yellow');`
+                }
 
-            log.debug("linesToHighlight_orange", linesToHighlight_orange)
-            log.debug("linesToHighlight_yellow", linesToHighlight_yellow)
+                var inlineHtmlField = scriptContext.form.addField({
+                    id: "custpage_anc_forecasthighlighter",
+                    type: "inlinehtml",
+                    label: "ANC SALES_forecasthighlighter"
+                });
 
-            var yellowHtml = "";
-            if(linesToHighlight_orange.length > 0)
-            {
-                // highlightItemSplitsSpecificRows(linesToHighlight_orange, 'orange');
-                yellowHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_orange)}, 'orange');`
-            }
-            var orangeHtml = "";
-            if(linesToHighlight_yellow.length > 0)
-            {
-                // highlightItemSplitsSpecificRows(linesToHighlight_yellow, 'yellow')
-                orangeHtml += `highlightItemSplitsSpecificRows(${JSON.stringify(linesToHighlight_yellow)}, 'yellow');`
-            }
-
-            var inlineHtmlField = scriptContext.form.addField({
-                id: "custpage_anc_forecasthighlighter",
-                type: "inlinehtml",
-                label: "ANC SALES_forecasthighlighter"
-            });
-
-            var inlineHtmlFieldValue =`<script>
+                var inlineHtmlFieldValue =`<script>
 
 
             console.log('wasap man111')
@@ -399,7 +403,12 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
             })
             </script>`
 
-            inlineHtmlField.defaultValue = inlineHtmlFieldValue;
+                inlineHtmlField.defaultValue = inlineHtmlFieldValue;
+            }
+            catch(e) {
+                log.error("ERROR in function eval_requestforecastadj", e)
+            }
+
 
             return eval_requestforecastadj_res;
 
@@ -682,6 +691,99 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
         }
 
+        function prepItems(recObj)
+        {
+            var prepItems_result = {list:[]};
+            try
+            {
+                var lineCount = recObj.getLineCount({
+                    sublistId : "item"
+                });
+                for(var a = 0 ; a < lineCount ; a++)
+                {
+                    var lineObj = {};
+                    lineObj["line_index"] = a;
+                    lineObj.line_item = recObj.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "item",
+                        line : a
+                    });
+                    lineObj.line_overrideopts = recObj.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "custcol_anc_item_override_options",
+                        line : a
+                    });
+                    lineObj.line_grade = recObj.getSublistValue({
+                        sublistId : "item",
+                        fieldId : "custcol_anc_grade",
+                        line : a
+                    });
+                    // lineObj["line_item"] = line_item;
+                    // lineObj["custcol_anc_item_override_options"] = line_overrideopts;
+                    // lineObj[line_item] = line_item;
+
+                    lineObj.line_overrideopts_stringify = `{${lineObj.line_overrideopts.split("\n").join(",")}}`;
+                    log.debug("lineObj after overrideopts stringify", lineObj.line_overrideopts_stringify);
+                    lineObj.line_overrideopts_obj = JSON.parse(lineObj.line_overrideopts_stringify);
+                    log.debug("lineObj after overrideopts parse", lineObj)
+
+
+                    if(lineObj.line_overrideopts_obj && lineObj.line_overrideopts_obj["G"])
+                    {
+                        prepItems_result.list.push(lineObj);
+                    }
+                    // var line_item = recObj.getSublistValue({
+                    //     sublistId : "item",
+                    //     fieldId : "item",
+                    //     line : a
+                    // });
+
+                    prepItems_result.byItem = groupBy(prepItems_result.list, "line_item");
+                    prepItems_result.byIndex = groupBy(prepItems_result.list, "line_index");
+                    prepItems_result.byGrade = groupBy(prepItems_result.list, "line_grade");
+                }
+
+
+
+                for (var gradeId in prepItems_result.byGrade)
+                {
+                    for(var a = 0 ; a < prepItems_result.byGrade[gradeId].length ; a++)
+                    {
+                        var opts = prepItems_result.byGrade[gradeId][a].line_overrideopts_obj;
+                        log.debug("opts after prepitems", opts)
+                        if(opts.D && opts.W && opts.Core)
+                        {
+                            var csv_row = [];
+                            // var opts = prepItems_result.byGrade[a].line_overrideopts_stringify;
+                            csv_row.push(gradeId, opts.D, opts.W, (opts.Core || opts.CORE));
+                            log.debug("csv_row after prepitems", csv_row)
+                            var csv_row_text = csv_row.join(",");
+                            log.debug("csv_row_text after prepitems", csv_row_text)
+
+                            csv_rows.push(csv_row_text)
+                        }
+
+
+                    }
+
+                }
+
+                csv_text = csv_rows.join("\n")
+
+
+                log.debug("prepItems csv_text", csv_text)
+
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function prepItems", e)
+            }
+
+            log.debug("prepItems_result", prepItems_result);
+            return prepItems_result;
+        }
+
         var doSaveAfterSubmit = false;
         /**
          * Defines the function definition that is executed after record is submitted.
@@ -699,11 +801,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                 id : scriptContext.newRecord.id
             });
 
-            determineLane(recObj);
+            //create mimssing item
+            prepItems(recObj);
 
-            implementSF(recObj);
-
-            implementFitment(recObj);
+            // determineLane(recObj);
+            //
+            // implementSF(recObj);
+            //
+            // implementFitment(recObj);
 
             if(doSaveAfterSubmit)
             {
