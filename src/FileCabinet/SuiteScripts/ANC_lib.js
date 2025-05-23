@@ -744,27 +744,60 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }
             }
 
-            function getFitmentResponse(rawRequestData)
+            function getFitmentResponse(group_init_to_final)
             {
-                    log.debug("getFitmentResponse rawRequestData", rawRequestData)
+                    log.debug("getFitmentResponse group_init_to_final", group_init_to_final)
                     var fitmentResponse = {
                             list : []
                     };
 
-                    for(var a = 0 ; a < rawRequestData[date]; a++)
+                    for(var a = 0 ; a < group_init_to_final.length; a++)
                     {
-                            if(srGroupedByDeliveryDate[date][a].line_usecrossdock && srGroupedByDeliveryDate[date][a].line_usecrossdock != "F")
+                            if(group_init_to_final[a].line_usecrossdock && group_init_to_final[a].line_usecrossdock != "F")
                             {
                                     var fitmentRequestData = {};
-                                    fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
+                                    fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final.lane_originloc_country; //TODO
 
-                                    fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                                    fitmentRequestData.vehicleName = group_init_to_final.line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
                                     // fitmentRequestData.transportationMode = "TRUCK"; //TODO
                                     //TODO DEFAULTS to TRUCK if not configured
-                                    fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                                    fitmentRequestData.transportationMode = group_init_to_final.line_equipment_typetext ? (group_init_to_final.line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
                                     fitmentRequestData.orderItems = [];
                                     try
                                     {
+
+
+                                            fitmentRequestData.orderItems.push(
+                                                {
+                                                        ItemId : rawRequestData[a].line_uniquekey,
+                                                        Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                                                        Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
+                                                        Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                                                        Nb : rawRequestData[a].line_quantity,
+                                                        Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                                                        RPP : rawRequestData[a].line_item_rollsperpack || 1,
+                                                }
+                                            )
+                                            log.debug("fitmentRequestData", fitmentRequestData)
+
+                                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                                            var connection_timeStamp_start = new Date().getTime();
+
+                                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                                            var connection_timeStamp_end = new Date().getTime();
+
+                                            log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                                            log.debug("rawResp.body", rawResp.body)
+
+                                            fitmentResponse.list.push(rawResp)
+
+
+
+
+
                                             // fitmentRequestData.orderItems.push(
                                             //     {
                                             //         ItemId : "188522",
@@ -788,48 +821,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             //     }
                                             // )
                                             //TODO
-                                            for(var a = 0 ; a < rawRequestData.length ; a++)
-                                            {
-                                                    fitmentRequestData.orderItems.push(
-                                                        {
-                                                                ItemId : rawRequestData[a].line_uniquekey,
-                                                                Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
-                                                                Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
-                                                                Weight : rawRequestData[a].line_item_basis_weight || 673.1,
-                                                                Nb : rawRequestData[a].line_quantity,
-                                                                Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
-                                                                RPP : rawRequestData[a].line_item_rollsperpack || 1,
-                                                        }
-                                                    )
 
-                                                    // fitmentRequestData.orderItems.push(
-                                                    //     {
-                                                    //         ItemId : rawRequestData[a].line_uniquekey,
-                                                    //         Diameter : 127, //TODO
-                                                    //         Width : 88.90,
-                                                    //         Weight : 673.1,
-                                                    //         Nb : 28,
-                                                    //         Type : 1,
-                                                    //         RPP : 1,
-                                                    //     }
-                                                    // )
-                                            }
 
-                                            log.debug("fitmentRequestData", fitmentRequestData)
-
-                                            fitmentRequestData = JSON.stringify(fitmentRequestData)
-
-                                            var connection_timeStamp_start = new Date().getTime();
-
-                                            var rawResp = PTMX.generateShipments(fitmentRequestData);
-
-                                            var connection_timeStamp_end = new Date().getTime();
-
-                                            log.debug("connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
-
-                                            log.debug("rawResp.body", rawResp.body)
-
-                                            fitmentResponse.list.push(rawResp)
                                             // return rawResp;
 
                                             // var fitmentObj = {
@@ -872,23 +865,23 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     }
                             }
                     }
-                    // if(srGroupedByDeliveryDate[date].line_usecrossdock && srGroupedByDeliveryDate[date].line_usecrossdock != "F")
+                    // if(group_init_to_final.line_usecrossdock && group_init_to_final.line_usecrossdock != "F")
                     // {
-                    //         srGroupedByDeliveryDate[date].line_usecrossdock
+                    //         group_init_to_final.line_usecrossdock
                     //
                     // }
                     // fitmentRequestData.country = "Canada"; //TODO
 
                     //first leg, if it requires cross dock expect 2 legs already
-                    if(rawRequestData[0].line_usecrossdock && rawRequestData[0].line_usecrossdock != "F")
+                    if(group_init_to_final.line_usecrossdock && group_init_to_final.line_usecrossdock != "F")
                     {
                             var fitmentRequestData = {};
-                            fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
+                            fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final.lane_originloc_country; //TODO
 
-                            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                            fitmentRequestData.vehicleName = group_init_to_final.line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
                             // fitmentRequestData.transportationMode = "TRUCK"; //TODO
                             //TODO DEFAULTS to TRUCK if not configured
-                            fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                            fitmentRequestData.transportationMode = group_init_to_final.line_equipment_typetext ? (group_init_to_final.line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
                             fitmentRequestData.orderItems = [];
                             try
                             {
@@ -1000,12 +993,12 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                             //LEG2
                             var fitmentRequestData = {};
-                            fitmentRequestData.JurisdictionName = "Canada" || rawRequestData[0].lane_originloc_country; //TODO
+                            fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final.lane_originloc_country; //TODO
 
-                            fitmentRequestData.vehicleName = rawRequestData[0].line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                            fitmentRequestData.vehicleName = group_init_to_final.line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
                             // fitmentRequestData.transportationMode = "TRUCK"; //TODO
                             //TODO DEFAULTS to TRUCK if not configured
-                            fitmentRequestData.transportationMode = rawRequestData[0].line_equipment_typetext ? (rawRequestData[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                            fitmentRequestData.transportationMode = group_init_to_final.line_equipment_typetext ? (group_init_to_final.line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
                             fitmentRequestData.orderItems = [];
                             try
                             {
