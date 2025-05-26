@@ -65,6 +65,26 @@ define(['N/https', 'N/record', 'N/search'],
                         var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
                     }
                 }
+
+                if(scriptContext.newRecord.type == "location")
+                {
+                    var oldCity = "";
+                    if(scriptContext.type == "edit")
+                    {
+                        oldCity = scriptContext.oldRecord.getValue({
+                            fieldId : "custrecord_alberta_ns_city"
+                        })
+                    }
+                    var consigneeNewCity = scriptContext.newRecord.getValue({
+                        fieldId : "custrecord_alberta_ns_city"
+                    })
+
+                    log.debug({oldCity, consigneeNewCity})
+                    if(oldCity != consigneeNewCity)
+                    {
+                        var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
+                    }
+                }
             }
 
 
