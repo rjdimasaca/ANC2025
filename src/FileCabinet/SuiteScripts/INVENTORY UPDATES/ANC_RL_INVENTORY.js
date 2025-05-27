@@ -58,14 +58,33 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
         const post = (requestBody) =>
         {
             var respMsg = {requestBody};
+            var createdShipmentRecId = "";
             try
             {
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
 
                 log.debug("requestBody", requestBody);
 
+                var loadId = requestBody.Load.Body.LoadNo;
+                var customerId = requestBody.Load.Body.CustomerId;
+                var consigneeId = requestBody.Load.Body.ConsigneeId;
+                var otherDetails = {customerId, consigneeId};
+
+                log.debug("{loadId, otherDetails}", {loadId, otherDetails})
+
+                if(loadId && otherDetails)
+                {
+                    var createdShipmentRecId = ANC_lib.prepLoad(loadId, otherDetails);
+                    log.debug("createdShipmentRecId", createdShipmentRecId);
+                }
+                else
+                {
+                    throw {success:false, message:"cannot resolve details provided" + JSON.stringify({loadId, otherDetails})}
+                }
+
+                respMsg={success:true, message: "created shipment for " + JSON.stringify({loadId, otherDetails}), nsRecordInternalId:createdShipmentRecId, warnings : [], requestBody:requestBody};
                 //TODO
-                respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), nsRecordInternalId:integrationLogId, warnings : [], requestBody:requestBody};
+                // respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), nsRecordInternalId:integrationLogId, warnings : [], requestBody:requestBody};
 
             }
             catch(e)

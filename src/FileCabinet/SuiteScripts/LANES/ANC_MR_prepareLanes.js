@@ -64,7 +64,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
 
 
 
-                var cons = [305736, 305730];
+                var cons = [305736, 305730, 304627];
                 var consSr = search.create({
                     type : "customrecord_alberta_ns_consignee_record",
                     filters : [
@@ -148,44 +148,84 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                     for(var a = 0 ; a < lanesSr.columns.length ; a++)
                     {
                         lanesObj[lanesSr.columns[a].label] = res.getValue(lanesSr.columns[a])
+                        lanesObj[lanesSr.columns[a].label + "text"] = res.getText(lanesSr.columns[a])
                     }
 
                     lanesObj.lanesObj_cityroute = lanesObj.lanes_originwhs.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase()
                     lanesObj.lanes_name = lanesObj.lanes_name.toUpperCase();
+                    lanesObj.fromwhstext_tocity = lanesObj.lanes_originwhstext.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase();
                     lanesList.push(lanesObj);
                     laneKeys[lanesObj.lanesObj_cityroute] = {lanesObj}
                     laneKeys[lanesObj.lanes_name] = {lanesObj}
+                    laneKeys[lanesObj.fromwhstext_tocity] = {lanesObj}
                     return true;
                 })
                 log.debug("lanesList", lanesList);
+                log.debug("before", laneKeys);
 
                 var mapVals = [];
-                for(var a = 0 ; a < consList.length ; a++)
+                for(var b = 0 ; b < locsList.length ; b++)
                 {
-                    for(var b = 0 ; b < locsList.length ; b++)
+                    for(var a = 0 ; a < consList.length ; a++)
                     {
                         var mapObj = {};
-                        var locCity_consCity = locsList[b].city + "_" + consList[a].city;
-                        locCity_consCity = locCity_consCity.toUpperCase();
-                        if(laneKeys[locCity_consCity])
+                        var locName_consCity = locsList[b].name + "_" + consList[a].city;
+                        locName_consCity = locName_consCity.toUpperCase();
+                        if(laneKeys[locName_consCity])
                         {
-                            if(!mapObj[locCity_consCity])
+                            if(!mapObj[locName_consCity])
                             {
-                                mapObj[locCity_consCity] = [];
+                                mapObj[locName_consCity] = [];
                             }
-                            mapObj[locCity_consCity].push([{locObj : locsList[b], conObj:consList[a]}])
+                            mapObj[locName_consCity].push({locObj : locsList[b], conObj:consList[a]})
+                            laneKeys[locName_consCity] = {} //TODO this allows it to not create dupes
                         }
                         else
                         {
-                            if(!mapObj[locCity_consCity])
+                            if(!mapObj[locName_consCity])
                             {
-                                mapObj[locCity_consCity] = [];
+                                mapObj[locName_consCity] = [];
                             }
-                            mapObj[locCity_consCity].push([{locObj : locsList[b], conObj:consList[a]}])
+                            mapObj[locName_consCity].push({locObj : locsList[b], conObj:consList[a]})
                             mapVals.push(mapObj)
+                            laneKeys[locName_consCity] = {} //TODO this allows it to not create dupes
                         }
                     }
+
+                    for(var a = 0 ; a < locsList.length ; a++)
+                    {
+                        //a!=b skip self
+                        if(a != b)
+                        {
+                            var mapObj = {};
+                            var locName_xlocName = locsList[b].name + "_" + locsList[a].name;
+                            locName_xlocName = locName_xlocName.toUpperCase();
+                            if(laneKeys[locName_xlocName])
+                            {
+                                if(!mapObj[locName_xlocName])
+                                {
+                                    mapObj[locName_xlocName] = [];
+                                }
+                                mapObj[locName_xlocName].push({locObj : locsList[b], xlocObj:locsList[a]})
+                                laneKeys[locName_xlocName] = {} //TODO this allows it to not create dupes
+                            }
+                            else
+                            {
+                                if(!mapObj[locName_xlocName])
+                                {
+                                    mapObj[locName_xlocName] = [];
+                                }
+                                mapObj[locName_xlocName].push({locObj : locsList[b], xlocObj:locsList[a]})
+                                mapVals.push(mapObj)
+                                laneKeys[locName_xlocName] = {} //TODO this allows it to not create dupes
+                            }
+                        }
+
+                    }
                 }
+
+
+                log.debug("after", laneKeys);
 
                 log.debug("mapVals", mapVals)
                 return mapVals;
@@ -219,14 +259,14 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
             try
             {
                 log.debug("mapContext.key", mapContext.key)
-                log.debug("mapContext.value", mapContext.value)
+                log.debug("mapContext.value", mapContext.value);
                 // var consId = mapContext.value.id;
                 // for(var a = 0 ; a < locs.length; a++)
                 // {
                 //
                 // }
 
-                createLane(mapContext.value)
+                createLane(JSON.parse(mapContext.value))
             }
             catch(e)
             {
@@ -241,13 +281,58 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
             {
                 for(var laneName in obj)
                 {
-                    laneRecObj = record.create({
-                        type : "customrecord_anc_shippinglanes"
-                    });
-                    laneRecObj.setValue({
-                        fieldId : "name",
-                        value : laneName
-                    })
+                    for(var a = 0 ; a < obj[laneName].length ; a++)
+                    {
+                        if(obj[laneName][a].locObj && obj[laneName][a].conObj)
+                        {
+                            laneRecObj = record.create({
+                                type : "customrecord_anc_shippinglanes"
+                            });
+                            laneRecObj.setValue({
+                                fieldId : "name",
+                                value : laneName
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_originwarehouse",
+                                value : obj[laneName][a].locObj.id
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_destination",
+                                value : obj[laneName][a].conObj.id
+                            })
+
+                            var laneRecId = laneRecObj.save({
+                                ignoreMandatoryFields : true,
+                                enableSourcing : true
+                            });
+                        }
+                        else if(obj[laneName][a].locObj && obj[laneName][a].xlocObj)
+                        {
+                            laneRecObj = record.create({
+                                type : "customrecord_anc_shippinglanes"
+                            });
+                            laneRecObj.setValue({
+                                fieldId : "name",
+                                value : laneName
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_originwarehouse",
+                                value : obj[laneName][a].locObj.id
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_cdw",
+                                value : obj[laneName][a].xlocObj.id
+                            })
+
+                            var laneRecId = laneRecObj.save({
+                                ignoreMandatoryFields : true,
+                                enableSourcing : true
+                            });
+                        }
+
+
+                        log.debug("laneRecId", laneRecId);
+                    }
                 }
 
             }
