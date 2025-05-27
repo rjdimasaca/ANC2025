@@ -100,7 +100,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
 
-                var prepLoad_result = ANC_lib.prepLoad(loadID, {customerId: ANC_lib.FREIGHTINVOICE.DEFAULTCUSTOMER, consigneeId : ANC_lib.FREIGHTINVOICE.DEFAULTCONSIGNEE})
+                var prepLoad_result = ANC_lib.prepLoad(loadID)
                 log.debug("prepLoad_result", prepLoad_result);
 
                 var loadDetails_result = ANC_lib.getLoadDetails(loadID);

@@ -8,7 +8,7 @@
 // {
 //     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
 define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
-    
+
     (query, record, runtime, search, https) => {
 
         const foo = () => {
@@ -1339,15 +1339,15 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return getLoadDetails_result;
             }
 
-            function prepLoad(loadID, otherDetails)
+            function prepLoad(loadID, otherDetails={})
             {
                     var OVERRIDE_LOAD_FOR_TESTING = false;
                     var prepShipmentRecId = "";
                     var assumeLoadIsMissing = true;
+                    var customerId = "";
+                    var consigneeId = "";
                     // var customerId = FREIGHTINVOICE.DEFAULTCUSTOMER
                     // var consigneeId = FREIGHTINVOICE.DEFAULTCONSIGNEE
-                    var customerId = ""
-                    var consigneeId = ""
                     try
                     {
                             if(assumeLoadIsMissing)
@@ -1356,22 +1356,21 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     var searchObj = search.create({
                                             type : "customsale_anc_shipment",
                                             filters : [
-                                                ["custbody4", "is", loadID]
+                                                    ["custbody4", "is", loadID]
                                             ]
                                     });
 
                                     var searchResultCount = searchObj.runPaged().count;
                                     if(searchResultCount <= 0)
                                     {
-
                                             customerId = searchCustomer_id(otherDetails)
                                             consigneeId = searchConsignee_id(otherDetails)
-                                        log.debug("no result for " + loadID, searchObj.filters)
+                                            log.debug("no result for " + loadID, searchObj.filters)
                                     }
                                     else
                                     {
-                                             searchObj.run().each(function(res){
-                                                     prepShipmentRecId = res.id;
+                                            searchObj.run().each(function(res){
+                                                    prepShipmentRecId = res.id;
                                                     return false;
                                             })
                                             if(OVERRIDE_LOAD_FOR_TESTING)
@@ -1387,7 +1386,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                             //         value: 106127,
                                                             // //Lee BHM Corp (Parent) : Arizona Daily Sun
                                                             // // WM5845	6477-WM5845_DUP_1
-                                                                    value: customerId,
+                                                            value: customerId,
                                                             // //Mittera Albertson's
                                                             //         value: 498581,
                                                             // //Midland Paper Company (Parent) : Midland PRH All Star Book
@@ -1400,7 +1399,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                             //         value: 305730,
                                                             // // Lee BHM Corp (Parent) : Arizona Daily Sun // Arizona Daily Sun TEST Second Consignee
                                                             // //AZ US
-                                                                    value: consigneeId,
+                                                            value: consigneeId,
                                                             // //BC Coast 2000 Terminals Ltd.
                                                             // // Lulu Island	BC	CAN
                                                             //         //WM6040
@@ -1478,30 +1477,30 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     });
                                     shipmentRecObj.setValue({
                                             fieldId : "entity",
-                                    //         value: 106127,
-                                    // //Lee BHM Corp (Parent) : Arizona Daily Sun
-                                    // // WM5845	6477-WM5845_DUP_1
-                                    //         value: 492090,
-                                    // //Mittera Albertson's
-                                    //         value: 498581,
-                                    // //Midland Paper Company (Parent) : Midland PRH All Star Book
+                                            //         value: 106127,
+                                            // //Lee BHM Corp (Parent) : Arizona Daily Sun
+                                            // // WM5845	6477-WM5845_DUP_1
+                                            //         value: 492090,
+                                            // //Mittera Albertson's
+                                            //         value: 498581,
+                                            // //Midland Paper Company (Parent) : Midland PRH All Star Book
                                             value: customerId,
-                                    //Friesens Corporation - MB CAN
+                                            //Friesens Corporation - MB CAN
                                     })
 
                                     shipmentRecObj.setValue({
                                             fieldId : "custbody_consignee",
-                                    //         value: 305730,
-                                    // // Lee BHM Corp (Parent) : Arizona Daily Sun // Arizona Daily Sun TEST Second Consignee
-                                    // //AZ US
-                                    //         value: 300725,
-                                    // //BC Coast 2000 Terminals Ltd.
-                                    // // Lulu Island	BC	CAN
-                                    //         //WM6040
-                                    //         value: 304127,
-                                    // // Friesens Corporation - MB CAN
+                                            //         value: 305730,
+                                            // // Lee BHM Corp (Parent) : Arizona Daily Sun // Arizona Daily Sun TEST Second Consignee
+                                            // //AZ US
+                                            //         value: 300725,
+                                            // //BC Coast 2000 Terminals Ltd.
+                                            // // Lulu Island	BC	CAN
+                                            //         //WM6040
+                                            //         value: 304127,
+                                            // // Friesens Corporation - MB CAN
                                             value: consigneeId,
-                                    //Active Warehouse 9	Mittera (Parent) : Mittera Kroger - AB CAN
+                                            //Active Warehouse 9	Mittera (Parent) : Mittera Kroger - AB CAN
                                     })
 
 
@@ -1603,8 +1602,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }
                     catch(e)
                     {
-                        log.error("ERROR in function searchCustomer_id", e)
+                            log.error("ERROR in function searchCustomer_id", e)
                     }
+
                     return customerId;
             }
             function searchConsignee_id(otherDetails)
@@ -1666,28 +1666,28 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     // ON : 54,
             }
 
-        return {
-                groupBy,
-                groupByKeys,
-                getResults,
-                foo,
-                bar,
-                getRelatedForecasts,
-                references,
-                getForecastFilters,
-                yearMapping,
-                submitIntegrationLog,
-                MINIMIZE_UI,
-                FREIGHTINVOICE,
-                PTMX,
-                getFitmentResponse,
-                generateShipments,
-                groupOrderLinesForShipmentGeneration,
-                getFitmentObj,
-                getLoadDetails,
-                prepLoad,
-                CA_TAXCODE_MAPPING_BY_STATE_CODE
-        }
+                return {
+                        groupBy,
+                        groupByKeys,
+                        getResults,
+                        foo,
+                        bar,
+                        getRelatedForecasts,
+                        references,
+                        getForecastFilters,
+                        yearMapping,
+                        submitIntegrationLog,
+                        MINIMIZE_UI,
+                        FREIGHTINVOICE,
+                        PTMX,
+                        getFitmentResponse,
+                        generateShipments,
+                        groupOrderLinesForShipmentGeneration,
+                        getFitmentObj,
+                        getLoadDetails,
+                        prepLoad,
+                        CA_TAXCODE_MAPPING_BY_STATE_CODE
+                }
 
     });
 
