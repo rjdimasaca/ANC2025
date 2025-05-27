@@ -2,14 +2,14 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/query', 'N/record', 'N/runtime', 'N/search'],
+define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
     /**
- * @param{query} query
- * @param{record} record
- * @param{runtime} runtime
- * @param{search} search
- */
-    (query, record, runtime, search) => {
+     * @param{query} query
+     * @param{record} record
+     * @param{runtime} runtime
+     * @param{search} search
+     */
+    (ANC_lib, https, query, record, runtime, search) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -151,13 +151,20 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                         lanesObj[lanesSr.columns[a].label + "text"] = res.getText(lanesSr.columns[a])
                     }
 
-                    lanesObj.lanesObj_cityroute = lanesObj.lanes_originwhs.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase()
-                    lanesObj.lanes_name = lanesObj.lanes_name.toUpperCase();
-                    lanesObj.fromwhstext_tocity = lanesObj.lanes_originwhstext.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase();
+                    // lanesObj.lanesObj_cityroute = lanesObj.lanes_originwhs.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase()
+                    // lanesObj.lanes_name = lanesObj.lanes_name.toUpperCase();
+                    // lanesObj.fromwhstext_tocity = lanesObj.lanes_originwhstext.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase();
+                    //
+                    // lanesObj.origcitytext = lanesObj.lanes_origincity.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase();
+                    lanesObj.origcity_destcitytext = lanesObj.lanes_origincity.toUpperCase() + "_" + lanesObj.lanes_destcity.toUpperCase();
+
                     lanesList.push(lanesObj);
-                    laneKeys[lanesObj.lanesObj_cityroute] = {lanesObj}
-                    laneKeys[lanesObj.lanes_name] = {lanesObj}
-                    laneKeys[lanesObj.fromwhstext_tocity] = {lanesObj}
+                    // laneKeys[lanesObj.lanesObj_cityroute] = {lanesObj}
+                    // laneKeys[lanesObj.lanes_name] = {lanesObj}
+                    laneKeys[lanesObj.origcity_destcitytext] = {lanesObj}
+
+
+                    // laneKeys[lanesObj.fromwhstext_tocitytext] = {lanesObj}
                     return true;
                 })
                 log.debug("lanesList", lanesList);
@@ -169,7 +176,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                     for(var a = 0 ; a < consList.length ; a++)
                     {
                         var mapObj = {};
-                        var locName_consCity = locsList[b].name + "_" + consList[a].city;
+                        var locName_consCity = locsList[b].city + "_" + consList[a].city;
                         locName_consCity = locName_consCity.toUpperCase();
                         if(laneKeys[locName_consCity])
                         {
@@ -198,7 +205,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                         if(a != b)
                         {
                             var mapObj = {};
-                            var locName_xlocName = locsList[b].name + "_" + locsList[a].name;
+                            var locName_xlocName = locsList[b].city + "_" + locsList[a].city;
                             locName_xlocName = locName_xlocName.toUpperCase();
                             if(laneKeys[locName_xlocName])
                             {
@@ -276,13 +283,52 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
 
         function createLane(obj)
         {
+            var equipmentsObj = {
+                byId : {
+                    list:[
+
+                    ]
+                },
+                byName : {
+                    list:[
+
+                    ]
+                },
+                list : []
+            };
+            var equipmentsSearchObj = search.create({
+                type : "customrecord_anc_equipment",
+                filters : [
+                    ["isinactive", "is", "F"]
+                ],
+                columns : [
+                    search.createColumn({name : "name"})
+                ]
+            });
+            equipmentsSearchObj.run().each(function(res){
+                var equipmentName = res.getValue({name : "name"});
+                var equipmentId = res.id;
+                equipmentsObj.list.push({equipmentId,equipmentName});
+
+                return true;
+            })
+            log.debug("equipmentsObj.list", equipmentsObj.list);
+            equipmentsObj.byId = ANC_lib.groupBy(equipmentsObj.list, "equipmentId")
+            log.debug("equipmentsObj.byId", equipmentsObj.byId);
+            equipmentsObj.byName = ANC_lib.groupBy(equipmentsObj.list, "equipmentName")
+            log.debug("equipmentsObj.byName", equipmentsObj.byName);
+
             var laneRecObj = null;
+            var laneRecId = null
             try
             {
                 for(var laneName in obj)
                 {
                     for(var a = 0 ; a < obj[laneName].length ; a++)
                     {
+                        log.debug("obj[laneName]", obj[laneName]);
+
+
                         if(obj[laneName][a].locObj && obj[laneName][a].conObj)
                         {
                             laneRecObj = record.create({
@@ -293,18 +339,52 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                                 value : laneName
                             })
                             laneRecObj.setValue({
-                                fieldId : "custrecord_anc_lane_originwarehouse",
-                                value : obj[laneName][a].locObj.id
+                                fieldId : "custrecord_anc_lane_originwarehousecity",
+                                value : obj[laneName][a].locObj.city
                             })
                             laneRecObj.setValue({
-                                fieldId : "custrecord_anc_lane_destination",
-                                value : obj[laneName][a].conObj.id
+                                fieldId : "custrecord_anc_lane_destinationcity",
+                                value : obj[laneName][a].conObj.city
                             })
 
-                            var laneRecId = laneRecObj.save({
-                                ignoreMandatoryFields : true,
-                                enableSourcing : true
-                            });
+                            log.debug("error city")
+                            var locs = {origincity:obj[laneName][a].locObj.city, destcity:obj[laneName][a].conObj.city}
+                            var functionResults = buildRateApiPayload(locs, equipmentsObj.list);
+
+                            laneRecObj.setText({
+                                fieldId : "custrecord_anc_lane_ftte",
+                                value : functionResults.fastestTimeElement.rates[0].equipment,
+                                text : functionResults.fastestTimeElement.rates[0].equipment
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_ftt",
+                                value : functionResults.fastestTimeElement.rates[0].transitTime,
+                                text : functionResults.fastestTimeElement.rates[0].transitTime
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_fttc",
+                                value : functionResults.fastestTimeElement.rates[0].totalCost,
+                                text : functionResults.fastestTimeElement.rates[0].totalCost
+                            })
+
+                            //FIXME - for lowest cost optmeth
+
+                            laneRecObj.setText({
+                                fieldId : "custrecord_anc_lane_lce",
+                                value : functionResults.lowestCostElement.rates[0].equipment,
+                                text : functionResults.lowestCostElement.rates[0].equipment
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_lctt",
+                                value : functionResults.lowestCostElement.rates[0].transitTime,
+                                text : functionResults.lowestCostElement.rates[0].transitTime
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_lcpt",
+                                value : functionResults.lowestCostElement.rates[0].totalCost,
+                                text : functionResults.lowestCostElement.rates[0].totalCost
+                            })
+
                         }
                         else if(obj[laneName][a].locObj && obj[laneName][a].xlocObj)
                         {
@@ -316,19 +396,62 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
                                 value : laneName
                             })
                             laneRecObj.setValue({
-                                fieldId : "custrecord_anc_lane_originwarehouse",
-                                value : obj[laneName][a].locObj.id
+                                fieldId : "custrecord_anc_lane_originwarehousecity",
+                                value : obj[laneName][a].locObj.city
                             })
                             laneRecObj.setValue({
-                                fieldId : "custrecord_anc_lane_cdw",
-                                value : obj[laneName][a].xlocObj.id
+                                fieldId : "custrecord_anc_lane_destinationcity",
+                                value : obj[laneName][a].xlocObj.city
+                            });
+                            log.debug("error city2")
+
+                            var locs = {origincity:obj[laneName][a].locObj.city, destcity:obj[laneName][a].xlocObj.city}
+
+                            log.debug("error city2.5")
+                            var functionResults = buildRateApiPayload(locs, equipmentsObj.list);
+
+                            log.debug("error city3")
+
+                            laneRecObj.setText({
+                                fieldId : "custrecord_anc_lane_ftte",
+                                value : functionResults.fastestTimeElement.rates[0].equipment,
+                                text : functionResults.fastestTimeElement.rates[0].equipment
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_ftt",
+                                value : functionResults.fastestTimeElement.rates[0].transitTime,
+                                text : functionResults.fastestTimeElement.rates[0].transitTime
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_fttc",
+                                value : functionResults.fastestTimeElement.rates[0].totalCost,
+                                text : functionResults.fastestTimeElement.rates[0].totalCost
                             })
 
-                            var laneRecId = laneRecObj.save({
-                                ignoreMandatoryFields : true,
-                                enableSourcing : true
-                            });
+                            //FIXME - for lowest cost optmeth
+
+                            laneRecObj.setText({
+                                fieldId : "custrecord_anc_lane_lce",
+                                value : functionResults.lowestCostElement.rates[0].equipment,
+                                text : functionResults.lowestCostElement.rates[0].equipment
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_lctt",
+                                value : functionResults.lowestCostElement.rates[0].transitTime,
+                                text : functionResults.lowestCostElement.rates[0].transitTime
+                            })
+                            laneRecObj.setValue({
+                                fieldId : "custrecord_anc_lane_lcpt",
+                                value : functionResults.lowestCostElement.rates[0].totalCost,
+                                text : functionResults.lowestCostElement.rates[0].totalCost
+                            })
                         }
+
+                        log.debug("error city4")
+                        laneRecId = laneRecObj.save({
+                            ignoreMandatoryFields : true,
+                            enableSourcing : true
+                        });
 
 
                         log.debug("laneRecId", laneRecId);
@@ -340,7 +463,106 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search'],
             {
                 log.error("ERROR in function createLane", e)
             }
+
+            return laneRecId;
         }
+
+        function buildRateApiPayload(locs, equipmentsObjList)
+        {
+            var functionRes = {};
+            var requestBodyObj = []
+            try
+            {
+                for(var a = 0 ; a < equipmentsObjList.length ; a++)
+                {
+                    var eqObj = equipmentsObjList[a];
+
+                    var reqBody = {
+                        "origAlias":"6170",
+                        "origCity":locs.origCity,
+                        "origState":"AB",
+                        "origZip":"T7S 1P9",
+                        "origCountry":"CAN",
+                        "destAlias":"6760",
+                        "destCity":locs.destCity,
+                        "destState":"BC",
+                        "destZip":"V6W 1M1",
+                        "destCountry":"CAN",
+                        "commodity":"PPR",
+                        "distance": 661,
+                        "equipment":eqObj.equipmentName,
+                        "weight":21769,
+                        "controlCust":"6170",
+                        "id":eqObj.equipmentName + new Date().getTime(),
+                        "destZone":"",
+                        "weightUOM":"LB",
+                        "hazmat": false,
+                        "effectiveDate":new Date()
+                    }
+                    requestBodyObj.push(reqBody);
+                }
+                var requestBodyStr = JSON.stringify(requestBodyObj)
+
+                log.debug("getRateInquiryResponse rawData before HTTP POST", requestBodyStr)
+
+                var rawResp = https.post({
+                    // url: "https://esb.albertanewsprint.com:50107/TMX",
+                    url: "https://esb.albertanewsprint.com:443/TMX",
+                    body : requestBodyStr
+                });
+
+                log.debug("getRateInquiryResponse rawResp", rawResp)
+                // rawResp = JSON.parse(rawResp)
+
+                var data = rawResp.body;
+                data = typeof data == "object" ? data : JSON.parse(data);
+                log.debug("buildRateApiPayload data1", data)
+                var lowestCostElement = getElementWithLowestTotalCost(data);
+                var fastestTimeElement = getElementWithFastestTransitTime(data); //FIXME
+                log.debug("buildRateApiPayload data2", data)
+                functionRes.lowestCostElement = lowestCostElement;
+                log.debug("lowestCostElement", lowestCostElement);
+                functionRes.fastestTimeElement = fastestTimeElement;
+                log.debug("fastestTimeElement", fastestTimeElement);
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function buildRateApiPayload", e)
+            }
+
+            log.debug("functionRes", functionRes);
+            return functionRes;
+        }
+
+        function getElementWithLowestTotalCost(data) {
+            return data.reduce((lowest, current) => {
+                const currentRate = current.rates && current.rates[0];
+                const lowestRate = lowest?.rates?.[0];
+
+                if (!currentRate) return lowest;
+                if (!lowestRate || currentRate.totalCost < lowestRate.totalCost) {
+                    return current;
+                }
+                return lowest;
+            }, null);
+        }
+
+        function getElementWithFastestTransitTime(data) {
+            return data.reduce((lowest, current) => {
+                const currentRate = current.rates && current.rates[0];
+                const lowestRate = lowest?.rates?.[0];
+
+                if (!currentRate) return lowest;
+                if (!lowestRate || currentRate.totalCost < lowestRate.totalCost) {
+                    return current;
+                }
+                return lowest;
+            }, null);
+        }
+
+
+
 
         /**
          * Defines the function that is executed when the reduce entry point is triggered. This entry point is triggered
