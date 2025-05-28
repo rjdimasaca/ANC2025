@@ -456,6 +456,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         clearSublist(poRecObj, requestBody);
                         fillSublist(poRecObj, requestBody, lookupPo_result, true);
 
+                        poRecId.setValue({
+                            fieldId : "tobeemailed",
+                            value: false
+                        })
+
                         poRecId = poRecObj.save({
                             ignoreMandatoryFields : true,
                             enableSourcing : true
@@ -531,7 +536,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             // fillSublist(irRecObj, requestBody, lookupPo_result);
 
 
-
+                            irRecObj.setValue({
+                                fieldId : "tobeemailed",
+                                value: false
+                            })
                             irRecId = irRecObj.save({
                                 ignoreMandatoryFields : true,
                                 enableSourcing : true
@@ -608,7 +616,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         // clearSublist(vbRecObj, requestBody);
                         // fillSublist(vbRecObj, requestBody, lookupPo_result);
-
+                        vbRecObj.setValue({
+                            fieldId : "tobeemailed",
+                            value: false
+                        })
                         vbRecId = vbRecObj.save({
                             ignoreMandatoryFields : true,
                             enableSourcing : true

@@ -1459,6 +1459,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     //         //Sales Order #SO62862
                                                     // });
 
+                                                    shipmentRecObj.setValue({
+                                                            fieldId : "tobeemailed",
+                                                            value: false
+                                                    })
 
                                                     prepShipmentRecId = shipmentRecObj.save({
                                                             ignoreMandatoryFields : true,
@@ -1553,6 +1557,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     //         //Sales Order #SO62862
                                     // });
 
+                                    shipmentRecObj.setValue({
+                                            fieldId : "tobeemailed",
+                                            value: false
+                                    })
 
                                     prepShipmentRecId = shipmentRecObj.save({
                                             ignoreMandatoryFields : true,
@@ -1592,6 +1600,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     });
                                     var searchResultCount = customerSearchObj.runPaged().count;
                                     log.debug("customerSearchObj result count",searchResultCount);
+                                    customerId = FREIGHTINVOICE.DEFAULTCUSTOMER;
                                     customerSearchObj.run().each(function(result){
                                             // .run().each has a limit of 4,000 results
                                             customerId = result.id;
@@ -1628,6 +1637,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     });
                                     var searchResultCount = customrecord_alberta_ns_consignee_recordSearchObj.runPaged().count;
                                     log.debug("customrecord_alberta_ns_consignee_recordSearchObj result count",searchResultCount);
+                                    consigneeId = FREIGHTINVOICE.DEFAULTCONSIGNEE;
                                     customrecord_alberta_ns_consignee_recordSearchObj.run().each(function(result){
                                             // .run().each has a limit of 4,000 results
                                             consigneeId = result.id;
@@ -1666,28 +1676,28 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     // ON : 54,
             }
 
-                return {
-                        groupBy,
-                        groupByKeys,
-                        getResults,
-                        foo,
-                        bar,
-                        getRelatedForecasts,
-                        references,
-                        getForecastFilters,
-                        yearMapping,
-                        submitIntegrationLog,
-                        MINIMIZE_UI,
-                        FREIGHTINVOICE,
-                        PTMX,
-                        getFitmentResponse,
-                        generateShipments,
-                        groupOrderLinesForShipmentGeneration,
-                        getFitmentObj,
-                        getLoadDetails,
-                        prepLoad,
-                        CA_TAXCODE_MAPPING_BY_STATE_CODE
-                }
+            return {
+                    groupBy,
+                    groupByKeys,
+                    getResults,
+                    foo,
+                    bar,
+                    getRelatedForecasts,
+                    references,
+                    getForecastFilters,
+                    yearMapping,
+                    submitIntegrationLog,
+                    MINIMIZE_UI,
+                    FREIGHTINVOICE,
+                    PTMX,
+                    getFitmentResponse,
+                    generateShipments,
+                    groupOrderLinesForShipmentGeneration,
+                    getFitmentObj,
+                    getLoadDetails,
+                    prepLoad,
+                    CA_TAXCODE_MAPPING_BY_STATE_CODE
+            }
 
     });
 
