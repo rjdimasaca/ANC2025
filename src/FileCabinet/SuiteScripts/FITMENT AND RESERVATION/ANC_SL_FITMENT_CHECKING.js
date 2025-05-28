@@ -280,7 +280,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     globalrefs["tranlinedestField"] = tranlinedestField;
                     // }
 
-                    troubleShootTabs(form);
+                    // troubleShootTabs(form);
 
 
                     fillSublist(scriptContext)
@@ -1091,6 +1091,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 for(var date in srGroupedByDeliveryDate)
                 {
 
+                    log.debug("srGroupedByDeliveryDate date", date);
+
                     var groupByLineUniqueKey = ANC_lib.groupBy(srGroupedByDeliveryDate[date], "line_uniquekey");
                     log.debug("getInputDetails groupByLineUniqueKey " + date, groupByLineUniqueKey);
 
@@ -1104,7 +1106,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                     var subtabObj = "";
                     var subtabId = `${(srGroupedByDeliveryDate[date][0].line_deliverydate).replace(/\//g, "_")}_${srGroupedByDeliveryDate[date][0].line_location}_${srGroupedByDeliveryDate[date][0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}`
+                    // var subtabId = date;
                     subtabId = subtabId.toLowerCase();
+                    log.debug("subtabId", subtabId)
                     if(!subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`])
                     {
                         log.debug("`${BASE_SUBTAB_ID}_${subtabId}`", `${BASE_SUBTAB_ID}_${subtabId}`);
@@ -1138,9 +1142,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-                    var finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}_${0}` + new Date().getTime()
+                    var finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}_leg${0}`
                     subtabObj = form.addSubtab({
-                        label : fitmentCheckSubtabLabel + `_${a}` + new Date().getTime(),
+                        label : finalSubtabId,
                         id : finalSubtabId,
                         // tab : `${BASE_SUBTAB_ID}_${subtabId}`,
                         tab : `${BASE_SUBTAB_ID}_${subtabId}`
@@ -1148,24 +1152,24 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     subtabObj.id = finalSubtabId;
                     // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
-                    var finalSubtabId_leg1 = `${BASE_SUBTAB_ID}_${subtabId}_${1}` + new Date().getTime()
+                    var finalSubtabId_leg1 = `${BASE_SUBTAB_ID}_${subtabId}_leg${1}`
                     subtabObj = form.addSubtab({
-                        label : fitmentCheckSubtabLabel + `_${a}` + new Date().getTime(),
-                        id : finalSubtabId + "leg1",
+                        label : finalSubtabId_leg1,
+                        id : finalSubtabId_leg1,
                         // tab : `${BASE_SUBTAB_ID}_${subtabId}`,
                         tab : `${BASE_SUBTAB_ID}_${subtabId}`
                     });
-                    subtabObj.id = finalSubtabId;
+                    subtabObj.id = finalSubtabId_leg1;
                     // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
-                    var finalSubtabId_leg2 = `${BASE_SUBTAB_ID}_${subtabId}_${2}` + new Date().getTime()
+                    var finalSubtabId_leg2 = `${BASE_SUBTAB_ID}_${subtabId}_leg${2}`
                     subtabObj = form.addSubtab({
-                        label : fitmentCheckSubtabLabel + `_${a}` + new Date().getTime(),
-                        id : finalSubtabId + "leg2",
+                        label : finalSubtabId_leg2,
+                        id : finalSubtabId_leg2,
                         // tab : `${BASE_SUBTAB_ID}_${subtabId}`,
                         tab : `${BASE_SUBTAB_ID}_${subtabId}`
                     });
-                    subtabObj.id = finalSubtabId;
+                    subtabObj.id = finalSubtabId_leg2;
                     // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
 
