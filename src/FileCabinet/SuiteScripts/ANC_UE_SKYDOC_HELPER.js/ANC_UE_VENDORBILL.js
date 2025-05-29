@@ -4,12 +4,12 @@
  */
 define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
     /**
- * @param{https} https
- * @param{query} query
- * @param{record} record
- * @param{runtime} runtime
- * @param{search} search
- */
+     * @param{https} https
+     * @param{query} query
+     * @param{record} record
+     * @param{runtime} runtime
+     * @param{search} search
+     */
     (https, query, record, runtime, search) => {
         /**
          * Defines the function definition that is executed before record is loaded.
@@ -56,6 +56,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
             }
         }
 
+        var ESB_VB_ENDPOINT = `https://esbtest.albertanewsprint.com/billstatus`
         function syncBill_via_ss(scriptContext)
         {
             if(scriptContext.newRecord.type == "vendorbill")
@@ -166,6 +167,14 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
             }
 
             log.debug("respObj", respObj);
+
+            var  requestBody = JSON.stringify(respObj);
+            var resp = https.post({
+                url : ESB_VB_ENDPOINT,
+                body : requestBody
+            });
+
+            log.debug("resp", resp)
         }
 
         return {beforeLoad, beforeSubmit, afterSubmit}

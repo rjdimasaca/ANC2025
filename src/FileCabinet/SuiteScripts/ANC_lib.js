@@ -78,6 +78,12 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                         },
                         shipment : {
                                 id : "CuTrSale108" //FIXME
+                        },
+                        months : {
+                                id : "customrecord_anc_pf_months"
+                        },
+                        shipmentcapacity : {
+                                id : "customrecord_anc_dailyshipmentcap"
                         }
                 }
         }
