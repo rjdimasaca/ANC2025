@@ -456,7 +456,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         clearSublist(poRecObj, requestBody);
                         fillSublist(poRecObj, requestBody, lookupPo_result, true);
 
-                        poRecId.setValue({
+                        poRecObj.setValue({
                             fieldId : "tobeemailed",
                             value: false
                         })
