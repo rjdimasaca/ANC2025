@@ -1339,7 +1339,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return getLoadDetails_result;
             }
 
-            function prepLoad(loadID, otherDetails={})
+            function prepLoad(loadID, otherDetails={}, updateShipment)
             {
                     var OVERRIDE_LOAD_FOR_TESTING = false;
                     var prepShipmentRecId = "";
@@ -1373,7 +1373,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     prepShipmentRecId = res.id;
                                                     return false;
                                             })
-                                            if(OVERRIDE_LOAD_FOR_TESTING)
+                                            if(updateShipment)
                                             {
 
 

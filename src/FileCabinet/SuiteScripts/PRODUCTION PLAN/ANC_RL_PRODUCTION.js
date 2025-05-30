@@ -311,34 +311,69 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 current.setDate(current.getDate() + 1); // advance to Monday
             }
 
-            while (weeks.length < 4 && current <= lastDayOfMonth) {
-                const weekStart = new Date(current);
-                const weekEnd = new Date(current);
-                weekEnd.setDate(weekStart.getDate() + 6);
+            if(jsMonth == 12)
+            {
+                while (weeks.length < 5 && current <= lastDayOfMonth) {
+                    const weekStart = new Date(current);
+                    const weekEnd = new Date(current);
+                    weekEnd.setDate(weekStart.getDate() + 6);
 
-                if (trimOverflow) {
-                    if (
-                        weekStart.getMonth() === jsMonth &&
-                        weekEnd.getMonth() === jsMonth
-                    ) {
-                        weeks.push({
-                            week: weekNumber++,
-                            start: formatDate(weekStart),
-                            end: formatDate(weekEnd),
-                        });
+                    if (trimOverflow) {
+                        if (
+                            weekStart.getMonth() === jsMonth &&
+                            weekEnd.getMonth() === jsMonth
+                        ) {
+                            weeks.push({
+                                week: weekNumber++,
+                                start: formatDate(weekStart),
+                                end: formatDate(weekEnd),
+                            });
+                        }
+                    } else {
+                        if (weekStart.getMonth() === jsMonth) {
+                            weeks.push({
+                                week: weekNumber++,
+                                start: formatDate(weekStart),
+                                end: formatDate(weekEnd),
+                            });
+                        }
                     }
-                } else {
-                    if (weekStart.getMonth() === jsMonth) {
-                        weeks.push({
-                            week: weekNumber++,
-                            start: formatDate(weekStart),
-                            end: formatDate(weekEnd),
-                        });
-                    }
+
+                    current.setDate(current.getDate() + 7); // move to next Monday
                 }
-
-                current.setDate(current.getDate() + 7); // move to next Monday
             }
+            else
+            {
+                while (weeks.length < 4 && current <= lastDayOfMonth) {
+                    const weekStart = new Date(current);
+                    const weekEnd = new Date(current);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+
+                    if (trimOverflow) {
+                        if (
+                            weekStart.getMonth() === jsMonth &&
+                            weekEnd.getMonth() === jsMonth
+                        ) {
+                            weeks.push({
+                                week: weekNumber++,
+                                start: formatDate(weekStart),
+                                end: formatDate(weekEnd),
+                            });
+                        }
+                    } else {
+                        if (weekStart.getMonth() === jsMonth) {
+                            weeks.push({
+                                week: weekNumber++,
+                                start: formatDate(weekStart),
+                                end: formatDate(weekEnd),
+                            });
+                        }
+                    }
+
+                    current.setDate(current.getDate() + 7); // move to next Monday
+                }
+            }
+
 
             return weeks;
         }

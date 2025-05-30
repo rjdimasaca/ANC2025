@@ -74,7 +74,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 if(loadId && otherDetails)
                 {
-                    var createdShipmentRecId = ANC_lib.prepLoad(loadId, otherDetails);
+                    var createdShipmentRecId = ANC_lib.prepLoad(loadId, otherDetails, true);
                     log.debug("createdShipmentRecId", createdShipmentRecId);
                 }
                 else
