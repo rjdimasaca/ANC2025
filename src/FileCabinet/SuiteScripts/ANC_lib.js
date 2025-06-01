@@ -27,6 +27,15 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                         SHIPDATE : "custcol_anc_shipdate",
                         PRODUCTIONDATE : "custcol_anc_productiondate",
                         SALESFORECAST : "custcol_anc_customeralloc_caid",
+                        LINESTATUS : {
+                                id : "custcol_anc_status",
+                                options : {
+                                        "APPROVED" : {val:1, text:"APPROVED"},
+                                        "PENDING" : {val:2, text:"PENDING"},
+                                        "REQUIRED" : {val:3, text:"REQUIRED"},
+                                        "SHIPPED" : {val:4, text:"SHIPPED"},
+                                }
+                        }
                 },
                 SALESFORECAST : {
                         FIELDS : {
@@ -1682,6 +1691,235 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     // ON : 54,
             }
 
+            function querySoPastLdc(obj)
+            {
+                    var sql = `SELECT
+                    BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
+                    BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS transactioninternalid /*{transactionnumber#RAW}*/,
+                BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
+                    transactionLine.linesequencenumber as transactionlinenum,
+                BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
+                BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity /*{transactionlines.quantity#RAW}*/,
+                transactionLine.custcol_anc_ldcdate AS ldcdate, 
+                (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
+                    FROM
+                    "TRANSACTION",
+                        transactionLine
+                    WHERE
+                    "TRANSACTION"."ID" = transactionLine."TRANSACTION" 
+                      
+                      AND NVL(transactionLine.taxline, 'F') = 'F'
+
+                      AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) ${obj.dayspassedoper || "="} ${obj.dayspassed || 1} THEN 1 ELSE 1 END = 1)
+                      
+                      AND transactionLine.quantity IS NOT NULL
+
+                    `
+
+                    sql += buildTranIdFilter(obj).filterStr;
+
+                    // sql+= `
+                    // AND (("TRANSACTION"."ID" = 61250543 AND transactionLine.quantity IS NOT NULL))`
+
+                    log.debug("querySoPastLdc querySoPastLdc sql", sql)
+                    const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                    log.debug("querySoPastLdc sqlResults", sqlResults);
+                    return sqlResults
+            }
+
+            var syncLinesPastLdcUrl = "https://loadfitting.anchub.ca/loadfitting/generateshipments"
+
+            function syncLinesPastLdc(obj)
+            {
+                    var syncLinesPastLdc_result = {};
+                    syncLinesPastLdc_result.by_transactioninternalid = [];
+                    syncLinesPastLdc_result.responseList = [];
+                    var groupedByInternalId = groupBy(obj, "transactioninternalid");
+
+                    for(var tranInternalId in groupedByInternalId)
+                    {
+                            log.debug("groupedByInternalId", groupedByInternalId);
+
+                            var requestData = preparePastLdcSyncData(groupedByInternalId[tranInternalId])
+
+                            var rawResp = callPastLdcUrl(requestData)
+
+                            syncLinesPastLdc_result[tranInternalId] = (rawResp);
+                            syncLinesPastLdc_result.responseList.push(rawResp);
+                    }
+
+                    log.debug("syncLinesPastLdc", syncLinesPastLdc)
+
+                    return syncLinesPastLdc_result;
+            }
+
+            function preparePastLdcSyncData(obj)
+            {
+
+            }
+
+            function updateLinesPastLdc(recObj, obj)
+            {
+                    var updateLinesPastLdc = {};
+
+                    var orderedByLineId = obj.sort(function(a, b){
+                            return (a.transactionlinenum || 0) - (b.transactionlinenum)
+                    });
+
+                    // var lineCount = recObj.getLineCount({
+                    //     sublistId : "item"
+                    // });
+                    // for(var a = 0 ; a < lineCount; a++)
+                    // {
+                    //
+                    // }
+                    for(var a = 0 ; a < orderedByLineId.length ; a++)
+                    {
+                            recObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : references.SO_COLUMNS.LINESTATUS.id,
+                                    line : orderedByLineId[a].transactionlinenum - 1,
+                                    value : references.SO_COLUMNS.LINESTATUS.options.REQUIRED.VAL || 3
+                            })
+                    }
+
+                    updateLinesPastLdc.orderedByLineId = orderedByLineId;
+                    log.debug("updateLinesPastLdc", updateLinesPastLdc)
+                    return updateLinesPastLdc;
+            }
+
+
+            function callPastLdcUrl(requestData)
+            {
+                    var callPastLdcUrl_response = "";
+
+                    requestData = JSON.stringify(requestData);
+
+                    callPastLdcUrl_response = https.post({
+                            url: syncLinesPastLdcUrl,
+                            body: requestData,
+                            headers: {
+                                    "Authorization": "Bearer 67afba48c5e94f0689dc4f9cb18afed2",
+                                    "Content-Type": "application/json",
+                                    "accept": "*/*"
+                            }
+                    });
+
+                    log.debug("callPastLdcUrl callPastLdcUrl_response", callPastLdcUrl_response);
+                    return callPastLdcUrl_response;
+            }
+
+            function buildTranIdFilter(obj)
+            {
+                    var functionOutput = {};
+                    var filterStr = "";
+                    try
+                    {
+
+                            var filterList = [];
+                            if(obj.traninternalids)
+                            {
+                                    filterList.push("AND");
+                                    filterStr += "AND "
+                                    filterStr += " " + obj.filterbyfield;
+                                    filterStr += " " + obj.sqlOperator;
+                                    filterStr += " " + as_IN_SQL_FILTER(obj.traninternalids).listStringCsv
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function buildTranIdFilter", e)
+                    }
+
+                    functionOutput.filterStr = filterStr;
+                    functionOutput.filterList = filterList;
+                    log.debug("buildTranIdFilter functionOutput.filterStr", functionOutput.filterStr)
+                    return functionOutput
+            }
+
+            function as_IN_SQL_FILTER(list)
+            {
+                    var functionOutput = {};
+                    try
+                    {
+                            if(list && list.length > 0)
+                            {
+                                    var listStringList = list.map(function(elem){
+
+                                            return `${elem}`
+                                    });
+                                    log.error("listStringList", listStringList)
+                                    functionOutput.listStringCsv = `(${listStringList.join(",")})`
+
+                                    log.debug("functionOutput.listStringCsv", functionOutput.listStringCsv)
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function as_IN_SQL_FILTER", e)
+                    }
+
+                    log.debug("as_IN_SQL_FILTER functionOutput", functionOutput)
+                    return functionOutput;
+            }
+
+            function soPastLdc(obj)
+            {
+                    var functionOutput = {};
+                    try
+                    {
+                        if(obj.recObj)
+                        {
+                                var linesDetails = getLinesDetails(obj);
+                        }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function soPastLdc", e)
+                    }
+
+                    return functionOutput;
+            }
+
+            function getLinesDetails(obj)
+            {
+                    var functionOutput = {};
+                    try
+                    {
+                        var lineCount = obj.recObj.getLineCount({
+                                sublistId : "item"
+                        })
+
+                            for(var a = 0 ; a < lineCount ; a++)
+                            {
+                                    var line_
+                                    var lineDetail = getLineDetails()
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getLinesDetails", e)
+                    }
+
+                    return functionOutput;
+            }
+
+            function getLineDetails(obj)
+            {
+                    var functionOutput = {};
+                    try
+                    {
+
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getLineDetils", e)
+                    }
+
+                    return functionOutput;
+            }
+
             return {
                     groupBy,
                     groupByKeys,
@@ -1702,7 +1940,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getFitmentObj,
                     getLoadDetails,
                     prepLoad,
-                    CA_TAXCODE_MAPPING_BY_STATE_CODE
+                    CA_TAXCODE_MAPPING_BY_STATE_CODE,
+                    querySoPastLdc,
+                    syncLinesPastLdc,
+                    callPastLdcUrl,
+                    updateLinesPastLdc
             }
 
     });

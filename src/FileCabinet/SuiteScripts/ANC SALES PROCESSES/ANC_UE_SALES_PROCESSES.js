@@ -804,7 +804,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
             //create mimssing item
             prepItems(recObj);
 
-            // determineLane(recObj);
+            determineLane(recObj);
             //
             // implementSF(recObj);
             //
@@ -817,9 +817,26 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                     enableSourcing : true
                 })
 
-                log.debug("submittedRecId", submittedRecId);
+                log.debug("afterSubmit submittedRecId after prepitems, determinelane, implemFitment", submittedRecId);
             }
 
+            var recObj = record.load({
+                type : scriptContext.newRecord.type,
+                id : scriptContext.newRecord.id
+            });
+
+            var pastLdcLinesSqlResults = ANC_lib.querySoPastLdc({traninternalids:[scriptContext.newRecord.id], sqlOperator:"IN", filterbyfield :"TRANSACTION.ID", dayspassedoper : ">", dayspassed : 0})
+
+            var syncLinesPastLdcSyncResults = ANC_lib.syncLinesPastLdc(pastLdcLinesSqlResults)
+
+            var updateLinesPastLdcResults = ANC_lib.updateLinesPastLdc(recObj, pastLdcLinesSqlResults)
+
+            var submittedRecId = recObj.save({
+                ignoreMandatoryFields : true,
+                enableSourcing : true
+            })
+
+            log.debug("afterSubmit after LDC LOGIC", submittedRecId);
         }
 
         function implementFitment(recObj)
@@ -1143,6 +1160,9 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                     var header_consigneeId = recObj.getValue({
                         fieldId : "custbody_consignee"
                     });
+                    var custbody_anc_ldc = recObj.getValue({
+                        fieldId : "custbody_anc_ldc"
+                    });
                     var header_consigneeLookup = search.lookupFields({
                         type : ANC_lib.references.RECTYPES.consignee.id,
                         id : header_consigneeId,
@@ -1422,7 +1442,13 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                             //TODO example , line 1 used to be 0403 deliver ship 0325, but should be 0403 - 2 days = 0401
                             var newShipDate = "";
                             var newProductionDate = "";
+                            var newLdcDate = "";
                             var deliverydate = recObj.getSublistValue({
+                                sublistId : "item",
+                                fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
+                                line : a
+                            });
+                            var ldcDate = recObj.getSublistValue({
                                 sublistId : "item",
                                 fieldId : ANC_lib.references.SO_COLUMNS.DELIVERYDATE,
                                 line : a
@@ -1444,14 +1470,21 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                 {
                                     newShipDate = deliverydate.setDate(deliverydate.getDate() - transitTime)
                                     newProductionDate = deliverydate_forprod.setDate(deliverydate_forprod.getDate() - transitTime - 1)
+
+                                    newLdcDate = new Date(newShipDate);
+                                    newLdcDate = newLdcDate.setDate(newLdcDate.getDate() - custbody_anc_ldc)
                                 }
                                 else
                                 {
                                     newShipDate = new Date(deliverydate).setDate(deliverydate.getDate() - transitTime)
                                     newProductionDate = new Date(deliverydate_forprod).setDate(deliverydate_forprod.getDate() - transitTime - 1)
+
+                                    newLdcDate = new Date(newShipDate);
+                                    newLdcDate = newLdcDate.setDate(newLdcDate.getDate() - custbody_anc_ldc)
                                 }
                                 newShipDate = (typeof newShipDate) != "object" ? new Date(newShipDate) : newShipDate;
                                 newProductionDate = (typeof newProductionDate) != "object" ? new Date(newProductionDate) : newProductionDate;
+                                newLdcDate = (typeof newLdcDate) != "object" ? new Date(newLdcDate) : newLdcDate;
 
                                 var newShipDate = format.format({
                                     value: newShipDate,
@@ -1463,8 +1496,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                     type: format.Type.DATE
                                 });
 
+                                var newLdcDate = format.format({
+                                    value: newLdcDate,
+                                    type: format.Type.DATE
+                                });
+
                                 log.debug("newProductionDate", newProductionDate);
                                 log.debug("newShipDate", newShipDate);
+                                log.debug("newLdcDate", newLdcDate);
                                 // transitTime
                                 //update shipdate
                                 if(newShipDate)
@@ -1485,6 +1524,18 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                         line : a,
                                         // value : newProductionDate,
                                         text : newProductionDate
+                                    })
+                                }
+
+                                //06012025
+                                if(newLdcDate)
+                                {
+                                    recObj.setSublistText({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_ldcdate",
+                                        line : a,
+                                        // value : newLdcDate,
+                                        text : newLdcDate
                                     })
                                 }
                             }
