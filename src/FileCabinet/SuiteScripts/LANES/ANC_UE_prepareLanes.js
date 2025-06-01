@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
-define(['N/https', 'N/record', 'N/search'],
+define(['N/task', 'N/https', 'N/record', 'N/search'],
     /**
  * @param{https} https
  * @param{record} record
  * @param{search} search
  */
-    (https, record, search) => {
+    (task, https, record, search) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -44,50 +44,86 @@ define(['N/https', 'N/record', 'N/search'],
          */
         const afterSubmit = (scriptContext) => {
 
-            if(scriptContext.type == "create" || scriptContext.type == "edit")
+
+            // prepareLanes_old(scriptContext)
+
+            prepareLanes_new(scriptContext)
+
+        }
+
+        function prepareLanes_old(scriptContext)
+        {
+            try
             {
-                if(scriptContext.newRecord.type == "customrecord_alberta_ns_consignee_record")
+                if(scriptContext.type == "create" || scriptContext.type == "edit")
                 {
-                    var consigneeOldCity = "";
-                    if(scriptContext.type == "edit")
+                    if(scriptContext.newRecord.type == "customrecord_alberta_ns_consignee_record")
                     {
-                        consigneeOldCity = scriptContext.oldRecord.getValue({
+                        var consigneeOldCity = "";
+                        if(scriptContext.type == "edit")
+                        {
+                            consigneeOldCity = scriptContext.oldRecord.getValue({
+                                fieldId : "custrecord_alberta_ns_city"
+                            })
+                        }
+                        var consigneeNewCity = scriptContext.newRecord.getValue({
                             fieldId : "custrecord_alberta_ns_city"
                         })
-                    }
-                    var consigneeNewCity = scriptContext.newRecord.getValue({
-                        fieldId : "custrecord_alberta_ns_city"
-                    })
 
-                    log.debug({consigneeOldCity, consigneeNewCity})
-                    if(consigneeOldCity != consigneeNewCity)
-                    {
-                        var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
+                        log.debug({consigneeOldCity, consigneeNewCity})
+                        if(consigneeOldCity != consigneeNewCity)
+                        {
+                            var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
+                        }
                     }
-                }
 
-                if(scriptContext.newRecord.type == "location")
-                {
-                    var oldCity = "";
-                    if(scriptContext.type == "edit")
+                    if(scriptContext.newRecord.type == "location")
                     {
-                        oldCity = scriptContext.oldRecord.getValue({
+                        var oldCity = "";
+                        if(scriptContext.type == "edit")
+                        {
+                            oldCity = scriptContext.oldRecord.getValue({
+                                fieldId : "custrecord_alberta_ns_city"
+                            })
+                        }
+                        var consigneeNewCity = scriptContext.newRecord.getValue({
                             fieldId : "custrecord_alberta_ns_city"
                         })
-                    }
-                    var consigneeNewCity = scriptContext.newRecord.getValue({
-                        fieldId : "custrecord_alberta_ns_city"
-                    })
 
-                    log.debug({oldCity, consigneeNewCity})
-                    if(oldCity != consigneeNewCity)
-                    {
-                        var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
+                        log.debug({oldCity, consigneeNewCity})
+                        if(oldCity != consigneeNewCity)
+                        {
+                            var prepShipmentResults = prepShipments(scriptContext.newRecord.id, consigneeNewCity);
+                        }
                     }
                 }
             }
+            catch(e)
+            {
+                log.error("ERROR in function prepareLanes_old", e)
+            }
+        }
 
+        function prepareLanes_new(scriptContext)
+        {
+            try
+            {
+                if(scriptContext.type == "create" || scriptContext.type == "edit")
+                {
+                    var taskObj = task.create({
+                        taskType : task.TaskType.MAP_REDUCE,
+                        scriptId : "customscript_anc_mr_preparelanes",
+                        deploymentId : "customdeploy_anc_mr_preparelanes"
+                    });
 
+                    var taskObjId = taskObj.submit()
+                    log.debug("taskObjId", taskObjId);
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function prepareLanes_old", e)
+            }
         }
 
         function prepShipments(consigneeId, consigneeNewCity)
