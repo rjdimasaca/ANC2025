@@ -19,6 +19,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
         }
 
+        var salesForecastJobFolderId = 392686;
+
         const references = {
                 SO_COLUMNS : {
                         GRADE : "custcol_anc_grade",
@@ -1944,7 +1946,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     querySoPastLdc,
                     syncLinesPastLdc,
                     callPastLdcUrl,
-                    updateLinesPastLdc
+                    updateLinesPastLdc,
+                    salesForecastJobFolderId
             }
 
     });

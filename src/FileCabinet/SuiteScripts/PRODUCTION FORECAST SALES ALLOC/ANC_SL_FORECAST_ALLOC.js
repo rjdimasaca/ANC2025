@@ -145,22 +145,105 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                 </head>
                 <body>
                     <form id="customerForm">
-                    
-                        <button type="button" onclick="collectInput()">Submit Changes</button>
-                        
-                        <button type="button" onclick="copyToYear()">Copy to Year</button>
-                        <button type="button" onclick="copyFromYear()">Copy from Year</button>
-                        
                         
                         <label for="years">Target Year:</label>
                         <select id="years">
+                          <option value="2050">2050</option>
+                          <option value="2049">2049</option>
+                            <option value="2048">2048</option>
+                          <option value="2047">2047</option>
+                          <option value="2046">2046</option>
+                            <option value="2045">2045</option>
+                          <option value="2044">2044</option>
+                          <option value="2043">2043</option>
+                          <option value="2042">2042</option>
+                          <option value="2041">2041</option>
+                          <option value="2040">2040</option>
+                          <option value="2039">2039</option>
+                          <option value="2038">2038</option>
+                          <option value="2037">2037</option>
+                          <option value="2036">2036</option>
+                          <option value="2035">2035</option>
+                          <option value="2034">2034</option>
+                          <option value="2033">2033</option>
+                          <option value="2032">2032</option>
+                          <option value="2031">2031</option>
+                          <option value="2030">2030</option>
+                          <option value="2029">2029</option>
+                          <option value="2028">2028</option>
+                          <option value="2027">2027</option>
                           <option value="2026">2026</option>
                           <option value="2025">2025</option>
                           <option value="2024">2024</option>
                           <option value="2023">2023</option>
                         </select>
                         
+                        
+                        
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                        <tbody>
+                        <tr class="uir-buttons">
+                        <td>
+                        <table id="tbl_secondaryedit" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation">
+                        <tbody>
+                        <tr id="tr_secondaryedit" class="pgBntG pgBntB"> <td id="tdleftcap_secondaryedit">
+                        <img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                        <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                        </td> <td id="tdbody_secondaryedit" height="20" valign="top" nowrap="" class="bntBgB"> 
+                        <input type="button" style="" class="rndbuttoninpt bntBgT " value="Submit Changes" id="secondaryedit" name="secondaryedit" onclick="collectInput(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="ht99do" _mousedown="F">
+                        </td> 
+                        <td id="tdrightcap_secondaryedit"> 
+                        <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt="">
+                        </td> 
+                        </tr> 
+                        </tbody>
+                        </table> 
+                        </td>
+                         <td> 
+                         <table id="tbl_secondary_back" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation"> 
+                         <tbody>
+                         <tr id="tr_secondary_back" class="pgBntG"> <td id="tdleftcap_secondary_back"><img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                         <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                         </td> <td id="tdbody_secondary_back" height="20" valign="top" nowrap="" class="bntBgB">
+                          <input type="button" style="" class="rndbuttoninpt bntBgT " value="Pre-Filter" id="secondary_back" name="secondary_back" onclick="preFilterYear(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="rwkb9h"></td> 
+                          <td id="tdrightcap_secondary_back"> <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt=""> 
+                          </td>
+                          </tr>
+                          </tbody>
+                         </table> 
+                         </td>
+                          <td>
+                          <table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div class="uir-button-menu-divider">
+                          
+</div>
+                          </td>
+                          </tr>
+                          </tbody>
+                          </table>
+                          </td> 
+                          
+                          <td> 
+                         <table id="tbl_secondary_back" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation"> 
+                         <tbody>
+                         <tr id="tr_secondary_back" class="pgBntG"> <td id="tdleftcap_secondary_back"><img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                         <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                         </td> <td id="tdbody_secondary_back" height="20" valign="top" nowrap="" class="bntBgB">
+                          <input type="button" style="" class="rndbuttoninpt bntBgT " value="Copy To Year" id="secondary_back" name="secondary_back" onclick="copyToYear(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="rwkb9h"></td> 
+                          <td id="tdrightcap_secondary_back"> <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt=""> 
+                          </td>
+                          </tr>
+                          </tbody>
+                         </table> 
+                         </td>
+                                  <td> 
+                                   </td> </tr> </tbody></table>
+                        
                         <button type="button" onclick="preFilterYear()">Pre-Filter</button>
+                        
+                        <button type="button" onclick="collectInput()">Submit Changes</button>
+                        
+                        <button type="button" onclick="copyToYear()">Copy to Year</button>
+                        <!--<button type="button" onclick="copyFromYear()">Copy from Year</button>-->
                         
                         <table id="customerTable" class="display" style="width:100%">
                             <thead>
@@ -268,10 +351,77 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                           </tfoot>
                         </table>
                         <br/>
+                        
+                        
+                        
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                        <tbody>
+                        <tr class="uir-buttons">
+                        <td>
+                        <table id="tbl_secondaryedit" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation">
+                        <tbody>
+                        <tr id="tr_secondaryedit" class="pgBntG pgBntB"> <td id="tdleftcap_secondaryedit">
+                        <img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                        <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                        </td> <td id="tdbody_secondaryedit" height="20" valign="top" nowrap="" class="bntBgB"> 
+                        <input type="button" style="" class="rndbuttoninpt bntBgT " value="Submit Changes" id="secondaryedit" name="secondaryedit" onclick="collectInput(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="ht99do" _mousedown="F">
+                        </td> 
+                        <td id="tdrightcap_secondaryedit"> 
+                        <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt="">
+                        </td> 
+                        </tr> 
+                        </tbody>
+                        </table> 
+                        </td>
+                         <td> 
+                         <table id="tbl_secondary_back" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation"> 
+                         <tbody>
+                         <tr id="tr_secondary_back" class="pgBntG"> <td id="tdleftcap_secondary_back"><img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                         <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                         </td> <td id="tdbody_secondary_back" height="20" valign="top" nowrap="" class="bntBgB">
+                          <input type="button" style="" class="rndbuttoninpt bntBgT " value="Pre-Filter" id="secondary_back" name="secondary_back" onclick="preFilterYear(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="rwkb9h"></td> 
+                          <td id="tdrightcap_secondary_back"> <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt=""> 
+                          </td>
+                          </tr>
+                          </tbody>
+                         </table> 
+                         </td>
+                          <td>
+                          <table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div class="uir-button-menu-divider">
+                          
+</div>
+                          </td>
+                          </tr>
+                          </tbody>
+                          </table>
+                          </td> 
+                          
+                          <td> 
+                         <table id="tbl_secondary_back" cellpadding="0" cellspacing="0" border="0" class="uir-button" style="margin-right:6px;" role="presentation"> 
+                         <tbody>
+                         <tr id="tr_secondary_back" class="pgBntG"> <td id="tdleftcap_secondary_back"><img src="/images/nav/ns_x.gif" class="bntLT" border="0" height="50%" width="3" alt=""> 
+                         <img src="/images/nav/ns_x.gif" class="bntLB" border="0" height="50%" width="3" alt=""> 
+                         </td> <td id="tdbody_secondary_back" height="20" valign="top" nowrap="" class="bntBgB">
+                          <input type="button" style="" class="rndbuttoninpt bntBgT " value="Copy To Year" id="secondary_back" name="secondary_back" onclick="copyToYear(); return false;" onmousedown="this.setAttribute('_mousedown','T'); setButtonDown(true, false, this);" onmouseup="this.setAttribute('_mousedown','F'); setButtonDown(false, false, this);" onmouseout="if(this.getAttribute('_mousedown')=='T') setButtonDown(false, false, this);" onmouseover="if(this.getAttribute('_mousedown')=='T') setButtonDown(true, false, this);" fdprocessedid="rwkb9h"></td> 
+                          <td id="tdrightcap_secondary_back"> <img src="/images/nav/ns_x.gif" height="50%" class="bntRT" border="0" width="3" alt=""> <img src="/images/nav/ns_x.gif" height="50%" class="bntRB" border="0" width="3" alt=""> 
+                          </td>
+                          </tr>
+                          </tbody>
+                         </table> 
+                         </td>
+                                  <td> 
+                                   </td> </tr> </tbody></table>
+                        
+                        <button type="button" onclick="preFilterYear()">Pre-Filter</button>
+                        
                         <button type="button" onclick="collectInput()">Submit Changes</button>
                         
                         <button type="button" onclick="copyToYear()">Copy to Year</button>
-                        <button type="button" onclick="copyFromYear()">Copy from Year</button>
+                        <!--<button type="button" onclick="copyFromYear()">Copy from Year</button>-->
+                        
+                        
+                        
+                        
                     </form>
                     <script>
                         function preFilterYear()
@@ -381,7 +531,7 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                             '<td><input value=' + row.month10 + ' origvalue=' + row.month10 + ' type="number" name="' + row.compositeKey+"_"+10 + '" style="width: 60px;" /></td>' +
                                             '<td><input value=' + row.month11 + ' origvalue=' + row.month11 + ' type="number" name="' + row.compositeKey+"_"+11 + '" style="width: 60px;" /></td>' +
                                             '<td><input value=' + row.month12 + ' origvalue=' + row.month12 + ' type="number" name="' + row.compositeKey+"_"+12 + '" style="width: 60px;" /></td>' +
-                                            '<td><input disabled value=' + row.total + ' origvalue=' + row.total + ' type="number" name="' + row.compositeKey+"_"+"13" + '" style="width: 60px;" /></td>' +
+                                            '<td><input disabled class="horizontalTotal" value=' + row.total + ' origvalue=' + row.total + ' type="number" name="' + row.compositeKey+"_"+"13" + '" style="width: 60px;" /></td>' +
                                             
                                             '<td>' + row.compositeKey + '</td>' +
                                         '</tr>';
@@ -431,7 +581,7 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                             });
                         
                             console.log('Collected Allocation Input:', data);
-                            alert('Open the console to see collected data. You can send it to NetSuite.');
+                            // alert('Open the console to see collected data. You can send it to NetSuite.');
                             
                             
                             $.ajax({
@@ -478,7 +628,7 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                 var table = $('#customerTable').DataTable();
                                 var tableRows = table.rows().nodes(); // DataTables API
                             
-                                $(tableRows).find('input[type="number"]').each(function() {
+                                $(tableRows).find('input[type="number"]:not([class*="horizontalTotal"])').each(function() {
                                     const origValue = this.getAttribute('origvalue');
                                     const currentValue = this.value;
                                     // if (origValue !== currentValue || (origValue==="0" && currentValue==="")) {
@@ -487,11 +637,15 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                     if (currentValue && (origValue==="0" && currentValue!=="")) {
                                         data[this.name] = currentValue;
                                     }
+                                    else
+                                    {
+                                        data[this.name] = currentValue;
+                                    }
                                 });
                             
                                 $('#loadingModal').removeClass('hidden');
                                 console.log('Collected Allocation Input:', data);
-                                alert('Open the console to see collected data. You can send it to NetSuite.');
+                                // alert('Open the console to see collected data. You can send it to NetSuite.');
                                 
                                 
                                 $.ajax({
