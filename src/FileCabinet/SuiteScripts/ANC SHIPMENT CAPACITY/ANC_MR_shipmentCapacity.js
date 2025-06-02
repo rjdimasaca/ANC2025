@@ -29,7 +29,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/format', 'N/https', 'N/record', 'N/runtim
             var year = runtime.getCurrentScript().getParameter({
                 name : "custscript_anc_shipcap_year"
             });
-            year = year ? year : "2025";
+            year = year ? year : new Date().getFullYear();
 
             var dates = getAllDatesOfYear(year);
 
@@ -152,7 +152,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/format', 'N/https', 'N/record', 'N/runtim
                 log.debug("reduceContext.key", reduceContext.key)
                 log.debug("reduceContext.values", reduceContext.values);
 
-                createDailyShipmentCapByMonth({month:reduceContext.key, dates:reduceContext.values});
+                var shipmentLocs = ANC_lib.getShipmentLocs();
+
+                log.debug("reduce shipmentLocs", shipmentLocs)
+                createDailyShipmentCapByMonth({month:reduceContext.key, dates:reduceContext.values, shipmentLocs:shipmentLocs});
 
                 // createDailyShipmentCap()
             }
@@ -164,13 +167,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/format', 'N/https', 'N/record', 'N/runtim
 
         function createDailyShipmentCapByMonth(obj)
         {
-            // var recObj = record.load({
-            //     type : "ANC_lib.references.RECTYPES.shipmentcap.id"
-            // })
-        }
 
-        function createDailyShipmentCapByMonth(obj)
-        {
+            log.debug("createDailyShipmentCapByMonth obj", obj)
+            var shipmentLocs = obj.shipmentLocs;
             var year = runtime.getCurrentScript().getParameter({
                 name : "custscript_anc_shipcap_year"
             });
@@ -193,47 +192,79 @@ define(['/SuiteScripts/ANC_lib.js', 'N/format', 'N/https', 'N/record', 'N/runtim
                 sublistId : "item"
             });
 
-            for(var a = 0 ; a < obj.dates.length ; a++)
+
+            var newLocId = runtime.getCurrentScript().getParameter({
+                name : "custscript_anc_shipcap_loc"
+            });
+
+            if(newLocId)
             {
-                recObj.setSublistValue({
-                    sublistId : "recmachcustrecord_anc_dsc_month",
-                    fieldId : "custrecord_anc_dsc_fulldate",
-                    line : a,
-                    value : new Date(obj.dates[a])
-                })
-                recObj.setSublistValue({
-                    sublistId : "recmachcustrecord_anc_dsc_month",
-                    fieldId : "name",
-                    line : a,
-                    value : obj.dates[a]
-                })
-                recObj.setSublistValue({
-                    sublistId : "recmachcustrecord_anc_dsc_month",
-                    fieldId : "custrecord_anc_dsc_date",
-                    line : a,
-                    value : new Date(obj.dates[a]).getDate(),
-                })
-                recObj.setSublistText({
-                    sublistId : "recmachcustrecord_anc_dsc_month",
-                    fieldId : "custrecord_anc_dsc_year",
-                    line : a,
-                    value : Math.floor(new Date(obj.dates[a]).getFullYear()),
-                    text : Math.floor(new Date(obj.dates[a]).getFullYear())
-                })
-                // recObj.setSublistValue({
-                //     sublistId : "recmachcustrecord_anc_dsc_month",
-                //     fieldId : "custrecord_anc_dsc_fulldate",
-                //     line : a,
-                //     value : obj.dates[a]
-                // })
-                // recObj.setSublistValue({
-                //     sublistId : "recmachcustrecord_anc_dsc_month",
-                //     fieldId : "custrecord_anc_dsc_fulldate",
-                //     line : a,
-                //     value : obj.dates[a]
-                // })
+                var newLocRecObj = record.load({
+                    type : "location",
+                    id : newLocId
+                });
+                var newLocName = newLocRecObj.getValue({
+                    fieldId : "name"
+                });
+                var newShipmentCapLoc = {
+                    name : newLocName,
+                    id : newLoc
+                }
+                shipmentLocs = [newShipmentCapLoc]
             }
 
+            var lineIndex = 0;
+            for(var b = 0 ; b < shipmentLocs.length ; b++)
+            {
+                for(var a = 0 ; a < obj.dates.length ; a++)
+                {
+                    recObj.setSublistValue({
+                        sublistId : "recmachcustrecord_anc_dsc_month",
+                        fieldId : "custrecord_anc_dsc_fulldate",
+                        line : lineIndex,
+                        value : new Date(obj.dates[a])
+                    })
+                    recObj.setSublistValue({
+                        sublistId : "recmachcustrecord_anc_dsc_month",
+                        fieldId : "name",
+                        line : lineIndex,
+                        value : shipmentLocs[b].name + "|" + obj.dates[a]
+                    })
+                    recObj.setSublistValue({
+                        sublistId : "recmachcustrecord_anc_dsc_month",
+                        fieldId : "custrecord_anc_dsc_date",
+                        line : lineIndex,
+                        value : new Date(obj.dates[a]).getDate(),
+                    })
+                    recObj.setSublistText({
+                        sublistId : "recmachcustrecord_anc_dsc_month",
+                        fieldId : "custrecord_anc_dsc_year",
+                        line : lineIndex,
+                        value : Math.floor(new Date(obj.dates[a]).getFullYear()),
+                        text : Math.floor(new Date(obj.dates[a]).getFullYear())
+                    })
+                    recObj.setSublistValue({
+                        sublistId : "recmachcustrecord_anc_dsc_month",
+                        fieldId : "custrecord_anc_dsc_loc",
+                        line : lineIndex,
+                        value : shipmentLocs[b].id,
+                    })
+                    // recObj.setSublistValue({
+                    //     sublistId : "recmachcustrecord_anc_dsc_month",
+                    //     fieldId : "custrecord_anc_dsc_fulldate",
+                    //     line : a,
+                    //     value : obj.dates[a]
+                    // })
+                    // recObj.setSublistValue({
+                    //     sublistId : "recmachcustrecord_anc_dsc_month",
+                    //     fieldId : "custrecord_anc_dsc_fulldate",
+                    //     line : a,
+                    //     value : obj.dates[a]
+                    // })
+
+                    lineIndex++;
+                }
+            }
 
             var monthRecObjId = recObj.save({
                 ignoreMandatoryFields : true,

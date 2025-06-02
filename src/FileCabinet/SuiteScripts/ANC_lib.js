@@ -2002,6 +2002,39 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return functionOutput;
             }
 
+            function getShipmentLocs()
+            {
+                    var sqlResults = [];
+                    try
+                    {
+                            var sql = `
+                                    SELECT
+                                            BUILTIN_RESULT.TYPE_STRING(LOCATION.name) AS name,
+                                            BUILTIN_RESULT.TYPE_INTEGER(LOCATION.ID) AS ID,
+                                            BUILTIN_RESULT.TYPE_STRING(LocationMainAddress.city) AS city,
+                                            BUILTIN_RESULT.TYPE_STRING(LOCATION.fullname) AS fullname
+                                    FROM
+                                            LOCATION,
+                                            LocationMainAddress
+                                    WHERE
+                                            LOCATION.mainaddress = LocationMainAddress.nkey(+)
+                                      AND ((LocationMainAddress.city IS NOT NULL AND NVL(LOCATION.isinactive, 'F') = 'F' AND LOCATION.makeinventoryavailable = 'T'))
+                            `
+
+                            log.debug("getShipmentLocs sql", sql)
+
+                            sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                            log.debug("getShipmentLocs sqlResults", sqlResults);
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getShipmentLocs", e);
+                    }
+
+                    return sqlResults;
+            }
+
             return {
                     groupBy,
                     groupByKeys,
@@ -2028,7 +2061,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     callPastLdcUrl,
                     updateLinesPastLdc,
                     salesForecastJobFolderId,
-                    getRelatedShipCap
+                    getRelatedShipCap,
+                    getShipmentLocs
             }
 
     });

@@ -27,7 +27,39 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/query', 'N/record', 'N/runtime
         {
             try
             {
-                var locs = [9, 239, 215, 245];
+                //default locs
+                var locs = [9, 239, 215, 245]; //TODO delete completely as soon as function getShipmentLocs is stable
+                var locs = ANC_lib.getShipmentLocs();
+                log.debug("getInputData getShipmentLocs locs", locs)
+
+                //allow override
+                var newLocId = runtime.getCurrentScript().getParameter({
+                    name : "custscript_anc_preplanes_loc"
+                });
+                if(newLocId)
+                {
+                    var newLocRecObj = record.load({
+                        type : "location",
+                        id : newLocId
+                    });
+                    var newLocName = newLocRecObj.getValue({
+                        fieldId : "name"
+                    });
+                    var newShipmentCapLoc = {
+                        name : newLocName,
+                        id : newLoc
+                    }
+                    locs = [newShipmentCapLoc]
+                }
+
+
+                locs = locs.map(function(elem){
+                    return elem.id;
+                })
+                log.debug("getInputData map locs", locs)
+
+
+
                 var locSr = search.create({
                     type : "location",
                     filters : [
@@ -64,11 +96,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/query', 'N/record', 'N/runtime
 
 
 
-                var cons = [305736, 305730, 304627];
+                //TODO limit for dev stage
+                // var cons = [305736, 305730, 304627];
                 var consSr = search.create({
                     type : "customrecord_alberta_ns_consignee_record",
                     filters : [
-                        ["internalid", "anyof", cons]
+                        // ["internalid", "anyof", cons],
+                        // "AND",
+                        ["custrecord_anc_includeinsalesforecast", "is", "T"],
                     ],
                     columns : [
                         search.createColumn({
