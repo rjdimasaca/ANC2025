@@ -29,6 +29,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                         SHIPDATE : "custcol_anc_shipdate",
                         PRODUCTIONDATE : "custcol_anc_productiondate",
                         SALESFORECAST : "custcol_anc_customeralloc_caid",
+                        SHIPMENTCAPACITY : "custcol_anc_shipmentcap_id",
+                        PRODUCTIONCAPACITYMONTH : "custcol_anc_prodcapmonth_id",
+                        PRODUCTIONCAPACITYWEEK : "custcol_anc_prodcapweek_id",
                         LINESTATUS : {
                                 id : "custcol_anc_status",
                                 options : {
@@ -148,6 +151,83 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                 return compositeKeyResults;
         }
+
+
+            function getRelatedShipCap(tranInternalid, lineValList)
+            {
+                    var compositeKeyResults = {};
+                    try
+                    {
+                            var forecastFilters = getShipCapFilters(tranInternalid, lineValList);
+                            var sqlFilters_text = forecastFilters.join(" OR ")
+
+                            log.debug("getRelatedForecasts sqlFilters_text", sqlFilters_text)
+
+                            var sql =
+                                `Select
+                         sc.id as sc_id,
+                         sc.custrecord_anc_dsc_loc as sc_location,
+                         sc.custrecord_anc_dsc_fulldate as sc_fulldate
+
+                        FROM
+                        customrecord_anc_dailyshipmentcap as sc
+
+                        WHERE
+                        ${sqlFilters_text}
+                 `
+
+                            log.debug("sql", sql)
+
+                            const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                            log.debug("sqlResults", sqlResults);
+
+                            var keyOrder = ["sc_location", "sc_fulldate"]
+                            compositeKeyResults = buildCompositeKeys(keyOrder, sqlResults)
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in fucntion getRelatedShipCap", e)
+                    }
+
+                    log.debug("getRelatedShipCap compositeKeyResults", compositeKeyResults)
+                    return compositeKeyResults;
+            }
+
+            const getShipCapFilters = (tranInternalId, lineValList) =>
+            {
+                    var filters = [];
+                    try
+                    {
+                            log.debug("getShipCapFilters lineValList.length", lineValList.length)
+                            for(var a = 0 ; a < lineValList.length ; a++)
+                            {
+                                    var lineVals = lineValList[a];
+                                    log.debug("getShipCapFilters lineVals", lineVals)
+                                    if(lineVals.shipdate)
+                                    {
+                                            var sqlForecastFilter = `
+                                        (
+                                        '${lineVals.shipdate}' = sc.${"custrecord_anc_dsc_fulldate"}
+                                        AND
+                                        ${lineVals.location} = sc.${"custrecord_anc_dsc_loc"}
+                                        )
+                                        `
+                                            //TODO move to lib
+                                            //TODO move to lib
+                                            filters.push(sqlForecastFilter)
+                                    }
+                            }
+
+                            log.debug("getShipCapFilters filters", filters);
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getForecastFilters")
+                    }
+
+                    return filters;
+            }
 
         const buildCompositeKeys = (keyOrder, forecastObj) =>
         {
@@ -1947,7 +2027,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     syncLinesPastLdc,
                     callPastLdcUrl,
                     updateLinesPastLdc,
-                    salesForecastJobFolderId
+                    salesForecastJobFolderId,
+                    getRelatedShipCap
             }
 
     });

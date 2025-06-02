@@ -802,13 +802,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
             });
 
             //create mimssing item
-            prepItems(recObj);
+            // prepItems(recObj); //deprecated, use item validator custom record/dropdown
 
             determineLane(recObj);
-            //
-            // implementSF(recObj);
+
+            implementSF(recObj);
             //
             // implementFitment(recObj);
+
 
             if(doSaveAfterSubmit)
             {
@@ -824,6 +825,9 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                 type : scriptContext.newRecord.type,
                 id : scriptContext.newRecord.id
             });
+
+            //call it after shipdate is resolved
+            implementShipCap(recObj);
 
             var pastLdcLinesSqlResults = ANC_lib.querySoPastLdc({traninternalids:[scriptContext.newRecord.id], sqlOperator:"IN", filterbyfield :"TRANSACTION.ID", dayspassedoper : ">", dayspassed : 0})
 
@@ -1780,6 +1784,141 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
             catch(e)
             {
                 log.error("ERROR in funtion implementSF", e)
+            }
+        }
+
+        function implementShipCap(recObj)
+        {
+            var doImplement = true;
+            yearMapping = ANC_lib.yearMapping;
+
+
+            try
+            {
+                if(doImplement)
+                {
+                    var lineCount = recObj.getLineCount({
+                        sublistId : "item"
+                    });
+
+                    log.debug("implementShipCap lineCount", lineCount)
+                    log.debug("implementShipCap ANC_lib.references", ANC_lib.references)
+                    var lineValList = [];
+                    var headerEntity = recObj.getValue({
+                        fieldId : "entity"
+                    })
+                    log.debug("lineVals after entity", headerEntity)
+                    var headerLocation = recObj.getValue({
+                        fieldId : "location"
+                    })
+                    log.debug("lineVals after location", headerLocation)
+
+                    for(var a = 0 ; a < lineCount ; a++)
+                    {
+                        var lineVals = {}
+
+                        log.debug("lineVals after lineVals declared", lineVals)
+
+                        lineVals.shipdate = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_shipdate",
+                            line : a
+                        });
+
+                        lineVals.shipdate = format.format({
+                            value: lineVals.shipdate,
+                            type: format.Type.DATE
+                        });
+
+                        log.debug("lineVals after shipdate", lineVals)
+                        lineVals.location = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : "location",
+                            line : a
+                        }) || headerLocation;
+                        log.debug("lineVals after location", lineVals)
+                        lineValList.push(lineVals);
+                    }
+                    log.debug("lineValList", lineValList);
+
+
+                    var compositeKeyResults = ANC_lib.getRelatedShipCap(recObj.id, lineValList)
+                    log.debug("implementShipCap compositeKeyResults", compositeKeyResults);
+                    var RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
+
+
+                    //TODO you can optimize this because it performs another loop that it already had.
+                    for(var a = 0 ; a < lineCount ; a++)
+                    {
+                        var lineVals = {}
+                        lineVals.shipdate = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_shipdate",
+                            line : a
+                        });
+                        lineVals.location = recObj.getSublistValue({
+                            sublistId : "item",
+                            fieldId : "location",
+                            line : a
+                        }) || headerLocation;
+
+                        lineVals.shipdate = format.format({
+                            value: lineVals.shipdate,
+                            type: format.Type.DATE
+                        });
+
+                        //TODO if not in yearmapping then refrain from proceeding, just from the start, dont waste effort if year is not mapped.
+                        // you have a defaulting anyway so year will always be mapped, but what if its's 2051?!?!?
+                        var lineCompositeKey = `${lineVals.location}_${lineVals.shipdate}`;
+
+                        log.debug("setting SC COLUMN lineCompositeKey", lineCompositeKey);
+                        // log.debug("setting SF COLUMN SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id", SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id);
+                        if(RESULTSBYCOMPOSITEKEY[lineCompositeKey])
+                        {
+                            if(RESULTSBYCOMPOSITEKEY[lineCompositeKey].sc_id) {
+                                recObj.setSublistValue({
+                                    sublistId: "item",
+                                    fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
+                                    line: a,
+                                    value: RESULTSBYCOMPOSITEKEY[lineCompositeKey].sc_id
+                                })
+
+                                doSaveAfterSubmit = true;
+                            }
+                            else
+                            {
+                                recObj.setSublistValue({
+                                    sublistId: "item",
+                                    fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
+                                    line: a,
+                                    value: ""
+                                })
+
+                                doSaveAfterSubmit = true;
+                            }
+                        }
+                        else
+                        {
+                            recObj.setSublistValue({
+                                sublistId: "item",
+                                fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
+                                line: a,
+                                value: ""
+                            })
+
+                            doSaveAfterSubmit = true;
+                        }
+
+
+
+                    }
+                    log.debug("lineValList", lineValList);
+
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in funtion implementShipCap", e)
             }
         }
 
