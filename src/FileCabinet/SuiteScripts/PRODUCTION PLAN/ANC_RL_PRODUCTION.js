@@ -181,7 +181,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     var weeklyDistributionQty = monthCapRecObj_quantity / 4;
 
                     log.debug("weeklyDistributionQty", weeklyDistributionQty)
-                    var getWeeksResults = getWeeks(year, monthCapRecObj_monthNumber, null)
+                    // var getWeeksResults = getWeeks(year, monthCapRecObj_monthNumber, null)
+                    var month445 = get445Month({
+                        year: year,
+                        month: monthCapRecObj_monthNumber, // 4th fiscal month
+                        anchorDate: '2025-01-06' // Fiscal year starts on Jan 6, 2025 (Monday)
+                    });
+
+                    getWeeksResults = month445.weeks;
+                    weeklyDistributionQty = parseFloat(monthCapRecObj_quantity / getWeeksResults.length).toFixed(2);
+                    //can never be zero anyway, so just pray lol
                     log.debug("getWeeksResults", getWeeksResults);
 
                     for(var b = 0 ; b < getWeeksResults.length ; b++)
@@ -211,17 +220,25 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             sublistId : "recmachcustrecord_prodfcw_month",
                             fieldId : "custrecord_prodfcw_capacity",
                             line : b,
-                            value : weeklyDistributionQty
+                            value : getWeeksResults[b].monthweek
+                        })
+
+                        monthCapRecObj.setSublistValue({
+                            sublistId : "recmachcustrecord_prodfcw_month",
+                            fieldId : "custrecord_prodfcw_monthweeknumber",
+                            line : b,
+                            value : getWeeksResults[b].monthweek
                         })
 
                         var monthWithLeadingZero = monthCapRecObj_monthNumber < 10 ? `0${monthCapRecObj_monthNumber}` : `${monthCapRecObj_monthNumber}`;
+                        var weekWithLeadingZero = getWeeksResults[b].week < 10 ? `0${getWeeksResults[b].week}` : `${getWeeksResults[b].week}`;
 
 
                         monthCapRecObj.setSublistValue({
                             sublistId : "recmachcustrecord_prodfcw_month",
                             fieldId : "name",
                             line : b,
-                            value : `${year}|${monthWithLeadingZero}|WEEK${getWeeksResults[b].week}`
+                            value : `${year}|${monthWithLeadingZero}|MONTHWEEK${getWeeksResults[b].monthweek}|YEARWEEK${weekWithLeadingZero}`
                         })
                     }
 
@@ -292,6 +309,48 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 }
             }
         }
+
+        function formatDate(date) {
+            return date.toISOString().slice(0, 10);
+        }
+
+        function get445Month({ year, month, anchorDate }) {
+            const anchor = new Date(anchorDate);
+            const weeksPerMonth = [4, 4, 5]; // repeats every quarter
+
+            const months = [];
+            let current = new Date(anchor);
+            let weekCounter = 1;
+
+            for (let i = 0; i < 12; i++) {
+                const weeksInMonth = weeksPerMonth[i % 3];
+                const monthWeeks = [];
+
+                for (let w = 0; w < weeksInMonth; w++) {
+                    const weekStart = new Date(current);
+                    const weekEnd = new Date(current);
+                    weekEnd.setDate(weekEnd.getDate() + 6);
+
+                    monthWeeks.push({
+                        week: weekCounter++,
+                        start: formatDate(weekStart),
+                        end: formatDate(weekEnd),
+                        monthweek: w+1
+                    });
+
+                    current.setDate(current.getDate() + 7); // move forward one week
+                }
+
+                months.push({
+                    year: year,
+                    monthNumber: i + 1,
+                    weeks: monthWeeks,
+                });
+            }
+
+            return months[month - 1]; // return the requested month
+        }
+
 
 
         function getWeeks(year, month, trimOverflow = false) {
