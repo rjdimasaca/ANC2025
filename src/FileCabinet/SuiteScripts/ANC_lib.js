@@ -2035,6 +2035,34 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return sqlResults;
             }
 
+            function getRelatedProdCap()
+            {
+                    var sqlResults = [];
+                    try
+                    {
+                            var sql = `
+                                    SELECT
+                                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.name) AS name
+                                    FROM
+                                            CUSTOMRECORD_ANC_PRODUCTION_CAPACITY
+                                    WHERE
+                                            DATE '2025-06-01' BETWEEN CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangestart AND CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangeend
+                            `
+
+                            log.debug("getRelatedProdCap sql", sql)
+
+                            sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                            log.debug("getRelatedProdCap sqlResults", sqlResults);
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getRelatedProdCap", e);
+                    }
+
+                    return sqlResults;
+            }
+
             return {
                     groupBy,
                     groupByKeys,
@@ -2062,7 +2090,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     updateLinesPastLdc,
                     salesForecastJobFolderId,
                     getRelatedShipCap,
-                    getShipmentLocs
+                    getShipmentLocs,
+                    getRelatedProdCap
             }
 
     });

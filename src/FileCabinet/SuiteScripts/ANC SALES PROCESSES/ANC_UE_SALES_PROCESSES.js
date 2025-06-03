@@ -1940,49 +1940,29 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                         sublistId : "item"
                     });
 
-                    log.debug("implementShipCap lineCount", lineCount)
-                    log.debug("implementShipCap ANC_lib.references", ANC_lib.references)
+                    log.debug("implementProdCap lineCount", lineCount)
+                    log.debug("implementProdCap ANC_lib.references", ANC_lib.references)
                     var lineValList = [];
-                    var headerEntity = recObj.getValue({
-                        fieldId : "entity"
-                    })
-                    log.debug("lineVals after entity", headerEntity)
-                    var headerLocation = recObj.getValue({
-                        fieldId : "location"
-                    })
-                    log.debug("lineVals after location", headerLocation)
 
                     for(var a = 0 ; a < lineCount ; a++)
                     {
                         var lineVals = {}
 
-                        log.debug("lineVals after lineVals declared", lineVals)
+                        log.debug("implementProdCap lineVals after lineVals declared", lineVals)
 
-                        lineVals.shipdate = recObj.getSublistValue({
+                        lineVals.productiondate = recObj.getSublistValue({
                             sublistId : "item",
-                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_shipdate",
+                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_productiondate",
                             line : a
                         });
-
-                        lineVals.shipdate = format.format({
-                            value: lineVals.shipdate,
-                            type: format.Type.DATE
-                        });
-
-                        log.debug("lineVals after shipdate", lineVals)
-                        lineVals.location = recObj.getSublistValue({
-                            sublistId : "item",
-                            fieldId : "location",
-                            line : a
-                        }) || headerLocation;
-                        log.debug("lineVals after location", lineVals)
+                        log.debug("implementProdCap lineVals after productiondate", lineVals)
                         lineValList.push(lineVals);
                     }
-                    log.debug("lineValList", lineValList);
+                    log.debug("implementProdCap lineValList", lineValList);
 
 
-                    var compositeKeyResults = ANC_lib.getRelatedShipCap(recObj.id, lineValList)
-                    log.debug("implementShipCap compositeKeyResults", compositeKeyResults);
+                    var compositeKeyResults = ANC_lib.getRelatedProdCap(recObj.id, lineValList)
+                    log.debug("implementProdCap compositeKeyResults", compositeKeyResults);
                     var RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
 
 
@@ -1990,19 +1970,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                     for(var a = 0 ; a < lineCount ; a++)
                     {
                         var lineVals = {}
-                        lineVals.shipdate = recObj.getSublistValue({
+                        lineVals.productiondate = recObj.getSublistValue({
                             sublistId : "item",
-                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_shipdate",
+                            fieldId : ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE || "custcol_anc_productiondate",
                             line : a
                         });
-                        lineVals.location = recObj.getSublistValue({
-                            sublistId : "item",
-                            fieldId : "location",
-                            line : a
-                        }) || headerLocation;
 
-                        lineVals.shipdate = format.format({
-                            value: lineVals.shipdate,
+                        lineVals.productiondate = format.format({
+                            value: lineVals.productiondate,
                             type: format.Type.DATE
                         });
 
