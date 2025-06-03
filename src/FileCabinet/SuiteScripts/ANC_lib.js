@@ -2035,18 +2035,30 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return sqlResults;
             }
 
-            function getRelatedProdCap()
+            function getRelatedProdCap(recId, targetDates)
             {
                     var sqlResults = [];
+                    var filterArray = [];
+                    var filterText = "";
                     try
                     {
+                            filterArray = prodCapDatesAsFilterArray(targetDates);
+                            log.debug("getRelatedProdCap filterArray", filterArray);
+                            filterText = prodCapDatesAsFilterText(filterArray);
                             var sql = `
                                     SELECT
-                                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.name) AS name
+                                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.name) AS name,
+                                            (CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.id) AS id,
+                                            (CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangestart) AS weekstartdate,
+                                            (CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangeend) AS weekenddate,
+                                            (CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_capacity) AS weekcapacity,
+                                            (CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_weeknumber) AS weeknumber
                                     FROM
                                             CUSTOMRECORD_ANC_PRODUCTION_CAPACITY
                                     WHERE
-                                            DATE '2025-06-01' BETWEEN CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangestart AND CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangeend
+                                            (
+                                            ${filterText}
+                                            )
                             `
 
                             log.debug("getRelatedProdCap sql", sql)
@@ -2061,6 +2073,24 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }
 
                     return sqlResults;
+            }
+
+            function prodCapDatesAsFilterArray(targetDates)
+            {
+                    var filterArray = [];
+                    for(var a = 0 ; a < targetDates.length ; a++)
+                    {
+                            //'2025-06-01'
+                            filterArray.push(`(DATE '${targetDates[a].productiondate}' BETWEEN CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangestart AND CUSTOMRECORD_ANC_PRODUCTION_CAPACITY.custrecord_prodfcw_daterangeend)`)
+                    }
+
+                    return filterArray;
+            }
+            function prodCapDatesAsFilterText(filterArray)
+            {
+                    var filterText = "";
+                    filterText = filterArray.join(" OR ")
+                    return filterText;
             }
 
             return {

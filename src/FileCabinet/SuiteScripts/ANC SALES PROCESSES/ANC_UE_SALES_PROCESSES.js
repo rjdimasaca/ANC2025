@@ -830,7 +830,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
             implementShipCap(recObj);
 
             //call it after shipdate,proddate is resolved //TODO
-            // implementProdCap(recObj);
+            implementProdCap(recObj);
 
             var pastLdcLinesSqlResults = ANC_lib.querySoPastLdc({traninternalids:[scriptContext.newRecord.id], sqlOperator:"IN", filterbyfield :"TRANSACTION.ID", dayspassedoper : ">", dayspassed : 0})
 
@@ -1952,9 +1952,17 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
                         lineVals.productiondate = recObj.getSublistValue({
                             sublistId : "item",
-                            fieldId : ANC_lib.references.SO_COLUMNS.SHIPDATE || "custcol_anc_productiondate",
+                            fieldId : ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE || "custcol_anc_productiondate",
                             line : a
                         });
+
+                        lineVals.productiondate_date = new Date(lineVals.productiondate);
+                        lineVals.productiondate = `${new Date(lineVals.productiondate_date).getFullYear()}-${new Date(lineVals.productiondate_date).getMonth()+1}-${new Date(lineVals.productiondate_date).getDate()}`
+
+                        // lineVals.productiondate = format.format({
+                        //     value: lineVals.productiondate,
+                        //     type: format.Type.DATE
+                        // });
                         log.debug("implementProdCap lineVals after productiondate", lineVals)
                         lineValList.push(lineVals);
                     }
@@ -1963,7 +1971,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
                     var compositeKeyResults = ANC_lib.getRelatedProdCap(recObj.id, lineValList)
                     log.debug("implementProdCap compositeKeyResults", compositeKeyResults);
-                    var RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
+                    // var RESULTSBYCOMPOSITEKEY = compositeKeyResults.groupedByCompositekey;
 
 
                     //TODO you can optimize this because it performs another loop that it already had.
@@ -1976,51 +1984,40 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                             line : a
                         });
 
-                        lineVals.productiondate = format.format({
-                            value: lineVals.productiondate,
-                            type: format.Type.DATE
-                        });
+                        // lineVals.productiondate = format.format({
+                        //     value: lineVals.productiondate,
+                        //     type: format.Type.DATE
+                        // });
 
-                        //TODO if not in yearmapping then refrain from proceeding, just from the start, dont waste effort if year is not mapped.
-                        // you have a defaulting anyway so year will always be mapped, but what if its's 2051?!?!?
-                        var lineCompositeKey = `${lineVals.location}_${lineVals.shipdate}`;
+                        var prodDate_dateObj = new Date(lineVals.productiondate)
+                        log.debug("prodDate_dateObj", prodDate_dateObj);
 
-                        log.debug("setting SC COLUMN lineCompositeKey", lineCompositeKey);
-                        // log.debug("setting SF COLUMN SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id", SF_RESULTSBYCOMPOSITEKEY[lineCompositeKey].sf_id);
-                        if(RESULTSBYCOMPOSITEKEY[lineCompositeKey])
-                        {
-                            if(RESULTSBYCOMPOSITEKEY[lineCompositeKey].sc_id) {
-                                recObj.setSublistValue({
-                                    sublistId: "item",
-                                    fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
-                                    line: a,
-                                    value: RESULTSBYCOMPOSITEKEY[lineCompositeKey].sc_id
-                                })
-
-                                doSaveAfterSubmit = true;
+                        var existingWeeklyProdCaps = compositeKeyResults.filter(function(elem){
+                            var startDate = new Date(elem.weekstartdate);
+                            var endDate = new Date(elem.weekenddate);
+                            log.debug("{prodDate_dateObj,startDate,endDate}", {prodDate_dateObj,startDate,endDate})
+                            log.debug("(startDate <= prodDate_dateObj && endDate >= prodDate_dateObj)", (startDate <= prodDate_dateObj && endDate >= prodDate_dateObj))
+                            if(startDate <= prodDate_dateObj && endDate >= prodDate_dateObj)
+                            {
+                                return true;
                             }
                             else
                             {
-                                recObj.setSublistValue({
-                                    sublistId: "item",
-                                    fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
-                                    line: a,
-                                    value: ""
-                                })
-
-                                doSaveAfterSubmit = true;
+                                return false;
                             }
-                        }
-                        else
+                        });
+                        log.debug("existingWeeklyProdCaps", existingWeeklyProdCaps)
+
+                        if(existingWeeklyProdCaps.length > 0)
                         {
                             recObj.setSublistValue({
                                 sublistId: "item",
-                                fieldId: ANC_lib.references.SO_COLUMNS.SHIPMENTCAPACITY,
+                                fieldId: ANC_lib.references.SO_COLUMNS.PRODUCTIONCAPACITYWEEK,
                                 line: a,
-                                value: ""
-                            })
+                                value: existingWeeklyProdCaps[0].id
+                            });
 
-                            doSaveAfterSubmit = true;
+                            log.debug(`LINE ${a} PRODCAP set to`, existingWeeklyProdCaps[0].id)
                         }
 
 
