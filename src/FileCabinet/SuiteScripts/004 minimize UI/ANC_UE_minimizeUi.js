@@ -36,7 +36,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
             try
             {
                 elemList = ANC_lib.MINIMIZE_UI.elemList;
-                // hideColumns(scriptContext);
+                hideColumns(scriptContext);
                 addElements(scriptContext);
             }
             catch(e)
@@ -49,11 +49,21 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
         {
             try
             {
+                // var columnsToHide = ["options"];
+                // var columnsToHide = ["options","rate","amount","taxrate1","taxrate2"];
+                var columnsToHide = [];
                 if(scriptContext.type == "view")
                 {
-                    var columnsToHide = ["options","rate","amount","taxrate1","taxrate2","shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
-                    // var columnsToHide = ["options"];
-                    // var columnsToHide = ["options","rate","amount","taxrate1","taxrate2"];
+                    columnsToHide = ["options","rate","amount","taxrate1","taxrate2","shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
+                }
+                else if(scriptContext.type == "edit")
+                {
+                    columnsToHide = ["taxrate1","taxrate2","shipaddress", "shippingaddress", "shippingaddress_key", "shipaddress_display", "shippingcarrier", "shipcarrier", "shipcarrier_display", "shipgroup", "shipmethod", "shipvia", "shippingmethod", "shipping_method"];
+                }
+
+
+                if(scriptContext.type == "view" || scriptContext.type == "edit")
+                {
 
                     for(var a = 0 ; a < columnsToHide.length ; a++)
                     {
@@ -133,9 +143,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
 
                         for(var a = 0  ; a < lineCount ; a++)
                         {
-                            // var lastSubstituteId = scriptContext.newRecord.getSublistValue({sublistId : "item", fieldId : "custcol_r8l_itemsubstitution", line : a})
                             var doMinimizeUi = true;
-
 
                             if(doMinimizeUi)
                             {
@@ -188,6 +196,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
                                     
                                     window["lineUrl_${groupElem.name}" + index] = lineUrls[index]
                                 
+                                //TODO you may not have to plug the functions or details into WINDOWS object, see see ANC_UE_SALES_PROCESSES.js it may have been done here already.
                                     if(index==0)
                                     {
                                         // console.log("jQuery(this).children()" + index, jQuery(this).children());
