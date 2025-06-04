@@ -2,13 +2,13 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['N/query', 'N/record', 'N/runtime', 'N/file'],
+define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/runtime', 'N/file'],
     /**
      * @param{query} query
      * @param{record} record
      * @param{runtime} runtime
      */
-    (query, record, runtime, file) => {
+    (ANC_lib, query, record, runtime, file) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -149,10 +149,49 @@ define(['N/query', 'N/record', 'N/runtime', 'N/file'],
                     value : `${yearText}_${forecastObj.colVals.customerInternalId}_${forecastObj.colVals.consigneeInternalId}_${forecastObj.colVals.gradeInternalId}_${forecastObj.colVals.monthInternalId}`
                 });
 
+
                 var sfRecObjId = sfRecObj.save({
                     ignoreMandatoryFields : true,
                     allowSourcing : true
                 });
+
+                var sfRecObj = record.load({
+                    type : "customrecord_anc_pf_",
+                    id : sfRecObjId
+                });
+
+                var recNameObj = {};
+                recNameObj.yearText = sfRecObj.getText({
+                    fieldId : "custrecord_anc_pf_year"
+                })
+                recNameObj.monthId = sfRecObj.getValue({
+                    fieldId : "custrecord_anc_pf_month"
+                });
+                recNameObj.monthId = ANC_lib.addLeadingZeroToMonths(recNameObj.monthId);
+                recNameObj.customerText = sfRecObj.getText({
+                    fieldId : "custrecord_anc_pf_customer"
+                });
+                recNameObj.consigneeText = sfRecObj.getText({
+                    fieldId : "custrecord_anc_pf_consignee"
+                });
+                recNameObj.gradeText = sfRecObj.getText({
+                    fieldId : "custrecord_anc_pf_grade"
+                });
+                log.debug("recNameObj", recNameObj)
+                var sfName = `${recNameObj.yearText}|${recNameObj.monthId}|${recNameObj.customerText}|${recNameObj.consigneeText}|${recNameObj.gradeText}`;
+
+                log.debug("sfName", sfName)
+
+                sfRecObj.setValue({
+                    fieldId : "name",
+                    value :sfName
+                })
+                var sfRecObjId = sfRecObj.save({
+                    ignoreMandatoryFields : true,
+                    allowSourcing : true
+                });
+
+                //set name
 
                 log.debug("sfRecObjId", sfRecObjId);
 

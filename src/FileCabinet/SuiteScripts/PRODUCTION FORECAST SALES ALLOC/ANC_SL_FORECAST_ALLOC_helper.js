@@ -129,7 +129,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/task', 'N/file'], 
             var mrTaskObj = task.create({
                 taskType : task.TaskType.MAP_REDUCE,
                 scriptId : "customscript_anc_mr_forecastalloc",
-                deploymentId : "customdeploy_anc_mr_forecastalloc",
+                // deploymentId : "customdeploy_anc_mr_forecastalloc",
                 params : {
                     custscript_anc_salesforecastdata:fileId,
                     // custscript_anc_salesforecasttyear:targetYear, //MR is expecting year internalid not actual year text

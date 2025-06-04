@@ -2092,6 +2092,32 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     filterText = filterArray.join(" OR ")
                     return filterText;
             }
+            function addLeadingZeroToMonths(monthText)
+            {
+                    if(typeof monthText == "number")
+                    {
+                            if(monthText < 10)
+                            {
+                                    return "0" + monthText;
+                            }
+                            else
+                            {
+                                    return monthText
+                            }
+                    }
+                    else
+                    {
+                            if(Number(monthText) < 10)
+                            {
+                                    return "0" + monthText;
+                            }
+                            else
+                            {
+                                    return monthText
+                            }
+                    }
+
+            }
 
             return {
                     groupBy,
@@ -2121,7 +2147,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     salesForecastJobFolderId,
                     getRelatedShipCap,
                     getShipmentLocs,
-                    getRelatedProdCap
+                    getRelatedProdCap,
+                    addLeadingZeroToMonths
             }
 
     });
