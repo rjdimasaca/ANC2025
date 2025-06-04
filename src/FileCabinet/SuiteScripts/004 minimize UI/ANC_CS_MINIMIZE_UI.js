@@ -77,23 +77,6 @@ define(['N/runtime', 'N/search', 'N/url', 'N/ui/message', 'N/currentRecord'],
             return implementMessagesHasWarning;
         }
 
-        const toMDY = (dateVal) => {
-            var retVal = dateVal;
-            try
-            {
-                if(dateVal)
-                {
-                    retVal = new Date(retVal);
-                }
-
-            }
-            catch(e)
-            {
-                console.log("ERROR in function toMDY", e)
-            }
-            console.log("retVal", retVal)
-            return retVal;
-        }
 
         function saveRecord(scriptContext)
         {

@@ -12,13 +12,13 @@
  * API Version  :       2.1
  * version      :       1.0.0
  */
-define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/redirect'],
+define(['/SuiteScripts/ANC_lib.js', 'N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/redirect'],
     /**
      * @param{runtime} runtime
      * @param{search} search
      * @param{url} url
      */
-    (record, runtime, search, url, uiSw, redirect) => {
+    (ANC_lib, record, runtime, search, url, uiSw, redirect) => {
 
         var globalrefs = {};
         var fitmentLineLimit = 2;
@@ -138,7 +138,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 source : "location",
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transitlocation",
-                                targetColumnId : "custcol_anc_transitlocation",
+                                targetColumnId : ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id,
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -149,7 +149,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 id : "custpage_tranlinetransittime",
                                 //container: "custpage_flgroup_input",
                                 sourceSearchKey:"tranline_transittime",
-                                targetColumnId : "custcol_anc_transittime",
+                                targetColumnId : ANC_lib.references.SO_COLUMNS.TRANSITTIME.id,
                                 displayType : {
                                     displayType: "inline"
                                 }
@@ -160,7 +160,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 id : "custpage_tranlinetransittom",
                                 source : "customlist_anc_transitoptmethods",
                                 sourceSearchKey:"tranline_transitoptmethod",
-                                targetColumnId : "custcol_anc_transitoptmethod",
+                                targetColumnId : ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id,
                                 //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "entry"
@@ -172,7 +172,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 id : "custpage_tranlineequipment",
                                 source : "customrecord_anc_equipment",
                                 sourceSearchKey:"tranline_equipment",
-                                targetColumnId : "custcol_anc_equipment",
+                                targetColumnId : ANC_lib.references.SO_COLUMNS.EQUIPMENT.id,
                                 //container: "custpage_flgroup_input",
                                 displayType : {
                                     displayType: "inline"
@@ -197,45 +197,45 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
-                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_shipdate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
                             label: "tranline_ship_date"
                         }),
                         search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
-                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_deliverydate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
                             label: "tranline_delivery_date"
                         }),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
-                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
-                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
                         search.createColumn({
                             name: "locationquantityavailable",
                             join: "item",
                             label: "tranline_availablequantity"
                         }),
-                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
-                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
-                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
-                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
-                        search.createColumn({name: "custcol_anc_equipment", label: "tranline_equipment"}),
-                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
-                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EQUIPMENT.id, label: "tranline_equipment"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 },
                 "orderquantity_and_inventorystatus" : {
@@ -383,44 +383,44 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
-                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_shipdate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
                             label: "tranline_ship_date"
                         }),
                         search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
-                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_deliverydate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
                             label: "tranline_delivery_date"
                         }),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
-                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
-                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
                         search.createColumn({
                             name: "locationquantityavailable",
                             join: "item",
                             label: "tranline_availablequantity"
                         }),
-                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
-                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
-                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
-                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
-                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
-                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 },
                 "product_and_packaging" : {
@@ -535,44 +535,44 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
-                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_shipdate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
                             label: "tranline_ship_date"
                         }),
                         search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
-                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_deliverydate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
                             label: "tranline_delivery_date"
                         }),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
-                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
-                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
                         search.createColumn({
                             name: "locationquantityavailable",
                             join: "item",
                             label: "tranline_availablequantity"
                         }),
-                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
-                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
-                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
-                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
-                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
-                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 },
                 "customer_and_shipping" : {
@@ -674,7 +674,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 source : "customrecord_alberta_ns_consignee_record",
                                 sourceSearchKey : "tranline_consignee",
                                 //container: "custpage_flgroup_input",
-                                targetColumnId : "custcol_consignee",
+                                targetColumnId : ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id,
                                 displayType : {
                                     displayType: "entry"
                                 },
@@ -710,44 +710,44 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
-                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_shipdate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
                             label: "tranline_ship_date"
                         }),
                         search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
-                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_deliverydate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
                             label: "tranline_delivery_date"
                         }),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
-                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
-                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
                         search.createColumn({
                             name: "locationquantityavailable",
                             join: "item",
                             label: "tranline_availablequantity"
                         }),
-                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
-                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
-                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
-                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
-                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
-                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 },
                 "scheduling_and_keydates" : {
@@ -893,44 +893,44 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                         search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
                         search.createColumn({name: "line", label: "tranline_linenum"}),
                         search.createColumn({name: "location", label: "tranline_location"}),
-                        search.createColumn({name: "custcol_anc_transitlocation", label: "tranline_transitlocation"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
                         search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
                         search.createColumn({
                             name: "formulanumeric",
                             formula: "600",
                             label: "tranline_transittime"
                         }),
-                        search.createColumn({name: "custcol_anc_ldcdate", label: "tranline_ldc_date"}),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrun_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_shipdate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
                             label: "tranline_ship_date"
                         }),
                         search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
-                        search.createColumn({name: "custcol_anc_productiondate", label: "tranline_production_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
                         search.createColumn({
                             name: "formuladate",
-                            formula: "{custcol_anc_deliverydate}",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
                             label: "tranline_delivery_date"
                         }),
-                        search.createColumn({name: "custcol_anc_pressrundate", label: "tranline_pressrundate"}),
-                        search.createColumn({name: "custcol_anc_expectedtonnage", label: "tranline_expectedtonnage"}),
-                        search.createColumn({name: "custcol_anc_totalrolls", label: "tranline_totalrolls"}),
-                        search.createColumn({name: "custcol_anc_rollsperpack", label: "tranline_rollsperpack"}),
-                        search.createColumn({name: "custcol_anc_wraptype", label: "tranline_wraptype"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
                         search.createColumn({
                             name: "locationquantityavailable",
                             join: "item",
                             label: "tranline_availablequantity"
                         }),
-                        search.createColumn({name: "custcol_anc_shippinglane", label: "tranline_shippinglane"}),
-                        search.createColumn({name: "custcol_anc_rollsonhand", label: "tranline_rollsonhand"}),
-                        search.createColumn({name: "custcol_anc_reservedrolls", label: "tranline_reservedrolls"}),
-                        search.createColumn({name: "custcol_anc_backorderrolls", label: "tranline_backorderrolls"}),
-                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "tranline_transitoptmethod"}),
-                        search.createColumn({name: "custcol_anc_transittime", label: "tranline_transittime"}),
-                        search.createColumn({name: "custcol_consignee", label: "tranline_consignee"})
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 }
             }
@@ -1148,7 +1148,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 //         }),
                                 //         search.createColumn({
                                 //             name : "custrecord_alberta_ns_city",
-                                //             join : "custcol_consignee",
+                                //             join : ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id,
                                 //             label : "consignee city"
                                 //         }),
                                 //         search.createColumn({
@@ -1169,7 +1169,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 //
                                 //     destCity = sr[a].getValue(search.createColumn({
                                 //         name : "custrecord_alberta_ns_city",
-                                //         join : "custcol_consignee",
+                                //         join : ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id,
                                 //         label : "consignee city"
                                 //     }))
                                 //
@@ -1182,14 +1182,14 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                                 //
                                 // soRecObj.setSublistValue({
                                 //     sublistId : "item",
-                                //     fieldId : "custcol_anc_shippinglane",
+                                //     fieldId : ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id,
                                 //     value : newLineDetails.laneid,
                                 //     line : targetIndex
                                 // })
                                 //
                                 // soRecObj.setSublistValue({
                                 //     sublistId : "item",
-                                //     fieldId : "custcol_anc_equipment",
+                                //     fieldId : ANC_lib.references.SO_COLUMNS.EQUIPMENT.id,
                                 //     value : newLineDetails.eqid,
                                 //     line : targetIndex
                                 // })
@@ -1419,8 +1419,7 @@ define(['N/record', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget', 'N/re
                             search.createColumn({name: "line", label: "line_id"}),
                             search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
                             search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
-                            search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
-                            search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"})
+                            // search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"})
                         ]
                 });
                 var searchResultCount = salesorderSearchObj.runPaged().count;

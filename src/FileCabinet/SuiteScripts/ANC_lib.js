@@ -24,7 +24,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
         const references = {
                 SO_COLUMNS : {
                         GRADE : "custcol_anc_grade",
-                        CONSIGNEE : "custcol_consignee",
+                        // CONSIGNEE : "custcol_consignee",
                         DELIVERYDATE : "custcol_anc_deliverydate",
                         SHIPDATE : "custcol_anc_shipdate",
                         PRODUCTIONDATE : "custcol_anc_productiondate",
@@ -40,7 +40,62 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                         "REQUIRED" : {val:3, text:"REQUIRED"},
                                         "SHIPPED" : {val:4, text:"SHIPPED"},
                                 }
-                        }
+                        },
+                        TRANSITLOCATION : {
+                                id : "custcol_anc_transitlocation",
+                        },
+                        TRANSITTIME : {
+                                id : "custcol_anc_transittime",
+                        },
+                        TRANSITOPTMETHOD : {
+                                id : "custcol_anc_transitoptmethod",
+                        },
+                        EQUIPMENT : {
+                                id : "custcol_anc_equipment",
+                        },
+                        EQUIPMENT : {
+                                id : "custcol_anc_equipment",
+                        },
+                        LDCDATE : {
+                                id : "custcol_anc_ldcdate",
+                        },
+                        PRESSRUNDATE : {
+                                id : "custcol_anc_pressrundate",
+                        },
+                        PRESSRUNDATE : {
+                                id : "custcol_anc_pressrundate",
+                        },
+                        PRESSRUNDATE : {
+                                id : "custcol_anc_pressrundate",
+                        },
+                        EXPECTEDTONNAGE : {
+                                id : "custcol_anc_expectedtonnage",
+                        },
+                        TOTALROLLS : {
+                                id : "custcol_anc_totalrolls",
+                        },
+                        ROLLSPERPACK : {
+                                id : "custcol_anc_rollsperpack",
+                        },
+                        WRAPTYPE : {
+                                id : "custcol_anc_wraptype",
+                        },
+                        SHIPPINGLANE : {
+                                id : "custcol_anc_shippinglane",
+                        },
+                        ROLLSONHAND : {
+                                id : "custcol_anc_rollsonhand",
+                        },
+                        RESERVEDROLLS : {
+                                id : "custcol_anc_reservedrolls",
+                        },
+                        BACKORDERROLLS : {
+                                id : "custcol_anc_backorderrolls",
+                        },
+                        CONSIGNEECOL : {
+                                id : "custcol_consignee",
+                        },
+
                 },
                 SALESFORECAST : {
                         FIELDS : {
@@ -2119,7 +2174,28 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
             }
 
+
+
+            const toMDY = (dateVal) => {
+                    var retVal = dateVal;
+                    try
+                    {
+                            if(dateVal)
+                            {
+                                    retVal = new Date(retVal);
+                            }
+
+                    }
+                    catch(e)
+                    {
+                            console.log("ERROR in function toMDY", e)
+                    }
+                    console.log("retVal", retVal)
+                    return retVal;
+            }
+
             return {
+                    toMDY,
                     groupBy,
                     groupByKeys,
                     getResults,
