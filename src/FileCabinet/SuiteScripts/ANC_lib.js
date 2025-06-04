@@ -24,7 +24,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
         const references = {
                 SO_COLUMNS : {
                         GRADE : "custcol_anc_grade",
-                        // CONSIGNEE : "custcol_consignee",
+                        CONSIGNEE : "custcol_consignee",
                         DELIVERYDATE : "custcol_anc_deliverydate",
                         SHIPDATE : "custcol_anc_shipdate",
                         PRODUCTIONDATE : "custcol_anc_productiondate",

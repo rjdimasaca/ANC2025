@@ -1324,7 +1324,8 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                             var lane_lctt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_lctt
                             var xdock_direct_diff = xdockCost - directLowestCost;
                             //LOWEST COST
-                            if(lineVals.optmethod == 1)
+                            //BY DEFAULT LOWEST COSt, so if left blank then assume LOWEST COST
+                            if(!lineVals.optmethod || lineVals.optmethod == 1)
                             {
 
                                 log.debug("xdockElig", xdockElig)
