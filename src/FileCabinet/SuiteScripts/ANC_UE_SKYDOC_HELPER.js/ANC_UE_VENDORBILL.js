@@ -75,7 +75,10 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
             }
             else
             {
-                recObj = scriptContext.newRecord
+                recObj = record.load({
+                    type : scriptContext.newRecord.type,
+                    id : scriptContext.newRecord.id
+                })
             }
 
             //algorithm:
@@ -172,7 +175,7 @@ define(['N/https', 'N/query', 'N/record', 'N/runtime', 'N/search'],
                 }
                 else
                 {
-                    log.debug("DO NOT sync via https! - version2 06042025", DO NOT sync via https!)
+                    log.debug("DO NOT sync via https! - version2 06042025")
                 }
 
             }
