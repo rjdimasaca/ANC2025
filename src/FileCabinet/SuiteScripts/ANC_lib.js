@@ -1353,7 +1353,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                 // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
                 // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
-                var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
+                // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
+                var srGroupedByDeliveryDate = groupByOrigcityDestcity(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
                 log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
                 return srGroupedByDeliveryDate
@@ -1384,6 +1385,129 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                             acc[key].push(obj);
                             return acc;
                     }, {});
+            }
+
+            function groupByOrigcityDestcity(objectArray, property)
+            {
+                    try
+                    {
+                            return objectArray.reduce(function (acc, obj) {
+
+                                    // var separator = " | ";
+                                    var separator = " > ";
+                                    var isCrossDock = true;
+                                    var isCrossDock = obj.custrecord_anc_crossdockeligible;
+
+                                    var key = "";
+                                    var origkeys = "";
+                                    var obj1 = JSON.parse(JSON.stringify(obj))
+                                    for(var a = 0 ; a < property.length; a++)
+                                    {
+                                            obj1["orig_"+property[a]] = obj1[""+property[a]];
+                                            origkeys += separator + (obj1[property[a]] || "");
+                                            key +=  separator + (obj1[property[a]] || "");
+                                    }
+
+                                    obj1["orig_custrecord_anc_lane_destinationcity"] = obj1["custrecord_anc_lane_destinationcity"];
+                                    obj1["orig_line_location"] = obj1["line_location"];
+                                    obj1.origkeys = origkeys;
+                                    // key += "|"
+
+                                    if (!acc[key]) {
+                                            acc[key] = {};
+                                            acc[key].list = [];
+                                    }
+                                    var straightObj = acc[key];
+                                    straightObj.list.push(obj1);
+
+                                    if(!isCrossDock || isCrossDock == "F")
+                                    {
+                                            var key = "";
+                                            var origkeys = "";
+                                            var obj1 = JSON.parse(JSON.stringify(obj))
+                                            for(var a = 0 ; a < property.length; a++)
+                                            {
+                                                    obj1["orig_"+property[a]] = obj1[""+property[a]];
+                                                    origkeys += separator + (obj1[property[a]] || "");
+                                                    key +=  separator + (obj1[property[a]] || "");
+                                            }
+
+                                            obj1["orig_custrecord_anc_lane_destinationcity"] = obj1["custrecord_anc_lane_destinationcity"];
+                                            obj1["orig_line_location"] = obj1["line_location"];
+                                            obj1.origkeys = origkeys;
+                                            // key += "|"
+
+                                            if (!straightObj["leg0"]) {
+                                                    straightObj.leg0 = [];
+                                            }
+                                            straightObj = acc[key];
+                                            straightObj.leg0.push(obj1);
+                                    }
+                                    else/* if(isCrossDock)*/
+                                    {
+                                            key = "";
+                                            origkeys = "";
+                                            //LEG1
+
+                                            var obj1 = JSON.parse(JSON.stringify(obj))
+                                            for(var a = 0 ; a < property.length; a++)
+                                            {
+                                                    origkeys += separator + (obj1[property[a]] || "");
+                                                    if(property[a] == "custrecord_anc_lane_destinationcity")
+                                                    {
+                                                            obj1["orig_"+property[a]] = obj1["custrecord_anc_lane_destinationcity"];
+                                                            obj1[property[a]] = obj1["custrecord_anc_lane_crossdockcity"];
+                                                    }
+                                                    key +=  separator + (obj1[property[a]] || "");
+                                            }
+                                            obj1["orig_line_location"] = obj1["line_location"];
+                                            obj1.custpage_ifr_leg = "1";
+                                            obj1.subtabname = obj1["line_uniquekey"];
+                                            obj1.origkeys = origkeys;
+                                            // key += "|"
+
+                                            if (!straightObj["leg1"]) {
+                                                    straightObj.leg1 = [];
+                                            }
+                                            straightObj.leg1.push(obj1);
+
+                                            key = "";
+                                            origkeys = "";
+
+                                            //LEG2
+
+                                            var obj2 = JSON.parse(JSON.stringify(obj))
+                                            for(var a = 0 ; a < property.length; a++)
+                                            {
+                                                    origkeys += separator + (obj2[property[a]] || "");
+                                                    if(property[a] == "line_locationtext")
+                                                    {
+                                                            obj2["orig_"+property[a]] = obj2["line_locationtext"];
+                                                            obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
+                                                    }
+                                                    key +=  separator + (obj2[property[a]] || "");
+                                            }
+                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                                            obj2["orig_line_location"] = obj2["line_location"];
+                                            obj2.custpage_ifr_leg = "2";
+                                            obj2.subtabname = obj2["line_uniquekey"];
+                                            obj2.origkeys = origkeys;
+                                            // key += "|"
+
+                                            if (!straightObj["leg2"]) {
+                                                    straightObj.leg2 = [];
+                                            }
+                                            straightObj.leg2.push(obj2);
+                                    }
+
+                                    return acc;
+                            }, {});
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function groupByOrigcityDestcity", e)
+                    }
+
             }
 
             function groupByKeys(objectArray, property) {

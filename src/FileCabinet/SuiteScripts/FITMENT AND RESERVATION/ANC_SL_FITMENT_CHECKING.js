@@ -1090,55 +1090,47 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 // var a = 0;
                 for(var date in srGroupedByDeliveryDate)
                 {
-
+                    var groupList_bylist = srGroupedByDeliveryDate[date].list
+                    var groupList_byleg1 = srGroupedByDeliveryDate[date].leg1
+                    var groupList_byleg2 = srGroupedByDeliveryDate[date].leg2
                     log.debug("srGroupedByDeliveryDate date", date);
+                    log.debug("groupList_bylist", groupList_bylist);
 
-                    var groupByLineUniqueKey = ANC_lib.groupBy(srGroupedByDeliveryDate[date], "line_uniquekey");
+                    var groupByLineUniqueKey = ANC_lib.groupBy(groupList_bylist, "line_uniquekey");
                     log.debug("getInputDetails groupByLineUniqueKey " + date, groupByLineUniqueKey);
 
-                    log.debug("srGroupedBy " + date, srGroupedByDeliveryDate[date]);
+                    log.debug("srGroupedBy " + date, groupList_bylist);
                     var multiGradeIndex = 0;
 
 
                     // var fitmentCheckSublistLabel = "Fitment Check:" + toMDY_text(date);
                     var fitmentCheckSublistLabel = "Fitment Check " + (date);
-                    var fitmentCheckSubtabLabel = "Fitment Check " + srGroupedByDeliveryDate[date][0].origkeys
+                    var fitmentCheckSubtabLabel = "Fitment Check " + groupList_bylist[0].origkeys
 
                     var subtabObj = "";
-                    var subtabId = `${(srGroupedByDeliveryDate[date][0].line_deliverydate).replace(/\//g, "_")}_${srGroupedByDeliveryDate[date][0].line_location}_${srGroupedByDeliveryDate[date][0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}`
+                    var subtabId = `${(groupList_bylist[0].line_deliverydate).replace(/\//g, "_")}_${groupList_bylist[0].line_location}_${groupList_bylist[0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}`
                     // var subtabId = date;
                     subtabId = subtabId.toLowerCase();
                     log.debug("subtabId", subtabId)
-                    if(!subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`])
+                    if(!subtabs[`${groupList_bylist[0].origkeys}`])
                     {
                         log.debug("`${BASE_SUBTAB_ID}_${subtabId}`", `${BASE_SUBTAB_ID}_${subtabId}`);
                         subtabObj = form.addTab({
-                        // subtabObj = form.addSubtab({
+                            // subtabObj = form.addSubtab({
                             label : fitmentCheckSubtabLabel,
                             id : `${BASE_SUBTAB_ID}_${subtabId}`,
                         });
                         subtabObj.id = `${BASE_SUBTAB_ID}_${subtabId}`;
-                        mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
+                        mapping[groupList_bylist[0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
                     }
                     else
                     {
-                        subtabObj = subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`]
+                        subtabObj = subtabs[`${groupList_bylist[0].origkeys}`]
                         subtabObj.id = `${BASE_SUBTAB_ID}_${subtabId}`;
-                        mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
+                        mapping[groupList_bylist[0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
                     }
-                    subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`] = subtabObj;
-                    mapping[srGroupedByDeliveryDate[date][0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
-
-
-
-
-                    var fitmentResponse = ANC_lib.getFitmentResponse(srGroupedByDeliveryDate[date]);
-
-                    log.debug("fitmentResponse", fitmentResponse)
-
-// no of rolls * weight / equipment weight = utilization
-                    //total the weight of each equipment
-                    var itemStats = {};
+                    subtabs[`${groupList_bylist[0].origkeys}`] = subtabObj;
+                    mapping[groupList_bylist[0].origkeys] = `${BASE_SUBTAB_ID}_${subtabId}`
 
 
 
@@ -1173,6 +1165,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
 
+                    var fitmentResponse = ANC_lib.getFitmentResponse(groupList_bylist);
+
+                    log.debug("fitmentResponse", fitmentResponse)
+
+                    // no of rolls * weight / equipment weight = utilization
+                    //total the weight of each equipment
+                    var itemStats = {};
 
                     var fitmentResponse_list = fitmentResponse.list;
                     for(var a = 0 ; a < fitmentResponse_list.length ; a++)
@@ -1220,18 +1219,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                             targetSubtabId = "";
                             log.debug("shipmentRec", shipmentRec);
-                            if(b == 0)
-                            {
-                                targetSubtabId = finalSubtabId
-                            }
-                            else if(b == 1)
-                            {
-                                targetSubtabId = finalSubtabId_leg1
-                            }
-                            else
-                            {
-                                targetSubtabId = finalSubtabId_leg2
-                            }
+                            targetSubtabId = finalSubtabId
 
 
 
@@ -1240,8 +1228,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                 label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
                                 type : "LIST",
                                 id : uiSublistId,
-                                // tab : subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`].id
-                                // tab : mapping[`${srGroupedByDeliveryDate[date][0].origkeys}`]
+                                // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
+                                // tab : mapping[`${groupList_bylist[0].origkeys}`]
                                 // tab : finalSubtabId,
                                 tab : targetSubtabId
                             });
@@ -1441,249 +1429,272 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                             }
                         }
+                    }
+                    //leg1
+                    var fitmentResponse = ANC_lib.getFitmentResponse(groupList_byleg1);
+
+                    log.debug("fitmentResponse", fitmentResponse)
+
+                    // no of rolls * weight / equipment weight = utilization
+                    //total the weight of each equipment
+                    var itemStats = {};
+
+                    var fitmentResponse_list = fitmentResponse.list;
+                    for(var a = 0 ; a < fitmentResponse_list.length ; a++)
+                    {
+                        var fitmentResponse_body = fitmentResponse_list[a].body;
+                        log.debug("typeof fitmentResponse_body", typeof fitmentResponse_body)
+                        fitmentResponse_body = fitmentResponse_body ? JSON.parse(fitmentResponse_body) : [];
+                        log.debug("fitmentResponse_body", fitmentResponse_body)
+                        var fitmentResponse_body_shipments = fitmentResponse_body.shipments || [];
 
 
 
 
 
-
-                        //END new specs based on ERD provided 03/12/2025
-
-                        // var deliveryDateGroup = srGroupedByDeliveryDate[date];
-                        // for(var c = 0 ; c < deliveryDateGroup.length ; c++)
+                        // for(var shipCtr = 0 ; shipCtr < fitmentResponse_body_shipments.length ; shipCtr++)
                         // {
-                        //     var resObjByColumnKey = deliveryDateGroup[c]
-                        //
-                        //     var firstSoRefLineIndex = (multiGradeIndex || 0);
-                        //     for(var b = 0; b < fitmentLineLimit; b++)
+                        //     for(var shipItemsCtr = 0 ; shipItemsCtr < fitmentResponse_body_shipments[shipCtr].shipmentItems.length ; shipItemsCtr++)
                         //     {
-                        //         if(b == 0)
+                        //         var responseItemId = fitmentResponse_body_shipments[shipCtr].shipmentItems[shipItemsCtr].itemId;
+                        //         if(itemStats[responseItemId])
                         //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_tietoline",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (multiGradeIndex || b)+1
-                        //             })
+                        //             itemStats[responseItemId].truckCount++;
+                        //             itemStats[responseItemId].shipmentNumbers.push(fitmentResponse_body_shipments[shipCtr].shipmentNumber)
                         //         }
-                        //         else if(b > 0)
+                        //         else
                         //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_tietoline",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : firstSoRefLineIndex
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.internalid)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_so",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.internalid
-                        //             })
-                        //         }
-                        //
-                        //         // log.debug("resObjByColumnKey.line_deliverydate", resObjByColumnKey.line_deliverydate);
-                        //         log.debug("resObjByColumnKey.line_shipdate", resObjByColumnKey.line_shipdate);
-                        //         if(resObjByColumnKey.line_deliverydate)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_line_deliverydate",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_shipdate)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_line_shipdate",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
-                        //             })
-                        //         }
-                        //
-                        //         //FILL BY ORDER QTY
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_orderqty",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_quantity
-                        //             })
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_consignee",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_consignee
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_reservedqty",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (resObjByColumnKey.line_reservedqty || 0)
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_equipment)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_equipment",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (resObjByColumnKey.line_equipment)
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_inputqty",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_consginee)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_consginee",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (resObjByColumnKey.line_consginee)
-                        //             })
-                        //         }
-                        //
-                        //
-                        //
-                        //
-                        //         //FILL BY ORDER WEIGHT
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_orderweight",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_quantity
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_reservedweight",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (resObjByColumnKey.line_reservedweight || 0)
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_quantity)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_col_ifr_inputweight",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
-                        //             })
-                        //         }
-                        //
-                        //
-                        //
-                        //
-                        //         if(resObjByColumnKey.line_id)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_lineref",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_id
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_uniquekey)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_lineuniquekey",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_uniquekey
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_iscrossdock",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : "T"
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.custpage_ifr_leg)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_leg",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : (resObjByColumnKey.custpage_ifr_leg)
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_solineref",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_item)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_item",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_item
-                        //             })
-                        //         }
-                        //         if(resObjByColumnKey.line_location)
-                        //         {
-                        //             fitmentReservationSublist.setSublistValue({
-                        //                 id : "custpage_ifr_location",
-                        //                 line : multiGradeIndex || b,
-                        //                 value : resObjByColumnKey.line_location
-                        //             })
-                        //         }
-                        //
-                        //         // loadid: "17424",
-                        //         //     loadnumber: "4",
-                        //         // weightplanned: "weight planned",
-                        //         // percentage: "34.567"
-                        //
-                        //         // fitmentReservationSublist.setSublistValue({
-                        //         //     id : sublistSettings.sublistFields[slfldCtr1].id,
-                        //         //     line : multiGradeIndex || b,
-                        //         //     value : fitmentResponse.list[b][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey]
-                        //         // })
-                        //
-                        //         log.debug("sublistSettings.sublistFields.length", sublistSettings.sublistFields.length);
-                        //
-                        //
-                        //         log.debug("resObjByColumnKey.line_uniquekey", resObjByColumnKey.line_uniquekey)
-                        //         if(itemStats[resObjByColumnKey.line_uniquekey])
-                        //         {
-                        //             for(var slfldCtr1 = 0 ; slfldCtr1 < sublistSettings.sublistFields.length ; slfldCtr1++)
-                        //             {
-                        //                 // log.debug("fsublistSettings.sublistFields[slfldCtr1].sourceApiRespKey 0 ", sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
-                        //
-                        //                 if(sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey)
-                        //                 {
-                        //                     if(itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
-                        //                     {
-                        //                         log.debug("fitmentResponse:itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey] 1 ", itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey])
-                        //
-                        //                         fitmentReservationSublist.setSublistValue({
-                        //                             id : sublistSettings.sublistFields[slfldCtr1].id,
-                        //                             line : multiGradeIndex || b,
-                        //                             value : itemStats[resObjByColumnKey.line_uniquekey][sublistSettings.sublistFields[slfldCtr1].sourceApiRespKey]
-                        //                         })
-                        //                     }
-                        //
-                        //                 }
-                        //
-                        //             }
-                        //         }
-                        //
-                        //
-                        //
-                        //         if(allowMultiGrade)
-                        //         {
-                        //             multiGradeIndex++;
+                        //             itemStats[responseItemId] = {};
+                        //             itemStats[responseItemId].shipmentNumbers = [];
+                        //             itemStats[responseItemId].truckCount = 1;
                         //         }
                         //     }
                         // }
+                        //
+                        //
+                        // log.debug("itemStats", itemStats)
+
+
+
+                        for(var b = 0 ; b < fitmentResponse_body_shipments.length ; b++)
+                        {
+                            var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b + "_" + new Date().getTime();
+                            // var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b;
+
+                            var shipmentRec = fitmentResponse_body_shipments[b];
+
+                            targetSubtabId = "";
+                            log.debug("shipmentRec", shipmentRec);
+                            targetSubtabId = finalSubtabId_leg1
+
+
+
+                            log.debug("fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
+                            var fitmentReservationSublist = form.addSublist({
+                                label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
+                                type : "LIST",
+                                id : uiSublistId,
+                                // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
+                                // tab : mapping[`${groupList_bylist[0].origkeys}`]
+                                // tab : finalSubtabId,
+                                tab : targetSubtabId
+                            });
+                            globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
+
+                            log.debug("subtabObj", subtabObj);
+                            log.debug("subtabs", subtabs);
+
+                            fitmentReservationSublist.addButton({
+                                id : `custpage_btn_${uiSublistId}_button`,
+                                label : "Select All",
+                                functionName : `alert(123)`
+                            })
+
+                            for(var slfldCtr = 0 ; slfldCtr < sublistSettings.sublistFields.length ; slfldCtr++)
+                            {
+
+                                var sublistFieldObj = fitmentReservationSublist.addField(sublistSettings.sublistFields[slfldCtr])
+                                if(sublistSettings.sublistFields[slfldCtr].displayType)
+                                {
+                                    sublistFieldObj.updateDisplayType({
+                                        displayType : sublistSettings.sublistFields[slfldCtr].displayType
+                                    });
+                                }
+                                if(sublistSettings.sublistFields[slfldCtr].defaultValue)
+                                {
+                                    sublistFieldObj.defaultValue = sublistSettings.sublistFields[slfldCtr].defaultValue
+                                }
+                            }
+
+
+
+
+                            for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
+                            {
+                                var shipmentItems = shipmentRec.shipmentItems[c]
+                                log.debug("shipmentItems", shipmentItems);
+                                log.debug("groupByLineUniqueKey", groupByLineUniqueKey);
+                                var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
+                                log.debug("lineDetails", lineDetails);
+                                var resObjByColumnKey = lineDetails[0];
+                                log.debug("resObjByColumnKey", resObjByColumnKey);
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_lineref",
+                                    line : c,
+                                    value : shipmentItems.itemId
+                                })
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_so",
+                                    line : c,
+                                    value : resObjByColumnKey.internalid
+                                })
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_col_ifr_line_deliverydate",
+                                    line : c,
+                                    value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
+                                })
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_col_ifr_line_shipdate",
+                                    line : c,
+                                    value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
+                                })
+
+                                //FILL BY ORDER QTY
+                                if(resObjByColumnKey.line_quantity)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_orderqty",
+                                        line : c,
+                                        value : resObjByColumnKey.line_quantity
+                                    })
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_consignee",
+                                        line : c,
+                                        value : resObjByColumnKey.line_consignee
+                                    })
+                                }
+
+
+                                if(resObjByColumnKey.line_equipment)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_equipment",
+                                        line : c,
+                                        value : (resObjByColumnKey.line_equipment)
+                                    })
+                                }
+                                if(resObjByColumnKey.line_quantity)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_inputqty",
+                                        line : c,
+                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
+                                    })
+                                }
+                                if(resObjByColumnKey.line_consginee)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_consginee",
+                                        line : c,
+                                        value : (resObjByColumnKey.line_consginee)
+                                    })
+                                }
+
+
+
+
+                                //FILL BY ORDER WEIGHT
+                                if(resObjByColumnKey.line_quantity)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_orderweight",
+                                        line : c,
+                                        value : resObjByColumnKey.line_quantity
+                                    })
+                                }
+                                if(resObjByColumnKey.line_quantity)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_reservedweight",
+                                        line : c,
+                                        value : (resObjByColumnKey.line_reservedweight || 0)
+                                    })
+                                }
+                                if(resObjByColumnKey.line_quantity)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_inputweight",
+                                        line : c,
+                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
+                                    })
+                                }
+
+
+
+
+                                if(resObjByColumnKey.line_id)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_lineref",
+                                        line : c,
+                                        value : resObjByColumnKey.line_id
+                                    })
+                                }
+                                if(resObjByColumnKey.line_uniquekey)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_lineuniquekey",
+                                        line : c,
+                                        value : resObjByColumnKey.line_uniquekey
+                                    })
+                                }
+                                if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_iscrossdock",
+                                        line : c,
+                                        value : "T"
+                                    })
+                                }
+                                if(resObjByColumnKey.custpage_ifr_leg)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_leg",
+                                        line : c,
+                                        value : (resObjByColumnKey.custpage_ifr_leg)
+                                    })
+                                }
+                                if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_solineref",
+                                        line : c,
+                                        value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
+                                    })
+                                }
+                                if(resObjByColumnKey.line_item)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_item",
+                                        line : c,
+                                        value : resObjByColumnKey.line_item
+                                    })
+                                }
+                                if(resObjByColumnKey.line_location)
+                                {
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_location",
+                                        line : c,
+                                        value : resObjByColumnKey.line_location
+                                    })
+                                }
+
+                            }
+                        }
                     }
 
 
