@@ -902,29 +902,103 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }
             }
 
-            function getFitmentResponse(group_init_to_final)
+            function getFitmentResponse(group_init_to_final = [])
             {
+                    //MULTIPLE LINES
                     log.debug("getFitmentResponse group_init_to_final", group_init_to_final)
+                        //8
+
+                    //EXAMPLE
+                    // group_init_to_final = [
+                    //     {
+                    //             "internalid":"61250543",
+                    //             "status":"pendingFulfillment",
+                    //             "entity":"106127","line_item":"188522",
+                    //             "line_item_parent":"188519",
+                    //             "line_quantity":"60",
+                    //             "line_location":"9",
+                    //             "line_locationtext":"ANS Paper (Summary) : ANC Whitecourt Warehouse","line_id":"1",
+                    //             "line_sequencenumber":"1",
+                    //             "line_uniquekey":"69348155",
+                    //             "line_number":"",
+                    //             "line_memo":"",
+                    //             "line_reservedqty":"",
+                    //             "line_reservedweight":"",
+                    //             "line_deliverydate":"04/03/2025",
+                    //             "line_shipdate":"03/09/2025",
+                    //             "line_consignee":"198816",
+                    //             "line_consigneetext":"The Arizona Republic",
+                    //             "line_consignee_country":"USA",
+                    //             "line_crossdock_country":"CA",
+                    //             "line_crossdock_countrytext":null,
+                    //             "lane_originloc_country":"37",
+                    //             "lane_originloc_countrytext":"Canada",
+                    //             "line_equipment":"5",
+                    //             "line_equipmenttext":"TRTAMHTR53",
+                    //             "line_equipment_type":"2",
+                    //             "line_equipment_typetext":"Truck",
+                    //             "line_rollsperpack":"1",
+                    //             "line_transitoptmethod":"2",
+                    //             "line_usecrossdock":true,
+                    //             "line_item_basis_weight":"673.1",
+                    //             "line_item_rolldiameter":"1",
+                    //             "line_item_rolldiametertext":"100",
+                    //             "line_item_rollwidth":"1",
+                    //             "line_item_rollwidthtext":"100",
+                    //             "custrecord_anc_lane_cde":"5",
+                    //             "custrecord_anc_lane_lce":"6",
+                    //             "custrecord_anc_lane_ftte":"1",
+                    //             "custrecord_anc_lane_originwarehousecity":"WHITECOURT",
+                    //             "custrecord_anc_lane_destinationcity":"Lulu Island",
+                    //             "custrecord_anc_lane_crossdockcity":"Lulu Island",
+                    //             "custrecord_anc_crossdockeligible":true,"id":"61250543",
+                    //             "orig_custrecord_anc_lane_destinationcity":"Deer Valley",
+                    //             "orig_line_location":"9",
+                    //             "custpage_ifr_leg":"1",
+                    //             "subtabname":"69348155",
+                    //             "origkeys":" > 03/09/2025 > ANS Paper (Summary) : ANC Whitecourt Warehouse > Deer Valley"
+                    //     },
+                    //         {"internalid":"61250543","status":"pendingFulfillment","entity":"106127","line_item":"188537","line_item_parent":"188519","line_quantity":"20","line_location":"9","line_locationtext":"ANS Paper (Summary) : ANC Whitecourt Warehouse","line_id":"2","line_sequencenumber":"2","line_uniquekey":"69348156","line_number":"","line_memo":"","line_reservedqty":"","line_reservedweight":"","line_deliverydate":"04/03/2025","line_shipdate":"03/09/2025","line_consignee":"198816","line_consigneetext":"The Arizona Republic","line_consignee_country":"USA","line_crossdock_country":"CA","line_crossdock_countrytext":null,"lane_originloc_country":"37","lane_originloc_countrytext":"Canada","line_equipment":"5","line_equipmenttext":"TRTAMHTR53","line_equipment_type":"2","line_equipment_typetext":"Truck","line_rollsperpack":"1","line_transitoptmethod":"","line_usecrossdock":true,"line_item_basis_weight":"","line_item_rolldiameter":"1","line_item_rolldiametertext":"100","line_item_rollwidth":"2","line_item_rollwidthtext":"200","custrecord_anc_lane_cde":"5","custrecord_anc_lane_lce":"6","custrecord_anc_lane_ftte":"1","custrecord_anc_lane_originwarehousecity":"WHITECOURT","custrecord_anc_lane_destinationcity":"Lulu Island","custrecord_anc_lane_crossdockcity":"Lulu Island","custrecord_anc_crossdockeligible":true,"id":"61250543","orig_custrecord_anc_lane_destinationcity":"Deer Valley","orig_line_location":"9","custpage_ifr_leg":"1","subtabname":"69348156","origkeys":" > 03/09/2025 > ANS Paper (Summary) : ANC Whitecourt Warehouse > Deer Valley"},
+                    //         {"internalid":"61250543","status":"pendingFulfillment","entity":"106127","line_item":"188537","line_item_parent":"188519","line_quantity":"30","line_location":"9","line_locationtext":"ANS Paper (Summary) : ANC Whitecourt Warehouse","line_id":"6","line_sequencenumber":"6","line_uniquekey":"69348160","line_number":"","line_memo":"","line_reservedqty":"","line_reservedweight":"","line_deliverydate":"04/03/2025","line_shipdate":"03/09/2025","line_consignee":"305730","line_consigneetext":"Arizona Daily Sun TEST_DIRECT","line_consignee_country":"USA","line_crossdock_country":"CA","line_crossdock_countrytext":null,"lane_originloc_country":"37","lane_originloc_countrytext":"Canada","line_equipment":"5","line_equipmenttext":"TRTAMHTR53","line_equipment_type":"2","line_equipment_typetext":"Truck","line_rollsperpack":"1","line_transitoptmethod":"1","line_usecrossdock":true,"line_item_basis_weight":"","line_item_":""}
+                    // ]
+
+
+
+
                     var fitmentResponse = {
                             list : []
-                    };
+                    }
+                    var fitmentRequestData = {};
+                    fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final[0].lane_originloc_country; //TODO
+
+                    fitmentRequestData.vehicleName = group_init_to_final[0].line_equipmenttext || "TRTAMDV53"; //TODO REMOVE THIS FALLBACK DEFAULT
+                    // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                    //TODO DEFAULTS to TRUCK if not configured
+                    fitmentRequestData.transportationMode = group_init_to_final[0].line_equipment_typetext ? (group_init_to_final[0].line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                    fitmentRequestData.orderItems = [];
 
                     for(var a = 0 ; a < group_init_to_final.length; a++)
                     {
                             if(true /*group_init_to_final[a].line_usecrossdock && group_init_to_final[a].line_usecrossdock != "F"*/)
                             {
                                     var rawRequestData = group_init_to_final
-                                    var fitmentRequestData = {};
-                                    fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final.lane_originloc_country; //TODO
 
-                                    fitmentRequestData.vehicleName = group_init_to_final.line_equipmenttext || "TRTAMDV53"; //TODO REMOVE THIS FALLBACK DEFAULT
-                                    // fitmentRequestData.transportationMode = "TRUCK"; //TODO
-                                    //TODO DEFAULTS to TRUCK if not configured
-                                    fitmentRequestData.transportationMode = group_init_to_final.line_equipment_typetext ? (group_init_to_final.line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
-                                    fitmentRequestData.orderItems = [];
                                     try
                                     {
 
+
+                                            log.debug("xdock=t rawRequestData", rawRequestData);
+                                            log.debug("xdock=t before push fitmentRequestData", fitmentRequestData);
+                                            log.debug("xdock=t before push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
+                                            fitmentRequestData.orderItems = fitmentRequestData.orderItems ? fitmentRequestData.orderItems : [];
+                                            log.debug("xdock=t after : push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
+                                            fitmentRequestData.orderItems = fitmentRequestData.orderItems || [];
+                                            log.debug("xdock=t after || reinit push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
+
+                                            if(fitmentRequestData && !fitmentRequestData.orderItems)
+                                            {
+                                                    fitmentRequestData.orderItems = [];
+                                            }
 
                                             fitmentRequestData.orderItems.push(
                                                 {
@@ -937,21 +1011,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                         RPP : rawRequestData[a].line_item_rollsperpack || 1,
                                                 }
                                             )
-                                            log.debug("LEG1 fitmentRequestData", fitmentRequestData)
+                                            log.debug("xdock=t after push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
 
-                                            fitmentRequestData = JSON.stringify(fitmentRequestData)
-
-                                            var connection_timeStamp_start = new Date().getTime();
-
-                                            var rawResp = PTMX.generateShipments(fitmentRequestData);
-
-                                            var connection_timeStamp_end = new Date().getTime();
-
-                                            log.debug("LEG1 connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
-
-                                            log.debug("LEG1 rawResp.body", rawResp.body)
-
-                                            fitmentResponse.list.push(rawResp)
 
 
 
@@ -1059,6 +1120,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             //     }
                                             // )
                                             //TODO
+
+                                            log.debug("xdock=t rawRequestData", rawRequestData);
+
                                             for(var a = 0 ; a < rawRequestData.length ; a++)
                                             {
                                                     fitmentRequestData.orderItems.push(
@@ -1144,7 +1208,21 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                             }
 
 
+                            log.debug("LEG1 fitmentRequestData", fitmentRequestData)
 
+                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                            var connection_timeStamp_start = new Date().getTime();
+
+                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                            var connection_timeStamp_end = new Date().getTime();
+
+                            log.debug("LEG1 connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                            log.debug("LEG1 rawResp.body", rawResp.body)
+
+                            fitmentResponse.list.push(rawResp)
 
 
 
@@ -1419,6 +1497,14 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     }
                                     var straightObj = acc[key];
                                     straightObj.list.push(obj1);
+                                    if (!acc[key]) {
+                                            acc[key] = {};
+                                            acc[key].leg0 = [];
+                                    }
+                                    if (!acc[key]) {
+                                            acc[key] = {};
+                                            acc[key].leg1 = [];
+                                    }
 
                                     if(!isCrossDock || isCrossDock == "F")
                                     {
@@ -1474,30 +1560,33 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             key = "";
                                             origkeys = "";
 
-                                            //LEG2
-
-                                            var obj2 = JSON.parse(JSON.stringify(obj))
-                                            for(var a = 0 ; a < property.length; a++)
-                                            {
-                                                    origkeys += separator + (obj2[property[a]] || "");
-                                                    if(property[a] == "line_locationtext")
-                                                    {
-                                                            obj2["orig_"+property[a]] = obj2["line_locationtext"];
-                                                            obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
-                                                    }
-                                                    key +=  separator + (obj2[property[a]] || "");
-                                            }
-                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
-                                            obj2["orig_line_location"] = obj2["line_location"];
-                                            obj2.custpage_ifr_leg = "2";
-                                            obj2.subtabname = obj2["line_uniquekey"];
-                                            obj2.origkeys = origkeys;
-                                            // key += "|"
-
-                                            if (!straightObj["leg2"]) {
-                                                    straightObj.leg2 = [];
-                                            }
-                                            straightObj.leg2.push(obj2);
+                                            //TODO dont work on LEG2, let this be taken care of LOAD PLANNING PHASE
+                                            //TODO just look at LEG1s of crossdocked orderlines, and leg0 or in other words DIRECT
+                                            //
+                                            // //LEG2
+                                            //
+                                            // var obj2 = JSON.parse(JSON.stringify(obj))
+                                            // for(var a = 0 ; a < property.length; a++)
+                                            // {
+                                            //         origkeys += separator + (obj2[property[a]] || "");
+                                            //         if(property[a] == "line_locationtext")
+                                            //         {
+                                            //                 obj2["orig_"+property[a]] = obj2["line_locationtext"];
+                                            //                 obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
+                                            //         }
+                                            //         key +=  separator + (obj2[property[a]] || "");
+                                            // }
+                                            // obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                                            // obj2["orig_line_location"] = obj2["line_location"];
+                                            // obj2.custpage_ifr_leg = "2";
+                                            // obj2.subtabname = obj2["line_uniquekey"];
+                                            // obj2.origkeys = origkeys;
+                                            // // key += "|"
+                                            //
+                                            // if (!straightObj["leg2"]) {
+                                            //         straightObj.leg2 = [];
+                                            // }
+                                            // straightObj.leg2.push(obj2);
                                     }
 
                                     return acc;
@@ -1698,10 +1787,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                             fieldId : "custbody_anc_equipment",
                                                             value: 6 //TRTAMDV53
                                                     })
+                                                    /*
                                                     shipmentRecObj.setValue({
                                                             fieldId : "location",
                                                             value: 9 //ANS Paper (Summary) : ANC Whitecourt Warehouse
-                                                    });
+                                                    });*/
 
                                                     shipmentRecObj.setSublistValue({
                                                             sublistId : "item",

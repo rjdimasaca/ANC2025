@@ -465,7 +465,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                         log.debug(`ITERATING THE FITMENT CHECK SUBLISTS index=${sublistCtr}`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]);
 
-                        uiSublistId = `${BASE_SUBLIST_ID}${sublistCtr}`
+                        uiSublistId = `${BASE_SUBLIST_ID}${sublistCtr}data`
+                        log.debug("`${BASE_SUBLIST_ID}${sublistCtr}data`", `${BASE_SUBLIST_ID}${sublistCtr}data`)
 
                         var lineCount = scriptContext.request.getLineCount({
                             group : uiSublistId
@@ -1028,6 +1029,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
+                            label : "Shipment Quantity(NB)",
+                            type : "integer",
+                            id : "custpage_ifr_nb",
+                            targetShipmentColumn:"quantity",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+                        {
                             label : "FTL Ave Tonnage",
                             type : "float",
                             id : "custpage_ifr_ftlavetonnage",
@@ -1087,14 +1095,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                 };
                 var mapping = {}
+
+                var sublistCounter = 0;
                 // var a = 0;
                 for(var date in srGroupedByDeliveryDate)
                 {
                     var groupList_bylist = srGroupedByDeliveryDate[date].list
+                    var groupList_byleg0 = srGroupedByDeliveryDate[date].leg0
                     var groupList_byleg1 = srGroupedByDeliveryDate[date].leg1
                     var groupList_byleg2 = srGroupedByDeliveryDate[date].leg2
-                    log.debug("srGroupedByDeliveryDate date", date);
+                    log.debug("srGroupedByDeliveryDate date", date)
                     log.debug("groupList_bylist", groupList_bylist);
+                    log.debug("groupList_byleg0", groupList_byleg0);
+                    log.debug("groupList_byleg1", groupList_byleg1);
 
                     var groupByLineUniqueKey = ANC_lib.groupBy(groupList_bylist, "line_uniquekey");
                     log.debug("getInputDetails groupByLineUniqueKey " + date, groupByLineUniqueKey);
@@ -1154,18 +1167,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     subtabObj.id = finalSubtabId_leg1;
                     // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
-                    var finalSubtabId_leg2 = `${BASE_SUBTAB_ID}_${subtabId}_leg${2}`
-                    subtabObj = form.addSubtab({
-                        label : finalSubtabId_leg2,
-                        id : finalSubtabId_leg2,
-                        // tab : `${BASE_SUBTAB_ID}_${subtabId}`,
-                        tab : `${BASE_SUBTAB_ID}_${subtabId}`
-                    });
-                    subtabObj.id = finalSubtabId_leg2;
-                    // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
+                    // var finalSubtabId_leg2 = `${BASE_SUBTAB_ID}_${subtabId}_leg${2}`
+                    // subtabObj = form.addSubtab({
+                    //     label : finalSubtabId_leg2,
+                    //     id : finalSubtabId_leg2,
+                    //     // tab : `${BASE_SUBTAB_ID}_${subtabId}`,
+                    //     tab : `${BASE_SUBTAB_ID}_${subtabId}`
+                    // });
+                    // subtabObj.id = finalSubtabId_leg2;
+                    // // finalSubtabId = `${BASE_SUBTAB_ID}_${subtabId}`
 
 
-                    var fitmentResponse = ANC_lib.getFitmentResponse(groupList_bylist);
+                    //leg0
+                    var fitmentResponse = groupList_byleg0 && groupList_byleg0.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg0) : {list:[]};
 
                     log.debug("fitmentResponse", fitmentResponse)
 
@@ -1272,6 +1286,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                 log.debug("lineDetails", lineDetails);
                                 var resObjByColumnKey = lineDetails[0];
                                 log.debug("resObjByColumnKey", resObjByColumnKey);
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_nb",
+                                    line : c,
+                                    value : shipmentItems.nb || 12
+                                })
 
                                 fitmentReservationSublist.setSublistValue({
                                     id : "custpage_ifr_lineref",
@@ -1430,8 +1450,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             }
                         }
                     }
+
                     //leg1
-                    var fitmentResponse = ANC_lib.getFitmentResponse(groupList_byleg1);
+                    var fitmentResponse = groupList_byleg1 && groupList_byleg1.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg1) : {list:[]};
 
                     log.debug("fitmentResponse", fitmentResponse)
 
@@ -1443,9 +1464,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     for(var a = 0 ; a < fitmentResponse_list.length ; a++)
                     {
                         var fitmentResponse_body = fitmentResponse_list[a].body;
-                        log.debug("typeof fitmentResponse_body", typeof fitmentResponse_body)
+                        log.debug("leg1 typeof fitmentResponse_body", typeof fitmentResponse_body)
                         fitmentResponse_body = fitmentResponse_body ? JSON.parse(fitmentResponse_body) : [];
-                        log.debug("fitmentResponse_body", fitmentResponse_body)
+                        log.debug("leg1 fitmentResponse_body", fitmentResponse_body)
                         var fitmentResponse_body_shipments = fitmentResponse_body.shipments || [];
 
 
@@ -1484,12 +1505,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             var shipmentRec = fitmentResponse_body_shipments[b];
 
                             targetSubtabId = "";
-                            log.debug("shipmentRec", shipmentRec);
+                            log.debug("leg1 shipmentRec" + b, shipmentRec);
                             targetSubtabId = finalSubtabId_leg1
 
 
 
-                            log.debug("fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
+                            log.debug("leg1 fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
                             var fitmentReservationSublist = form.addSublist({
                                 label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
                                 type : "LIST",
@@ -1499,10 +1520,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                 // tab : finalSubtabId,
                                 tab : targetSubtabId
                             });
-                            globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
+                            globalrefs["leg1 fitmentReservationSublist"] = fitmentReservationSublist;
 
-                            log.debug("subtabObj", subtabObj);
-                            log.debug("subtabs", subtabs);
+                            log.debug("leg1 subtabObj", subtabObj);
+                            log.debug("leg1 subtabs", subtabs);
 
                             fitmentReservationSublist.addButton({
                                 id : `custpage_btn_${uiSublistId}_button`,
@@ -1532,12 +1553,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
                             {
                                 var shipmentItems = shipmentRec.shipmentItems[c]
-                                log.debug("shipmentItems", shipmentItems);
-                                log.debug("groupByLineUniqueKey", groupByLineUniqueKey);
+                                log.debug("leg1 shipmentItems", shipmentItems);
+                                log.debug("leg1 groupByLineUniqueKey", groupByLineUniqueKey);
                                 var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
-                                log.debug("lineDetails", lineDetails);
+                                var nb = groupByLineUniqueKey[""+shipmentItems.nb];
+                                log.debug("leg1 lineDetails", lineDetails);
                                 var resObjByColumnKey = lineDetails[0];
-                                log.debug("resObjByColumnKey", resObjByColumnKey);
+                                log.debug("leg1 resObjByColumnKey", resObjByColumnKey);
+
+                                fitmentReservationSublist.setSublistValue({
+                                    id : "custpage_ifr_nb",
+                                    line : c,
+                                    value : shipmentItems.nb || 12
+                                })
 
                                 fitmentReservationSublist.setSublistValue({
                                     id : "custpage_ifr_lineref",
