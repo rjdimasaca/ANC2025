@@ -238,11 +238,6 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                   <td> 
                                    </td> </tr> </tbody></table>
                         
-                        <button type="button" onclick="preFilterYear()">Pre-Filter</button>
-                        
-                        <button type="button" onclick="collectInput()">Submit Changes</button>
-                        
-                        <button type="button" onclick="copyToYear()">Copy to Year</button>
                         <!--<button type="button" onclick="copyFromYear()">Copy from Year</button>-->
                         
                         <table id="customerTable" class="display" style="width:100%">
@@ -412,11 +407,6 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                                   <td> 
                                    </td> </tr> </tbody></table>
                         
-                        <button type="button" onclick="preFilterYear()">Pre-Filter</button>
-                        
-                        <button type="button" onclick="collectInput()">Submit Changes</button>
-                        
-                        <button type="button" onclick="copyToYear()">Copy to Year</button>
                         <!--<button type="button" onclick="copyFromYear()">Copy from Year</button>-->
                         
                         

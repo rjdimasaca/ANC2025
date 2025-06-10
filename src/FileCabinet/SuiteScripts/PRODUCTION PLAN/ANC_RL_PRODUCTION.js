@@ -220,7 +220,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             sublistId : "recmachcustrecord_prodfcw_month",
                             fieldId : "custrecord_prodfcw_capacity",
                             line : b,
-                            value : getWeeksResults[b].monthweek
+                            value : weeklyDistributionQty
                         })
 
                         monthCapRecObj.setSublistValue({
