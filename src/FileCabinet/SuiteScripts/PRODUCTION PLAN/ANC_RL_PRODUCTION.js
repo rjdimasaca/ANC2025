@@ -310,16 +310,24 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             }
         }
 
-        function formatDate(date) {
-            return date.toISOString().slice(0, 10);
-        }
+        // function formatDate(date) {
+        //     return date.toISOString().slice(0, 10);
+        // }
 
         function get445Month({ year, month, anchorDate }) {
-            const anchor = new Date(anchorDate);
-            const weeksPerMonth = [4, 4, 5]; // repeats every quarter
+            const baseAnchor = new Date(anchorDate);
+            const baseYear = baseAnchor.getFullYear();
 
+            // Calculate how many fiscal years to offset
+            const yearsToAdd = year - baseYear;
+
+            // Each 445 fiscal year is 52 weeks = 364 days
+            const adjustedAnchor = new Date(baseAnchor);
+            adjustedAnchor.setDate(adjustedAnchor.getDate() + yearsToAdd * 364);
+
+            const weeksPerMonth = [4, 4, 5]; // 4-4-5 pattern
             const months = [];
-            let current = new Date(anchor);
+            let current = new Date(adjustedAnchor);
             let weekCounter = 1;
 
             for (let i = 0; i < 12; i++) {
@@ -335,10 +343,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         week: weekCounter++,
                         start: formatDate(weekStart),
                         end: formatDate(weekEnd),
-                        monthweek: w+1
+                        monthweek: w + 1,
                     });
 
-                    current.setDate(current.getDate() + 7); // move forward one week
+                    current.setDate(current.getDate() + 7);
                 }
 
                 months.push({
@@ -348,8 +356,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 });
             }
 
-            return months[month - 1]; // return the requested month
+            return months[month - 1];
         }
+
 
 
 
