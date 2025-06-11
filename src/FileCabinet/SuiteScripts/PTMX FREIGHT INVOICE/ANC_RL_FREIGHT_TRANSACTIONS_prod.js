@@ -243,7 +243,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         var poRecObj = record.load({
                             type : "purchaseorder",
                             id : poId,
-                            isDynamic : true,
                         });
 
                         if(targets.targetCons)
@@ -378,7 +377,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         var poRecObj = record.create({
                             type : "purchaseorder",
-                            isDynamic : true,
                             defaultValues : {
                                 entity : carrierInternalid
                             }
@@ -458,6 +456,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         clearSublist(poRecObj, requestBody);
                         fillSublist(poRecObj, requestBody, lookupPo_result, true);
 
+                        poRecObj.setValue({
+                            fieldId : "tobeemailed",
+                            value: false
+                        })
+
                         poRecId = poRecObj.save({
                             ignoreMandatoryFields : true,
                             enableSourcing : true
@@ -487,7 +490,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         {
                             var poId_approved = record.submitFields({
                                 type : "purchaseorder",
-                                isDynamic : true,
                                 id : poId,
                                 values : {"supervisorapproval" : "T"}
                             })
@@ -534,7 +536,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             // fillSublist(irRecObj, requestBody, lookupPo_result);
 
 
-
+                            irRecObj.setValue({
+                                fieldId : "tobeemailed",
+                                value: false
+                            })
                             irRecId = irRecObj.save({
                                 ignoreMandatoryFields : true,
                                 enableSourcing : true
@@ -576,33 +581,41 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value :new Date(transactionDateRaw),
                         })
 
+
                         vbRecObj.setValue({
                             fieldId : "approvalstatus",
                             value :"1",
                         })
 
-                        poRecObj.setValue({
-                            fieldId : "externalid",
-                            value :loadID,
-                        })
                         // poRecObj.setValue({
+                        //     fieldId : "externalid",
+                        //     value :loadID,
+                        // })
+                        // vbRecObj.setValue({
                         //     fieldId : "custbody_work_order",
                         //     value :loadID,
                         // })
-                        poRecObj.setValue({
+                        vbRecObj.setValue({
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
                         if(targets.targetBol)
                         {
-                            poRecObj.setValue({
+                            vbRecObj.setValue({
                                 fieldId : "custbody4",
                                 value : targets.targetBol
                             })
                         }
                         if(targets.targetBol)
                         {
-                            poRecObj.setValue({
+                            vbRecObj.setValue({
+                                fieldId : "tranid",
+                                value : targets.targetBol
+                            })
+                        }
+                        if(targets.targetBol)
+                        {
+                            vbRecObj.setValue({
                                 fieldId : "custbody_wmid",
                                 value : targets.targetBol
                             })
@@ -610,7 +623,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         // clearSublist(vbRecObj, requestBody);
                         // fillSublist(vbRecObj, requestBody, lookupPo_result);
-
+                        vbRecObj.setValue({
+                            fieldId : "tobeemailed",
+                            value: false
+                        })
                         vbRecId = vbRecObj.save({
                             ignoreMandatoryFields : true,
                             enableSourcing : true
@@ -703,11 +719,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             {
                 if(initializeMainItem)
                 {
-                    nsRecObj.selectLine({
-                        sublistId : "item",
-                        line : 0
-                    })
-                    nsRecObj.setCurrentSublistValue({
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "item",
                         line : 0,
@@ -715,7 +727,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     })
                     if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "rate",
                             line : 0,
@@ -724,7 +736,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     }
                     else
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "rate",
                             line : 0,
@@ -732,13 +744,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         })
                     }
 
-                    nsRecObj.setCurrentSublistValue({
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "quantity",
                         line : 0,
                         value : 1
                     })
-                    nsRecObj.setCurrentSublistValue({
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "amount",
                         line : 0,
@@ -761,7 +773,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     //TODO, setup a rule when or when not to add tax
                     if(targets.targetTaxcodeId)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "taxcode",
                             line : 0,
@@ -771,7 +783,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                     if(targets.targetBol)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_bol",
                             line : 0,
@@ -781,7 +793,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                     if(targets.targetCust)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_customer",
                             line : 0,
@@ -791,7 +803,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                     if(targets.targetCons)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_consignee",
                             line : 0,
@@ -800,9 +812,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     }
                 }
 
-                if(requestBody.FuelSurcharge)
+                if(requestBody.FuelSurcharge || requestBody.fuelSurcharge)
                 {
-                    nsRecObj.setCurrentSublistValue({
+                    log.debug("YES YOU HAVE FUEL SURCHARGE", requestBody.FuelSurcharge || requestBody.fuelSurcharge)
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "item",
                         line : 1,
@@ -810,34 +823,34 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     })
                     if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "rate",
                             line : 1,
-                            value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                            value : requestBody.FuelSurcharge || requestBody.fuelSurcharge
                         })
                     }
                     else
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "rate",
                             line : 1,
-                            value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                            value : requestBody.FuelSurcharge || requestBody.fuelSurcharge
                         })
                     }
 
-                    nsRecObj.setCurrentSublistValue({
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "quantity",
                         line : 1,
                         value : 1
                     })
-                    nsRecObj.setCurrentSublistValue({
+                    nsRecObj.setSublistValue({
                         sublistId : "item",
                         fieldId : "amount",
                         line : 1,
-                        value : requestBody.FuelSurcharge || requestBody.FuelSurcharge
+                        value : requestBody.FuelSurcharge || requestBody.fuelSurcharge
                     })
 
                     //TODO clear this, it's just for testing standard defaultings
@@ -856,7 +869,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     //TODO, setup a rule when or when not to add tax
                     if(targets.targetTaxcodeId)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "taxcode",
                             line : 1,
@@ -866,7 +879,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                     if(targets.targetBol)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_bol",
                             line : 1,
@@ -876,7 +889,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                     if(targets.targetCust)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_wm_customer",
                             line : 1,
@@ -885,7 +898,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     }
                     if(targets.targetCons)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "custcol_consignee",
                             line : 1,
@@ -909,10 +922,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     for(var a = 0 ; a < accessorials.length ; a++)
                     {
 
-                        nsRecObj.selectLine({
-                            sublistId : "item",
-                            line : targetLine
-                        })
+
                         log.debug("looping accessorials", accessorials)
                         log.debug("looping targetLine", targetLine)
                         var accessorial = accessorials[a];
@@ -926,11 +936,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                         if(!targetItemInternalId)
                         {
-                            targetItemInternalId = 188338 //"Unknown Accessorial Line"
+                            targetItemInternalId = accessorial_mapping["Unknown Accessorial Line"] //"Unknown Accessorial Line"
                         }
 
                         //05202025 Mike wants fixed accessorial
-                        targetItemInternalId = 188338 //"Unknown Accessorial Line"
+                        targetItemInternalId = accessorial_mapping["Unknown Accessorial Line"] //"Unknown Accessorial Line"
 
                         log.debug("targetItemInternalId", targetItemInternalId)
 
@@ -940,7 +950,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         {
                             if(targetItemInternalId)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "item",
                                     line : targetLine,
@@ -949,7 +959,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             }
                             else
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "item",
                                     line : targetLine,
@@ -959,7 +969,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                             if(PAYLOAD_VALUES_INCLUSIVE_OF_TAX)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "rate",
                                     line : targetLine,
@@ -968,7 +978,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             }
                             else
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "rate",
                                     line : targetLine,
@@ -976,13 +986,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 })
                             }
 
-                            nsRecObj.setCurrentSublistValue({
+                            nsRecObj.setSublistValue({
                                 sublistId : "item",
                                 fieldId : "quantity",
                                 line : targetLine,
                                 value : 1
                             })
-                            nsRecObj.setCurrentSublistValue({
+                            nsRecObj.setSublistValue({
                                 sublistId : "item",
                                 fieldId : "amount",
                                 line : targetLine,
@@ -990,7 +1000,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             })
 
 
-                            nsRecObj.setCurrentSublistValue({
+                            nsRecObj.setSublistValue({
                                 sublistId : "item",
                                 fieldId : "description",
                                 line : targetLine,
@@ -1013,7 +1023,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             //TODO, setup a rule when or when not to add tax
                             if(targets.targetTaxcodeId)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "taxcode",
                                     line : targetLine,
@@ -1023,7 +1033,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                             if(targets.targetBol)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_wm_bol",
                                     line : targetLine,
@@ -1033,7 +1043,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                             if(targets.targetCust)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_wm_customer",
                                     line : targetLine,
@@ -1042,7 +1052,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             }
                             if(targets.targetCons)
                             {
-                                nsRecObj.setCurrentSublistValue({
+                                nsRecObj.setSublistValue({
                                     sublistId : "item",
                                     fieldId : "custcol_consignee",
                                     line : targetLine,
@@ -1075,11 +1085,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 for(var a = nsRecObj_itemSublist_count ; a > 0 ; a--)
                 {
-                    nsRecObj.selectLine({
-                        sublistId : "item",
-                        line : a-1
-                    })
-                    var itemId = nsRecObj.setCurrentSublistValue({
+                    var itemId = nsRecObj.getSublistValue({
                         sublistId : "item",
                         fieldId : "item",
                         line : a-1
@@ -1088,7 +1094,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     //TODO dont have to uncheck it if it passed.
                     if(itemId == NF_item)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "itemreceive",
                             line : a-1,
@@ -1098,7 +1104,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     //just receive all - Cody said he spoke with Mike and accepted PO,IR,BILL to be created all at the same time.
                     else if(itemId != NF_item)
                     {
-                        nsRecObj.setCurrentSublistValue({
+                        nsRecObj.setSublistValue({
                             sublistId : "item",
                             fieldId : "itemreceive",
                             line : a-1,
@@ -1121,11 +1127,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                 for(var a = nsRecObj_itemSublist_count ; a > 0 ; a--)
                 {
                     log.debug("clearSublist, a", a);
-                    nsRecObj.selectLine({
-                        sublistId : "item",
-                        line : a - 1
-                    })
-                    var itemId = nsRecObj.setCurrentSublistValue({
+                    var itemId = nsRecObj.getSublistValue({
                         sublistId : "item",
                         fieldId : "item",
                         line : a-1
