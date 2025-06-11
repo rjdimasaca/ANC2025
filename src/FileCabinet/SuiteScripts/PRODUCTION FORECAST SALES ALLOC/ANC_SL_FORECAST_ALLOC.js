@@ -120,7 +120,7 @@ define(['N/ui/serverWidget', 'N/query'], (serverWidget, query) => {
                             const currentYear = new Date().getFullYear().toString();
                             document.querySelector("#years").value = currentYear;
                 
-                            
+                            preFilterYear();
                         });
                     </script>
                     
