@@ -933,6 +933,271 @@ define(['/SuiteScripts/ANC_lib.js', 'N/record', 'N/runtime', 'N/search', 'N/url'
                         search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
                     ]
                 }
+                ,
+                "shipments" : {
+                    title : "Shipments",
+                    bodyfieldgroups : {
+                        list : [
+                            {
+                                id: "custpage_flgroup_source",
+                                label: "Origin"
+                            },
+                            {
+                                id: "custpage_flgroup_input",
+                                label: "Input"
+                            }
+                        ]
+                    },
+                    bodyfields : {
+                        list : [
+                            {
+                                label : "Minimize UI / Process Id",
+                                type : "text",
+                                id : "custpage_minimizeui",
+                                //container: "custpage_flgroup_source",
+                                defaultValue:scriptContext.request.parameters.minimizeui || scriptContext.request.parameters.processid || scriptContext.request.parameters.custpage_minimizeui,
+                                displayType : {
+                                    displayType: "hidden"
+                                }
+                            },
+                            {
+                                label : "Source",
+                                type : "select",
+                                id : "custpage_traninternalid",
+                                source : "salesorder",
+                                //container: "custpage_flgroup_source",
+                                sourceSearchKey:"tran_internalid",
+                                displayType : {
+                                    displayType: "inline"
+                                }
+                            },
+                            {
+                                label : "Item",
+                                type : "select",
+                                id : "custpage_tranlineitem",
+                                source : "item",
+                                //container: "custpage_flgroup_source",
+                                sourceSearchKey:"tranline_item",
+                                displayType : {
+                                    displayType: "inline"
+                                }
+                            },
+                            {
+                                label : "Line Sequence",
+                                type : "integer",
+                                id : "custpage_tranlinesequence",
+                                //container: "custpage_flgroup_source",
+                                sourceSearchKey:"tranline_linesequence",
+                                displayType : {
+                                    displayType: "inline"
+                                },
+                            },
+                            {
+                                label : "Line Num",
+                                type : "integer",
+                                id : "custpage_tranlinenum",
+                                //container: "custpage_flgroup_source",
+                                sourceSearchKey:"tranline_linenum",
+                                displayType : {
+                                    // displayType: "inline",
+                                    displayType: "hidden"
+                                }
+                            },
+                            {
+                                label : "Ship Date",
+                                type : "date",
+                                id : "custpage_tranlineshipdate",
+                                //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_ship_date",
+                                displayType : {
+                                    displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
+                                },
+                            },
+                            {
+                                label : "Production Date",
+                                type : "date",
+                                id : "custpage_tranlineproductiondate",
+                                //container: "custpage_flgroup_input",
+                                sourceSearchKey:"tranline_production_date",
+                                displayType : {
+                                    displayType: "inline"
+                                }
+                            },
+                            {
+                                label : "Total Shipments",
+                                type : "integer",
+                                id : "custpage_totalshipments",
+                                //container: "custpage_flgroup_input",
+                                displayType : {
+                                    displayType: "inline"
+                                },
+                                updateBreakType : {
+                                    breakType : uiSw.FieldBreakType.STARTCOL
+                                },
+                                updateLayoutType : {
+                                    layoutType : uiSw.FieldLayoutType.OUTSIDEBELOW
+                                }
+                            },
+
+                        ]
+                    },
+                    sublists : {
+                        list : [
+                            {
+                                listCounter_bodyField : "custpage_totalshipments",
+                                id : "custpage_minui_sublist_shipments",
+                                label : "Shipments",
+                                type : "list",
+                                updateTotallingFieldId:"custpage_shipmentreflineqty",
+                                dataSource:"",
+                                sublistFields : [
+                                    {
+                                        label : "Shipment Ref#",
+                                        type : "select",
+                                        id : "custpage_shipmentref",
+                                        source : "transaction",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"internalid",
+                                        displayType : {
+                                            displayType: "disabled"
+                                        }
+                                    },
+                                    {
+                                        label : "Status",
+                                        type : "select",
+                                        id : "custpage_shipmentstatus",
+                                        source : "customlist_anc_shipstatus",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"custbody_anc_shipstatus",
+                                        displayType : {
+                                            displayType: "inline"
+                                        }
+                                    },
+                                    {
+                                        label : "Shipment Line Status",
+                                        type : "select",
+                                        id : "custpage_shipmentlinestatus",
+                                        source : "customlist_anc_shipstatus",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"custcol_anc_shipmentlinestatus",
+                                        displayType : {
+                                            displayType: "inline"
+                                        }
+                                    },
+                                    {
+                                        label : "Shipment Line#",
+                                        type : "integer",
+                                        id : "custpage_shipmentreflinenum",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"Line Sequence Number",
+                                        displayType : {
+                                            displayType: "inline"
+                                        }
+                                    },
+                                    {
+                                        label : "Shipment Line Qty",
+                                        type : "float",
+                                        id : "custpage_shipmentreflineqty",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"Quantity",
+                                        displayType : {
+                                            displayType: "inline"
+                                        }
+                                    },
+                                    {
+                                        label : "Shipment Line Unique Key",
+                                        type : "integer",
+                                        id : "custpage_shipmentreflineuniquekey",
+                                        //container: "custpage_flgroup_input",
+                                        sourceSearchKey:"Line Unique Key",
+                                        displayType : {
+                                            displayType: "hidden"
+                                        }
+                                    },
+                                ],
+                                searchtype: "transaction",
+                                columns:
+                                [
+                                    search.createColumn({name: "internalid", label: "internalid"}),
+                                    search.createColumn({name: "tranid", label: "Document Number"}),
+                                    search.createColumn({name: "custcol_anc_relatedtransaction", label: "Related Transaction"}),
+                                    search.createColumn({name: "custcol_anc_relatedlineuniquekey", label: "Related Line Unique Key"}),
+                                    search.createColumn({name: "item", label: "Item"}),
+                                    search.createColumn({name: "custcol_anc_actualitemtobeshipped", label: "Actual Item To Be Shipped"}),
+                                    search.createColumn({name: "custbody_anc_carrier", label: "Carrier(vendor)"}),
+                                    search.createColumn({name: "custbody_anc_vehicleno", label: "Vehicle Number"}),
+                                    search.createColumn({name: "custbody_anc_trackingno", label: "Tracking No"}),
+                                    search.createColumn({name: "line", label: "Line ID"}),
+                                    search.createColumn({name: "linesequencenumber", label: "Line Sequence Number"}),
+                                    search.createColumn({name: "lineuniquekey", label: "Line Unique Key"}),
+                                    search.createColumn({name: "quantity", label: "Quantity"}),
+                                    search.createColumn({name: "statusref", label: "Status"}),
+                                    search.createColumn({name: "custbody_anc_shipstatus", label: "custbody_anc_shipstatus"}),
+                                    search.createColumn({name: "custcol_anc_shipmentlinestatus", label: "custcol_anc_shipmentlinestatus"})
+                                ],
+                                filters:
+                                [
+                                    ["mainline","is","F"]
+                                ]
+                            }
+                        ]
+                    },
+                    searchFilters : [
+                        ["type","anyof","SalesOrd"],
+                        "AND",
+                        ["mainline","is","F"],
+                    ],
+                    searchColumns: [
+                        search.createColumn({name: "internalid", label: "tran_internalid"}),
+                        search.createColumn({name: "mainname", label: "tran_customer"}),
+                        search.createColumn({name: "item", label: "tranline_item"}),
+                        search.createColumn({name: "linesequencenumber", label: "tranline_linesequence"}),
+                        search.createColumn({name: "lineuniquekey", label: "tranline_lineuniquekey"}),
+                        search.createColumn({name: "line", label: "tranline_linenum"}),
+                        search.createColumn({name: "location", label: "tranline_location"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITLOCATION.id, label: "tranline_transitlocation"}),
+                        search.createColumn({name: "location", label: "tranline_laneoriginwarehouse"}),
+                        search.createColumn({
+                            name: "formulanumeric",
+                            formula: "600",
+                            label: "tranline_transittime"
+                        }),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.LDCDATE.id, label: "tranline_ldc_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrun_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.SHIPDATE}}`,
+                            label: "tranline_ship_date"
+                        }),
+                        search.createColumn({name: "shipdate", label: "tranline_stndship_date"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE, label: "tranline_production_date"}),
+                        search.createColumn({
+                            name: "formuladate",
+                            formula: `{${ANC_lib.references.SO_COLUMNS.PRODUCTIONDATE}}`,
+                            label: "tranline_delivery_date"
+                        }),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.PRESSRUNDATE.id, label: "tranline_pressrundate"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.EXPECTEDTONNAGE.id, label: "tranline_expectedtonnage"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TOTALROLLS.id, label: "tranline_totalrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSPERPACK.id, label: "tranline_rollsperpack"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.WRAPTYPE.id, label: "tranline_wraptype"}),
+                        search.createColumn({
+                            name: "locationquantityavailable",
+                            join: "item",
+                            label: "tranline_availablequantity"
+                        }),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.SHIPPINGLANE.id, label: "tranline_shippinglane"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.ROLLSONHAND.id, label: "tranline_rollsonhand"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.RESERVEDROLLS.id, label: "tranline_reservedrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.BACKORDERROLLS.id, label: "tranline_backorderrolls"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITOPTMETHOD.id, label: "tranline_transitoptmethod"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.TRANSITTIME.id, label: "tranline_transittime"}),
+                        search.createColumn({name: ANC_lib.references.SO_COLUMNS.CONSIGNEECOL.id, label: "tranline_consignee"})
+                    ]
+                }
             }
         }
 
@@ -972,6 +1237,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/record', 'N/runtime', 'N/search', 'N/url'
                     searchFilters.push(["line", "equalto", scriptContext.request.parameters.tranlinenum])
 
                     log.debug("searchFilters", searchFilters);
+
 
                     sourceValSearchObj = search.create({
                         type: "salesorder",
@@ -1024,6 +1290,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/record', 'N/runtime', 'N/search', 'N/url'
                     {
                         uiWidgetObj.updateBreakType(widgetObj.updateBreakType)
                     }
+                    if(widgetObj.updateLayoutType)
+                    {
+                        uiWidgetObj.updateLayoutType(widgetObj.updateLayoutType)
+                    }
                     if(widgetObj.defaultValue || widgetObj.defaultValue == "0" || widgetObj.defaultValue === false)
                     {
                         uiWidgetObj.defaultValue = widgetObj.defaultValue
@@ -1040,6 +1310,138 @@ define(['/SuiteScripts/ANC_lib.js', 'N/record', 'N/runtime', 'N/search', 'N/url'
 
 
                     globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
+                }
+
+                //add sublist 06132025
+                for(var a = 0 ; a < elements[minimize_ui_processid].sublists.list.length ; a++)
+                {
+                    var sublistObj = form.addSublist(elements[minimize_ui_processid].sublists.list[a]);
+
+                    for(var b = 0 ; b < elements[minimize_ui_processid].sublists.list[a].sublistFields.length ; b++)
+                    {
+                        var widgetObj = elements[minimize_ui_processid].sublists.list[a].sublistFields[b];
+                        log.debug("widgetObj", widgetObj);
+                        var uiWidgetObj = sublistObj.addField(widgetObj);
+                        if(widgetObj.displayType)
+                        {
+                            uiWidgetObj.updateDisplayType(widgetObj.displayType)
+                        }
+                        if(widgetObj.updateBreakType)
+                        {
+                            uiWidgetObj.updateBreakType(widgetObj.updateBreakType)
+                        }
+                        if(widgetObj.defaultValue || widgetObj.defaultValue == "0" || widgetObj.defaultValue === false)
+                        {
+                            uiWidgetObj.defaultValue = widgetObj.defaultValue
+                        }
+
+
+
+
+                    }
+
+                    //
+                    if(elements[minimize_ui_processid].sublists.list[a].filters &&
+                        elements[minimize_ui_processid].sublists.list[a].columns)
+                    {
+                        if(minimize_ui_processid == "shipments" && elements[minimize_ui_processid].sublists.list[a].label == "Shipments")
+                        {
+                            elements[minimize_ui_processid].sublists.list[a].filters = elements[minimize_ui_processid].sublists.list[a].filters.concat(
+                                [
+                                    "AND",
+                                    // ["internalid","anyof",[scriptContext.request.parameters.traninternalid]],
+                                    ["custcol_anc_relatedlineuniquekey","is",[firstResult.tranline_lineuniquekey.value]],
+                                ]
+                            )
+                        }
+
+                        log.debug("elements[minimize_ui_processid].sublists.list[a].filters", elements[minimize_ui_processid].sublists.list[a].filters);
+
+                        // return;
+
+                        var transactionSearchObj = search.create({
+                            type:elements[minimize_ui_processid].sublists.list[a].searchtype,
+                            filters:
+                            elements[minimize_ui_processid].sublists.list[a].filters,
+                            columns:
+                            elements[minimize_ui_processid].sublists.list[a].columns
+                        });
+                        var searchResultCount = transactionSearchObj.runPaged().count;
+                        log.debug("transactionSearchObj result count",searchResultCount);
+
+                        if(elements[minimize_ui_processid].sublists.list[a].listCounter_bodyField)
+                        {
+                            var listCounterFieldObj = form.getField({id:elements[minimize_ui_processid].sublists.list[a].listCounter_bodyField});
+                            listCounterFieldObj.defaultValue = searchResultCount;
+
+                        }
+
+                        var resCounter = 0;
+                        transactionSearchObj.run().each(function(result){
+                            // .run().each has a limit of 4,000 results
+
+
+                            for(var b = 0 ; b < elements[minimize_ui_processid].sublists.list[a].sublistFields.length ; b++)
+                            {
+                                var resObjBykey = {};
+                                for(var c = 0 ; c < elements[minimize_ui_processid].sublists.list[a].columns.length ; c++)
+                                {
+                                    srCol = elements[minimize_ui_processid].sublists.list[a].columns[c]
+                                    resObjBykey[srCol.label] = result.getValue(srCol)
+                                }
+
+                                var widgetObj = elements[minimize_ui_processid].sublists.list[a].sublistFields[b];
+                                log.debug("fillup sublist widgetObj", widgetObj)
+                                log.debug("fillup sublist resObjBykey", resObjBykey)
+                                if(resObjBykey[widgetObj.sourceSearchKey])
+                                {
+                                    sublistObj.setSublistValue({
+                                        id : widgetObj.id,
+                                        line : resCounter,
+                                        value : resObjBykey[widgetObj.sourceSearchKey]
+                                    })
+                                }
+
+                            }
+
+                            resCounter++;
+                            return true;
+                        });
+                    }
+
+                    if(elements[minimize_ui_processid].sublists.list[a].updateTotallingFieldId)
+                    {
+                        sublistObj.updateTotallingFieldId({
+                            id: elements[minimize_ui_processid].sublists.list[a].updateTotallingFieldId
+                        });
+                    }
+
+                    // var widgetObj = elements[minimize_ui_processid].bodyfields.list[a];
+                    // var uiWidgetObj = form.addField(widgetObj);
+                    // if(widgetObj.displayType)
+                    // {
+                    //     uiWidgetObj.updateDisplayType(widgetObj.displayType)
+                    // }
+                    // if(widgetObj.updateBreakType)
+                    // {
+                    //     uiWidgetObj.updateBreakType(widgetObj.updateBreakType)
+                    // }
+                    // if(widgetObj.defaultValue || widgetObj.defaultValue == "0" || widgetObj.defaultValue === false)
+                    // {
+                    //     uiWidgetObj.defaultValue = widgetObj.defaultValue
+                    // }
+                    //
+                    // if(firstResult && widgetObj.sourceSearchKey || widgetObj.sourceSearchKey == "0" || widgetObj.sourceSearchKey === false)
+                    // {
+                    //     // uiWidgetObj.defaultValue = widgetObj.defaultValue
+                    //     log.debug("firstResult[widgetObj.sourceSearchKey]", firstResult[widgetObj.sourceSearchKey]);
+                    //     uiWidgetObj.defaultValue = firstResult[widgetObj.sourceSearchKey].value;
+                    //     log.debug("set value firstResult[widgetObj.sourceSearchKey]", firstResult[widgetObj.sourceSearchKey])
+                    // }
+                    //
+                    //
+                    //
+                    // globalrefs["uiWidgetObj_" + widgetObj.id] = uiWidgetObj;
                 }
 
 

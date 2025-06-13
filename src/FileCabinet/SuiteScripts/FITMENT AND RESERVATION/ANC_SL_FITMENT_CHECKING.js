@@ -20,16 +20,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
         var form = "";
         var CONSIGNEE_REC_TYPE = "customrecord_alberta_ns_consignee_record"
 
+
         var SUBMITTED_FITMENT_RESULT_COLUMNS = [
-            "tranid",
-            "custcol_anc_relatedtransaction",
-            "custcol_anc_relatedlineuniquekey",
-            "item",
-            "custcol_anc_actualitemtobeshipped",
-            /*"custbody_anc_subcustomerconsignee",*/
-            "custbody_anc_carrier",
-            "custbody_anc_vehicleno",
-            "custbody_anc_trackingno"
+            search.createColumn({name: "tranid", label: "Document Number"}),
+            search.createColumn({name: "custcol_anc_relatedtransaction", label: "Related Transaction"}),
+            search.createColumn({name: "custcol_anc_relatedlineuniquekey", label: "Related Line Unique Key"}),
+            search.createColumn({name: "item", label: "Item"}),
+            search.createColumn({name: "custcol_anc_actualitemtobeshipped", label: "Actual Item To Be Shipped"}),
+            search.createColumn({name: "custbody_anc_carrier", label: "Carrier(vendor)"}),
+            search.createColumn({name: "custbody_anc_vehicleno", label: "Vehicle Number"}),
+            search.createColumn({name: "custbody_anc_trackingno", label: "Tracking No"}),
+            search.createColumn({name: "lineuniquekey", label: "Line Unique Key"})
         ];
 
         var TEMPORARY_SHIPMENT_ITEM = 188748;
@@ -461,7 +462,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 {
                     log.debug(`resolving ${BASE_SUBLIST_ID}${sublistCtr}data`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]);
                     // if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${a}fields`]){
-                    if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]){
+
+                    var lineCount = scriptContext.request.getLineCount({
+                        group : `${BASE_SUBLIST_ID}${sublistCtr}data`
+                    });
+
+                    if(lineCount > 0){
+                    // if(scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]){
 
                         log.debug(`ITERATING THE FITMENT CHECK SUBLISTS index=${sublistCtr}`, scriptContext.request.parameters[`${BASE_SUBLIST_ID}${sublistCtr}data`]);
 
@@ -870,6 +877,84 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     ],
                     columns : SUBMITTED_FITMENT_RESULT_COLUMNS
                 });
+                var salesOrdersToUpdate = {};
+
+                if(shipmentObj_recIds)
+                {
+                    fitmentSubmitResultSearch.run().each(function(elem){
+                        var shipmentInternalId = elem.id;
+                        var targetSoInternalId = elem.getValue({name:"custcol_anc_relatedtransaction"});
+                        var targetSoLineUniqueKey = elem.getValue({name:"custcol_anc_relatedlineuniquekey"});
+                        var shipmentLineUniqueKey = elem.getValue({name:"lineuniquekey"});
+                        salesOrdersToUpdate[targetSoInternalId] = salesOrdersToUpdate[targetSoInternalId] ? salesOrdersToUpdate[targetSoInternalId] : {};
+                        salesOrdersToUpdate[targetSoInternalId][targetSoLineUniqueKey] = salesOrdersToUpdate[targetSoInternalId][targetSoLineUniqueKey] ? salesOrdersToUpdate[targetSoInternalId][targetSoLineUniqueKey] : {list:[]};
+                        salesOrdersToUpdate[targetSoInternalId][targetSoLineUniqueKey].list.push({shipmentInternalId, shipmentLineUniqueKey})
+
+                        return true;
+                    })
+                }
+
+                log.debug("salesOrdersToUpdate", salesOrdersToUpdate);
+
+                var doSaveSoForLineTagging = false;
+                for(var soId in salesOrdersToUpdate)
+                {
+                    var soRecObj = record.load({
+                        type : "salesorder",
+                        id : soId
+                    })
+                    log.debug(`UPDATE SO ${soId}`)
+                    for(var soLineUniqueKey in salesOrdersToUpdate[soId]){
+                        var listOfShipmentAndShipmentLines = salesOrdersToUpdate[soId][soLineUniqueKey].list || [];
+
+                        log.debug("listOfShipmentAndShipmentLines", {soLineUniqueKey, listOfShipmentAndShipmentLines});
+                        //TODO how are you going to indentify which Sales Order line to update based on the LineUniqueKey?
+                        //or is it? i think it is!
+                        //the line unique key can be read from searches, but not from the record object
+                        // var soLineUniqueKey_lineIndex = record
+                        // custcol_anc_relatedshipments
+
+                        var targetLineIndex = soRecObj.findSublistLineWithValue({
+                            sublistId : "item",
+                            fieldId : "lineuniquekey",
+                            value : "" + soLineUniqueKey
+                        });
+
+                        if(targetLineIndex != -1)
+                        {
+                            soRecObj.setSublistValue({
+                                sublistId : "item",
+                                fieldId : "custcol_anc_relatedshipments",
+                                line : targetLineIndex,
+                                value : JSON.stringify(listOfShipmentAndShipmentLines)
+                            })
+
+                            log.debug("LINKING SO LINE : " + targetLineIndex, {listOfShipmentAndShipmentLines, soLineUniqueKey, targetLineIndex})
+
+                            doSaveSoForLineTagging = true;
+                        }
+
+
+                        /*
+                        TODO what will you do for partial loadings? do you need partial loadings?
+                        i mean what if the SO is already associated with loads, then re-fitment occurs
+                        how does that look like?
+                        */
+                    }
+
+                    if(doSaveSoForLineTagging)
+                    {
+                        var submittedSoRecid_withLinkedColumns = soRecObj.save({
+                            ignoreMandatoryFields : true,
+                            enableSourcing : true
+                        })
+
+                        log.debug("submittedSoRecid_withLinkedColumns", submittedSoRecid_withLinkedColumns);
+                    }
+
+                }
+
+
 
                 redirect.toSearchResult({
                     search: fitmentSubmitResultSearch
@@ -1098,6 +1183,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                 var sublistCounter = 0;
                 // var a = 0;
+                var gen_sublistCtr = 0;
                 for(var date in srGroupedByDeliveryDate)
                 {
                     var groupList_bylist = srGroupedByDeliveryDate[date].list
@@ -1121,7 +1207,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     var fitmentCheckSubtabLabel = "Fitment Check " + groupList_bylist[0].origkeys
 
                     var subtabObj = "";
-                    var subtabId = `${(groupList_bylist[0].line_deliverydate).replace(/\//g, "_")}_${groupList_bylist[0].line_location}_${groupList_bylist[0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}`
+                    var subtabId = `${(groupList_bylist[0].line_shipdate).replace(/\//g, "_")}_${groupList_bylist[0].line_location}_${groupList_bylist[0].orig_custrecord_anc_lane_destinationcity.replace(/ /g, "_")}__${groupList_bylist[0].line_equipmenttext}`
                     // var subtabId = date;
                     subtabId = subtabId.toLowerCase();
                     log.debug("subtabId", subtabId)
@@ -1227,6 +1313,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         for(var b = 0 ; b < fitmentResponse_body_shipments.length ; b++)
                         {
                             var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b + "_" + new Date().getTime();
+                            var uiSublistId = `${BASE_SUBLIST_ID}${gen_sublistCtr}data`
+                            gen_sublistCtr++;
                             // var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b;
 
                             var shipmentRec = fitmentResponse_body_shipments[b];
@@ -1235,218 +1323,220 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             log.debug("shipmentRec", shipmentRec);
                             targetSubtabId = finalSubtabId
 
-
-
-                            log.debug("fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
-                            var fitmentReservationSublist = form.addSublist({
-                                label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
-                                type : "LIST",
-                                id : uiSublistId,
-                                // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
-                                // tab : mapping[`${groupList_bylist[0].origkeys}`]
-                                // tab : finalSubtabId,
-                                tab : targetSubtabId
-                            });
-                            globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
-
-                            log.debug("subtabObj", subtabObj);
-                            log.debug("subtabs", subtabs);
-
-                            fitmentReservationSublist.addButton({
-                                id : `custpage_btn_${uiSublistId}_button`,
-                                label : "Select All",
-                                functionName : `alert(123)`
-                            })
-
-                            for(var slfldCtr = 0 ; slfldCtr < sublistSettings.sublistFields.length ; slfldCtr++)
+                            if(shipmentRec && shipmentRec.shipmentItems && shipmentRec.shipmentItems.length > 0)
                             {
+                                log.debug("fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
+                                var fitmentReservationSublist = form.addSublist({
+                                    label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
+                                    type : "LIST",
+                                    id : uiSublistId,
+                                    // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
+                                    // tab : mapping[`${groupList_bylist[0].origkeys}`]
+                                    // tab : finalSubtabId,
+                                    tab : targetSubtabId
+                                });
+                                globalrefs["fitmentReservationSublist"] = fitmentReservationSublist;
 
-                                var sublistFieldObj = fitmentReservationSublist.addField(sublistSettings.sublistFields[slfldCtr])
-                                if(sublistSettings.sublistFields[slfldCtr].displayType)
-                                {
-                                    sublistFieldObj.updateDisplayType({
-                                        displayType : sublistSettings.sublistFields[slfldCtr].displayType
-                                    });
-                                }
-                                if(sublistSettings.sublistFields[slfldCtr].defaultValue)
-                                {
-                                    sublistFieldObj.defaultValue = sublistSettings.sublistFields[slfldCtr].defaultValue
-                                }
-                            }
+                                log.debug("subtabObj", subtabObj);
+                                log.debug("subtabs", subtabs);
+                                log.debug("uiSublistId", uiSublistId);
 
-
-
-
-                            for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
-                            {
-                                var shipmentItems = shipmentRec.shipmentItems[c]
-                                log.debug("shipmentItems", shipmentItems);
-                                log.debug("groupByLineUniqueKey", groupByLineUniqueKey);
-                                var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
-                                log.debug("lineDetails", lineDetails);
-                                var resObjByColumnKey = lineDetails[0];
-                                log.debug("resObjByColumnKey", resObjByColumnKey);
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_nb",
-                                    line : c,
-                                    value : shipmentItems.nb || 12
+                                fitmentReservationSublist.addButton({
+                                    id : `custpage_btn_${uiSublistId}_button`,
+                                    label : "Select All",
+                                    functionName : `alert(123)`
                                 })
 
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_lineref",
-                                    line : c,
-                                    value : shipmentItems.itemId
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_so",
-                                    line : c,
-                                    value : resObjByColumnKey.internalid
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_col_ifr_line_deliverydate",
-                                    line : c,
-                                    value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_col_ifr_line_shipdate",
-                                    line : c,
-                                    value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
-                                })
-
-                                //FILL BY ORDER QTY
-                                if(resObjByColumnKey.line_quantity)
+                                for(var slfldCtr = 0 ; slfldCtr < sublistSettings.sublistFields.length ; slfldCtr++)
                                 {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_orderqty",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity
-                                    })
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_consignee",
-                                        line : c,
-                                        value : resObjByColumnKey.line_consignee
-                                    })
-                                }
 
-
-                                if(resObjByColumnKey.line_equipment)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_equipment",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_equipment)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_inputqty",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_consginee)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_consginee",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_consginee)
-                                    })
+                                    var sublistFieldObj = fitmentReservationSublist.addField(sublistSettings.sublistFields[slfldCtr])
+                                    if(sublistSettings.sublistFields[slfldCtr].displayType)
+                                    {
+                                        sublistFieldObj.updateDisplayType({
+                                            displayType : sublistSettings.sublistFields[slfldCtr].displayType
+                                        });
+                                    }
+                                    if(sublistSettings.sublistFields[slfldCtr].defaultValue)
+                                    {
+                                        sublistFieldObj.defaultValue = sublistSettings.sublistFields[slfldCtr].defaultValue
+                                    }
                                 }
 
 
 
 
-                                //FILL BY ORDER WEIGHT
-                                if(resObjByColumnKey.line_quantity)
+                                for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
                                 {
+                                    var shipmentItems = shipmentRec.shipmentItems[c]
+                                    log.debug("shipmentItems", shipmentItems);
+                                    log.debug("groupByLineUniqueKey", groupByLineUniqueKey);
+                                    var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
+                                    log.debug("lineDetails", lineDetails);
+                                    var resObjByColumnKey = lineDetails[0];
+                                    log.debug("resObjByColumnKey", resObjByColumnKey);
+
                                     fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_orderweight",
+                                        id : "custpage_ifr_nb",
                                         line : c,
-                                        value : resObjByColumnKey.line_quantity
+                                        value : shipmentItems.nb || 12
                                     })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_reservedweight",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_reservedweight || 0)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_inputweight",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
-                                    })
-                                }
 
-
-
-
-                                if(resObjByColumnKey.line_id)
-                                {
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_lineref",
                                         line : c,
-                                        value : resObjByColumnKey.line_id
+                                        value : shipmentItems.itemId
                                     })
-                                }
-                                if(resObjByColumnKey.line_uniquekey)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_lineuniquekey",
-                                        line : c,
-                                        value : resObjByColumnKey.line_uniquekey
-                                    })
-                                }
-                                if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_iscrossdock",
-                                        line : c,
-                                        value : "T"
-                                    })
-                                }
-                                if(resObjByColumnKey.custpage_ifr_leg)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_leg",
-                                        line : c,
-                                        value : (resObjByColumnKey.custpage_ifr_leg)
-                                    })
-                                }
-                                if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_solineref",
-                                        line : c,
-                                        value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
-                                    })
-                                }
-                                if(resObjByColumnKey.line_item)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_item",
-                                        line : c,
-                                        value : resObjByColumnKey.line_item
-                                    })
-                                }
-                                if(resObjByColumnKey.line_location)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_location",
-                                        line : c,
-                                        value : resObjByColumnKey.line_location
-                                    })
-                                }
 
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_so",
+                                        line : c,
+                                        value : resObjByColumnKey.internalid
+                                    })
+
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_line_deliverydate",
+                                        line : c,
+                                        value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
+                                    })
+
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_line_shipdate",
+                                        line : c,
+                                        value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
+                                    })
+
+                                    //FILL BY ORDER QTY
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_orderqty",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity
+                                        })
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_consignee",
+                                            line : c,
+                                            value : resObjByColumnKey.line_consignee
+                                        })
+                                    }
+
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_equipment",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_equipment)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_inputqty",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_consginee)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_consginee",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_consginee)
+                                        })
+                                    }
+
+
+
+
+                                    //FILL BY ORDER WEIGHT
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_orderweight",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_reservedweight",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_reservedweight || 0)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_inputweight",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
+                                        })
+                                    }
+
+
+
+
+                                    if(resObjByColumnKey.line_id)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_lineref",
+                                            line : c,
+                                            value : resObjByColumnKey.line_id
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_uniquekey)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_lineuniquekey",
+                                            line : c,
+                                            value : resObjByColumnKey.line_uniquekey
+                                        })
+                                    }
+                                    if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_iscrossdock",
+                                            line : c,
+                                            value : "T"
+                                        })
+                                    }
+                                    if(resObjByColumnKey.custpage_ifr_leg)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_leg",
+                                            line : c,
+                                            value : (resObjByColumnKey.custpage_ifr_leg)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_solineref",
+                                            line : c,
+                                            value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_item)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_item",
+                                            line : c,
+                                            value : resObjByColumnKey.line_item
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_location)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_location",
+                                            line : c,
+                                            value : resObjByColumnKey.line_location
+                                        })
+                                    }
+
+                                }
                             }
                         }
                     }
@@ -1500,6 +1590,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         for(var b = 0 ; b < fitmentResponse_body_shipments.length ; b++)
                         {
                             var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b + "_" + new Date().getTime();
+                            var uiSublistId = `${BASE_SUBLIST_ID}${gen_sublistCtr}data`
+                            gen_sublistCtr++;
                             // var uiSublistId = BASE_SUBLIST_ID + "_" + a + "_" + b;
 
                             var shipmentRec = fitmentResponse_body_shipments[b];
@@ -1508,220 +1600,223 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             log.debug("leg1 shipmentRec" + b, shipmentRec);
                             targetSubtabId = finalSubtabId_leg1
 
-
-
-                            log.debug("leg1 fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
-                            var fitmentReservationSublist = form.addSublist({
-                                label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
-                                type : "LIST",
-                                id : uiSublistId,
-                                // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
-                                // tab : mapping[`${groupList_bylist[0].origkeys}`]
-                                // tab : finalSubtabId,
-                                tab : targetSubtabId
-                            });
-                            globalrefs["leg1 fitmentReservationSublist"] = fitmentReservationSublist;
-
-                            log.debug("leg1 subtabObj", subtabObj);
-                            log.debug("leg1 subtabs", subtabs);
-
-                            fitmentReservationSublist.addButton({
-                                id : `custpage_btn_${uiSublistId}_button`,
-                                label : "Select All",
-                                functionName : `alert(123)`
-                            })
-
-                            for(var slfldCtr = 0 ; slfldCtr < sublistSettings.sublistFields.length ; slfldCtr++)
+                            if(shipmentRec && shipmentRec.shipmentItems && shipmentRec.shipmentItems.length > 0)
                             {
+                                log.debug("leg1 fitmentCheckSublistLabel + \"_\" + a + \"_\" + b", fitmentCheckSublistLabel + "_" + a + "_" + b);
+                                var fitmentReservationSublist = form.addSublist({
+                                    label : fitmentCheckSublistLabel + "_" + a + "_" + b + "_SUBLIST",
+                                    type : "LIST",
+                                    id : uiSublistId,
+                                    // tab : subtabs[`${groupList_bylist[0].origkeys}`].id
+                                    // tab : mapping[`${groupList_bylist[0].origkeys}`]
+                                    // tab : finalSubtabId,
+                                    tab : targetSubtabId
+                                });
+                                globalrefs["leg1 fitmentReservationSublist"] = fitmentReservationSublist;
 
-                                var sublistFieldObj = fitmentReservationSublist.addField(sublistSettings.sublistFields[slfldCtr])
-                                if(sublistSettings.sublistFields[slfldCtr].displayType)
-                                {
-                                    sublistFieldObj.updateDisplayType({
-                                        displayType : sublistSettings.sublistFields[slfldCtr].displayType
-                                    });
-                                }
-                                if(sublistSettings.sublistFields[slfldCtr].defaultValue)
-                                {
-                                    sublistFieldObj.defaultValue = sublistSettings.sublistFields[slfldCtr].defaultValue
-                                }
-                            }
+                                log.debug("leg1 subtabObj", subtabObj);
+                                log.debug("leg1 subtabs", subtabs);
+                                log.debug("uiSublistId", uiSublistId);
 
-
-
-
-                            for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
-                            {
-                                var shipmentItems = shipmentRec.shipmentItems[c]
-                                log.debug("leg1 shipmentItems", shipmentItems);
-                                log.debug("leg1 groupByLineUniqueKey", groupByLineUniqueKey);
-                                var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
-                                var nb = groupByLineUniqueKey[""+shipmentItems.nb];
-                                log.debug("leg1 lineDetails", lineDetails);
-                                var resObjByColumnKey = lineDetails[0];
-                                log.debug("leg1 resObjByColumnKey", resObjByColumnKey);
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_nb",
-                                    line : c,
-                                    value : shipmentItems.nb || 12
+                                fitmentReservationSublist.addButton({
+                                    id : `custpage_btn_${uiSublistId}_button`,
+                                    label : "Select All",
+                                    functionName : `alert(123)`
                                 })
 
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_lineref",
-                                    line : c,
-                                    value : shipmentItems.itemId
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_ifr_so",
-                                    line : c,
-                                    value : resObjByColumnKey.internalid
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_col_ifr_line_deliverydate",
-                                    line : c,
-                                    value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
-                                })
-
-                                fitmentReservationSublist.setSublistValue({
-                                    id : "custpage_col_ifr_line_shipdate",
-                                    line : c,
-                                    value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
-                                })
-
-                                //FILL BY ORDER QTY
-                                if(resObjByColumnKey.line_quantity)
+                                for(var slfldCtr = 0 ; slfldCtr < sublistSettings.sublistFields.length ; slfldCtr++)
                                 {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_orderqty",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity
-                                    })
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_consignee",
-                                        line : c,
-                                        value : resObjByColumnKey.line_consignee
-                                    })
-                                }
 
-
-                                if(resObjByColumnKey.line_equipment)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_equipment",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_equipment)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_inputqty",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_consginee)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_consginee",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_consginee)
-                                    })
+                                    var sublistFieldObj = fitmentReservationSublist.addField(sublistSettings.sublistFields[slfldCtr])
+                                    if(sublistSettings.sublistFields[slfldCtr].displayType)
+                                    {
+                                        sublistFieldObj.updateDisplayType({
+                                            displayType : sublistSettings.sublistFields[slfldCtr].displayType
+                                        });
+                                    }
+                                    if(sublistSettings.sublistFields[slfldCtr].defaultValue)
+                                    {
+                                        sublistFieldObj.defaultValue = sublistSettings.sublistFields[slfldCtr].defaultValue
+                                    }
                                 }
 
 
 
 
-                                //FILL BY ORDER WEIGHT
-                                if(resObjByColumnKey.line_quantity)
+                                for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
                                 {
+                                    var shipmentItems = shipmentRec.shipmentItems[c]
+                                    log.debug("leg1 shipmentItems", shipmentItems);
+                                    log.debug("leg1 groupByLineUniqueKey", groupByLineUniqueKey);
+                                    var lineDetails = groupByLineUniqueKey[""+shipmentItems.itemId];
+                                    var nb = groupByLineUniqueKey[""+shipmentItems.nb];
+                                    log.debug("leg1 lineDetails", lineDetails);
+                                    var resObjByColumnKey = lineDetails[0];
+                                    log.debug("leg1 resObjByColumnKey", resObjByColumnKey);
+
                                     fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_orderweight",
+                                        id : "custpage_ifr_nb",
                                         line : c,
-                                        value : resObjByColumnKey.line_quantity
+                                        value : shipmentItems.nb || 12
                                     })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_reservedweight",
-                                        line : c,
-                                        value : (resObjByColumnKey.line_reservedweight || 0)
-                                    })
-                                }
-                                if(resObjByColumnKey.line_quantity)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_col_ifr_inputweight",
-                                        line : c,
-                                        value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
-                                    })
-                                }
 
-
-
-
-                                if(resObjByColumnKey.line_id)
-                                {
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_lineref",
                                         line : c,
-                                        value : resObjByColumnKey.line_id
+                                        value : shipmentItems.itemId
                                     })
-                                }
-                                if(resObjByColumnKey.line_uniquekey)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_lineuniquekey",
-                                        line : c,
-                                        value : resObjByColumnKey.line_uniquekey
-                                    })
-                                }
-                                if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_iscrossdock",
-                                        line : c,
-                                        value : "T"
-                                    })
-                                }
-                                if(resObjByColumnKey.custpage_ifr_leg)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_leg",
-                                        line : c,
-                                        value : (resObjByColumnKey.custpage_ifr_leg)
-                                    })
-                                }
-                                if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_solineref",
-                                        line : c,
-                                        value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
-                                    })
-                                }
-                                if(resObjByColumnKey.line_item)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_item",
-                                        line : c,
-                                        value : resObjByColumnKey.line_item
-                                    })
-                                }
-                                if(resObjByColumnKey.line_location)
-                                {
-                                    fitmentReservationSublist.setSublistValue({
-                                        id : "custpage_ifr_location",
-                                        line : c,
-                                        value : resObjByColumnKey.line_location
-                                    })
-                                }
 
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_so",
+                                        line : c,
+                                        value : resObjByColumnKey.internalid
+                                    })
+
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_line_deliverydate",
+                                        line : c,
+                                        value : /*"03/03/2025"*/resObjByColumnKey.line_deliverydate
+                                    })
+
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_col_ifr_line_shipdate",
+                                        line : c,
+                                        value : /*"03/03/2025"*/resObjByColumnKey.line_shipdate
+                                    })
+
+                                    //FILL BY ORDER QTY
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_orderqty",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity
+                                        })
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_consignee",
+                                            line : c,
+                                            value : resObjByColumnKey.line_consignee
+                                        })
+                                    }
+
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_equipment",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_equipment)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_inputqty",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedqty || 0)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_consginee)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_consginee",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_consginee)
+                                        })
+                                    }
+
+
+
+
+                                    //FILL BY ORDER WEIGHT
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_orderweight",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_reservedweight",
+                                            line : c,
+                                            value : (resObjByColumnKey.line_reservedweight || 0)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_quantity)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_col_ifr_inputweight",
+                                            line : c,
+                                            value : resObjByColumnKey.line_quantity - (resObjByColumnKey.line_reservedweight || 0)
+                                        })
+                                    }
+
+
+
+
+                                    if(resObjByColumnKey.line_id)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_lineref",
+                                            line : c,
+                                            value : resObjByColumnKey.line_id
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_uniquekey)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_lineuniquekey",
+                                            line : c,
+                                            value : resObjByColumnKey.line_uniquekey
+                                        })
+                                    }
+                                    if(resObjByColumnKey.custrecord_anc_crossdockeligible && resObjByColumnKey.custrecord_anc_crossdockeligible != "F")
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_iscrossdock",
+                                            line : c,
+                                            value : "T"
+                                        })
+                                    }
+                                    if(resObjByColumnKey.custpage_ifr_leg)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_leg",
+                                            line : c,
+                                            value : (resObjByColumnKey.custpage_ifr_leg)
+                                        })
+                                    }
+                                    if(resObjByColumnKey.internalid && resObjByColumnKey.line_id)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_solineref",
+                                            line : c,
+                                            value : resObjByColumnKey.internalid + "_" + resObjByColumnKey.line_id
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_item)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_item",
+                                            line : c,
+                                            value : resObjByColumnKey.line_item
+                                        })
+                                    }
+                                    if(resObjByColumnKey.line_location)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_location",
+                                            line : c,
+                                            value : resObjByColumnKey.line_location
+                                        })
+                                    }
+
+                                }
                             }
+
                         }
                     }
 

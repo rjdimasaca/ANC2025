@@ -745,6 +745,28 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                 position : 9,
                                 addtlParams : "&minimizeui=customer_and_shipping"
                         },
+                        {
+                                name : "shipments",
+                                list : [],
+                                title : "Shipments",
+                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
+                                properties : [
+
+                                ],
+                                tdElemHtml : [
+                                        `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+
+                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                ],
+                                targetScriptId : "customscript_anc_sl_minimize_ui",
+                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                headerTitle : "Shipments",
+                                rowTitle : "Shipments",
+                                iconWidth : "50px",
+                                iconHeight : "50px",
+                                position : 10,
+                                addtlParams : "&minimizeui=shipments"
+                        },
                         // {
                         //     name : "graderun_reservation",
                         //     list : [],
@@ -1000,7 +1022,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     fitmentRequestData.orderItems = [];
                                             }
 
-                                            fitmentRequestData.orderItems.push(
+                                            fitmentRequestData.orderItems ? fitmentRequestData.orderItems.push(
                                                 {
                                                         ItemId : rawRequestData[a].line_uniquekey,
                                                         Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
@@ -1010,7 +1032,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                         Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
                                                         RPP : rawRequestData[a].line_item_rollsperpack || 1,
                                                 }
-                                            )
+                                            ) : ""
                                             log.debug("xdock=t after push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
 
 
@@ -1432,7 +1454,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
                 // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
                 // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
-                var srGroupedByDeliveryDate = groupByOrigcityDestcity(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
+                var srGroupedByDeliveryDate = groupByOrigcityDestcity(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", "line_equipmenttext"])
                 log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
                 return srGroupedByDeliveryDate
