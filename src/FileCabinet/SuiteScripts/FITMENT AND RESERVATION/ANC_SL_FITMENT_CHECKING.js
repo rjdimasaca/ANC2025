@@ -534,6 +534,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         // custpage_ifr_percentage
                         // custpage_ifr_loadnum
                         // custpage_ifr_loadid
+                        var keptInfoForShipmentCreation = {
+                            targetConsignee : {val : ""},
+                            targetOriginLoc : {val : ""},
+                            targetDeliveryDate : {val : ""},
+                            targetShipDate : {val : ""},
+                            equipment : {val : ""},
+                        };
                         var shipmentLineValues = [];
                         for(var a = 0 ; a < lineCount ; a++)
                         {
@@ -580,11 +587,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                             log.debug("shipmentLineValues", shipmentLineValues);
 
-                            var keptInfoForShipmentCreation = {
-                                targetConsignee : {val : ""},
-                                targetOriginLoc : {val : ""},
-                                targetDeliveryDate : {val : ""},
-                            };
+
                             for(var a = 0 ; a < lineCount ; a++)
                             {
                                 if(a == 0)
@@ -602,6 +605,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                     keptInfoForShipmentCreation["targetDeliveryDate"] = scriptContext.request.getSublistValue({
                                         group: uiSublistId,
                                         name : "custpage_col_ifr_line_deliverydate",
+                                        line : a
+                                    });
+                                    keptInfoForShipmentCreation["targetShipDate"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_line_shipdate",
+                                        line : a
+                                    });
+
+                                    keptInfoForShipmentCreation["equipment"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_equipment",
                                         line : a
                                     });
                                 }
@@ -641,6 +655,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                     lineValues["item"] = scriptContext.request.getSublistValue({
                                         group: uiSublistId,
                                         name : "custpage_ifr_item",
+                                        line : a
+                                    })
+                                    lineValues["equipment"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_col_ifr_equipment",
                                         line : a
                                     })
                                     lineValues["item"] = scriptContext.request.getSublistValue({
@@ -753,6 +772,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         value : lineValues["custcol_anc_relatedlineuniquekey"]
                                     })
 
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_equipment",
+                                        // line : targetIndex,
+                                        value : lineValues["equipment"]
+                                    })
+
 
                                     soStats[lineValues["custcol_anc_relatedlineuniquekey"]] = {};
 
@@ -804,13 +830,35 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         log.debug("totalLoadWeight", totalLoadWeight);
                         // totalLoadWeight = 4000;
                         transportationMaxWeight = 50000;
-                        shipmentUtilRate = (100 * (totalLoadWeight/transportationMaxWeight));
+                        var equipmentList_filtered = equipmentList.filter(function(elem){
+                            if(elem.eq_internalid == keptInfoForShipmentCreation["equipment"])
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        })
+
+                        if(equipmentList_filtered.length > 0)
+                        {
+                            transportationMaxWeight = equipmentList_filtered[0].eq_weightcap || 0
+                        }
+
+                        shipmentUtilRate = 0;
+                        if(transportationMaxWeight)
+                        {
+                            shipmentUtilRate = (100 * (totalLoadWeight/transportationMaxWeight));
+                        }
+
 
                         log.debug("shipmentUtilRate", shipmentUtilRate);
 
+
                         shipmentObj.setValue({
                             sublistId : "item",
-                            fieldId : "custbody_anc_shipment_utilizationrate",
+                            fieldId : "custbody_anc_loadingefficiency",
                             // line : targetIndex,
                             value : shipmentUtilRate
                         })
@@ -836,6 +884,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                     text : keptInfoForShipmentCreation["targetDeliveryDate"]
                                     // value : keptInfoForShipmentCreation["targetDeliveryDate"]
                                 })
+                                shipmentObj.setText({
+                                    fieldId : "custbody_anc_shipdate",
+                                    text : keptInfoForShipmentCreation["targetShipDate"]
+                                    // value : keptInfoForShipmentCreation["targetDeliveryDate"]
+                                })
+                                shipmentObj.setValue({
+                                    fieldId : "custbody_anc_equipment",
+                                    value : keptInfoForShipmentCreation["equipment"]
+                                    // value : keptInfoForShipmentCreation["equipment"]
+                                })
+
                             }
 
                             var shipmentObj_recId = shipmentObj.save({
@@ -1128,7 +1187,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             type : "float",
                             id : "custpage_ifr_linetotalweight",
                             // sourceApiRespKey:"totalWeight",
-                            // targetShipmentColumn:"custbody_anc_shipment_utilizationrate",
+                            // targetShipmentColumn:"custbody_anc_loadingefficiency",
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {

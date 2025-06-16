@@ -1,5 +1,5 @@
 /**
- * @NApiVersion 2.x
+ * @NApiVersion 2.1
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
@@ -115,6 +115,7 @@ function(currentRecord) {
         {
             console.log("error in function validateField", e)
         }
+        return true;
         return retVal;
     }
 
@@ -200,7 +201,7 @@ function(currentRecord) {
     }
 
     return {
-        // pageInit: pageInit,
+         // pageInit: pageInit,
         // fieldChanged: fieldChanged,
         // postSourcing: postSourcing,
         // sublistChanged: sublistChanged,
