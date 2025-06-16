@@ -924,7 +924,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     }
             }
 
-            function getFitmentResponse(group_init_to_final = [])
+            function getFitmentResponse(group_init_to_final = [], shipmentLineIdTracker)
             {
                     //MULTIPLE LINES
                     log.debug("getFitmentResponse group_init_to_final", group_init_to_final)
@@ -1021,6 +1021,17 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             {
                                                     fitmentRequestData.orderItems = [];
                                             }
+
+
+                                            if(shipmentLineIdTracker[rawRequestData[a].line_uniquekey])
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                    shipmentLineIdTracker[rawRequestData[a].line_uniquekey] = {};
+                                            }
+                                            shipmentLineIdTracker[rawRequestData[a].line_uniquekey].weight = rawRequestData[a].line_item_basis_weight;
 
                                             fitmentRequestData.orderItems ? fitmentRequestData.orderItems.push(
                                                 {
@@ -2430,6 +2441,39 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return retVal;
             }
 
+            function getEquipmentList(equipIds)
+            {
+                    var sqlResults = [];
+                    try {
+                            // var sqlFilters = getForecastFilters(tranInternalid, lineValList);
+                            // var sqlFilters_text = forecastFilters.join(" OR ")
+                            //
+                            // log.debug("getRelatedForecasts sqlFilters_text", sqlFilters_text)
+
+                            var sql =
+                                `Select
+                                 eq.id as eq_internalid,
+                                 eq.custrecord_anc_equipmentweightcap as eq_weightcap,
+                                 eq.custrecord_anc_transportmode as eq_transportmode
+                                FROM
+                                customrecord_anc_equipment as eq`
+
+
+                            log.debug("getEquipmentList sql", sql)
+
+                            sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                            log.debug("getEquipmentList sqlResults", sqlResults);
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getEquipmentList", e)
+                    }
+
+                    log.debug("getEquipmentList sqlResults return", sqlResults)
+                    return sqlResults;
+            }
+
             return {
                     toMDY,
                     groupBy,
@@ -2460,7 +2504,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getRelatedShipCap,
                     getShipmentLocs,
                     getRelatedProdCap,
-                    addLeadingZeroToMonths
+                    addLeadingZeroToMonths,
+                    getEquipmentList
             }
 
     });

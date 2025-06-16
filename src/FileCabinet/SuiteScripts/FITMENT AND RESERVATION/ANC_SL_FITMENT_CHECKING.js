@@ -430,8 +430,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
             })
         }
 
+        var equipmentList = [];
         function fitmentCheckFormSubmitted(scriptContext)
         {
+            equipmentList = ANC_lib.getEquipmentList();
+
+            log.debug("equipmentList", equipmentList);
             try
             {
                 log.debug("POST, Submitted", scriptContext);
@@ -481,6 +485,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         log.debug("lineCount", lineCount);
 
                         var doCreateShipment = false;
+                        var totalLoadWeight = 0;
                         var shipmentObj = record.create({
                             type : "customsale_anc_shipment",
                             isDynamic : true
@@ -567,48 +572,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                 })
 
                                 log.debug("lineValues", lineValues)
-                                // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
-                                // {"custpage_col_ifr_cb":"T","custpage_col_ifr_inputqty":"1","custpage_ifr_weightplanned":"weight planned","custpage_ifr_percentage":"34.567","custpage_ifr_loadnum":"4","custpage_ifr_loadid":"17424"}
-                                // var targetIndex = tranObj.findSublistLineWithValue({
-                                //     sublistId : "item",
-                                //     fieldId : "line",
-                                //     value : tranLinenum
-                                // })
-                                // log.debug("POST tranLinenum", tranLinenum)
-                                // tranObj.selectLine({
-                                //     sublistId : "item",
-                                //     line : targetIndex
-                                // })
-                                // log.debug("POST targetIndex", targetIndex)
-                                // tranObj.setCurrentSublistValue({
-                                //     sublistId : "item",
-                                //     fieldId : "custcol_anc_lxpert_loadweightplanned",
-                                //     line : targetIndex,
-                                //     value : lineValues["custpage_ifr_weightplanned"]
-                                // })
-                                // tranObj.setCurrentSublistValue({
-                                //     sublistId : "item",
-                                //     fieldId : "custcol_anc_lxpert_loadscount",
-                                //     line : targetIndex,
-                                //     value : lineValues["custpage_ifr_loadnum"]
-                                // })
-                                // tranObj.setCurrentSublistValue({
-                                //     sublistId : "item",
-                                //     fieldId : "custcol_anc_lxpert_lastloadutilrate",
-                                //     line : targetIndex,
-                                //     value : lineValues["custpage_ifr_percentage"]
-                                // })
-                                // tranObj.setCurrentSublistValue({
-                                //     sublistId : "item",
-                                //     fieldId : "custcol_anc_lxpert_loadreservedqty",
-                                //     line : targetIndex,
-                                //     value : lineValues["custpage_col_ifr_inputqty"]
-                                // })
-                                // log.debug("before commit")
-                                // tranObj.commitLine({
-                                //     sublistId : "item",
-                                // })
-                                // log.debug("after commit")
 
                                 doCreateShipment = true;
 
@@ -705,6 +668,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         name : "custpage_ifr_consignee",
                                         line : a
                                     })
+                                    lineValues["custcol_anc_shipment_linetotalweight"] = scriptContext.request.getSublistValue({
+                                        group: uiSublistId,
+                                        name : "custpage_ifr_linetotalweight",
+                                        line : a
+                                    })
 
                                     log.debug("lineValues", lineValues)
                                     // nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId()).getLineItemValue("item", "line", 3)
@@ -733,6 +701,21 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         // line : targetIndex,
                                         value : lineValues["custcol_anc_actualitemtobeshipped"] || lineValues["item"]
                                     })
+                                    //TODO track the total weight
+                                    shipmentObj.setCurrentSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_shipment_linetotalweight",
+                                        // line : targetIndex,
+                                        value : lineValues["custcol_anc_shipment_linetotalweight"] || 0
+                                    })
+
+                                    log.debug("totalLoadWeight before +=", totalLoadWeight)
+
+                                    log.debug("totalLineWeight before +=", Number(lineValues["custcol_anc_shipment_linetotalweight"]))
+                                    totalLoadWeight += Number(lineValues["custcol_anc_shipment_linetotalweight"]);
+
+                                    log.debug("totalLoadWeight after +=", totalLoadWeight)
+
                                     shipmentObj.setCurrentSublistValue({
                                         sublistId : "item",
                                         fieldId : "custcol_consignee",
@@ -816,42 +799,60 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                 }
 
                             }
+                        }
 
-                            if(doCreateShipment)
+                        log.debug("totalLoadWeight", totalLoadWeight);
+                        // totalLoadWeight = 4000;
+                        transportationMaxWeight = 50000;
+                        shipmentUtilRate = (100 * (totalLoadWeight/transportationMaxWeight));
+
+                        log.debug("shipmentUtilRate", shipmentUtilRate);
+
+                        shipmentObj.setValue({
+                            sublistId : "item",
+                            fieldId : "custbody_anc_shipment_utilizationrate",
+                            // line : targetIndex,
+                            value : shipmentUtilRate
+                        })
+
+                        if(doCreateShipment)
+                        {
+                            if(keptInfoForShipmentCreation["targetConsignee"])
                             {
-                                if(keptInfoForShipmentCreation["targetConsignee"])
-                                {
-                                    shipmentObj.setValue({
-                                        fieldId : SHIPMENT_CONSIGNEE_FIELD_ID,
-                                        value : keptInfoForShipmentCreation["targetConsignee"]
-                                    })
+                                shipmentObj.setValue({
+                                    fieldId : SHIPMENT_CONSIGNEE_FIELD_ID,
+                                    value : keptInfoForShipmentCreation["targetConsignee"]
+                                })
 
-                                    shipmentObj.setValue({
-                                        fieldId : "location",
-                                        value : keptInfoForShipmentCreation["targetOriginLoc"]
-                                    })
+                                shipmentObj.setValue({
+                                    fieldId : "location",
+                                    value : keptInfoForShipmentCreation["targetOriginLoc"]
+                                })
 
-                                    log.debug(`keptInfoForShipmentCreation["targetDeliveryDate"]`, keptInfoForShipmentCreation["targetDeliveryDate"])
-                                    // shipmentObj.setValue({
-                                    shipmentObj.setText({
-                                        fieldId : "custbody_anc_deliverydate",
-                                        text : keptInfoForShipmentCreation["targetDeliveryDate"]
-                                        // value : keptInfoForShipmentCreation["targetDeliveryDate"]
-                                    })
-                                }
-
-                                var shipmentObj_recId = shipmentObj.save({
-                                    ignoreMandatoryFields : true
-                                });
-                                log.debug("shipmentObj_recId", shipmentObj_recId);
-
-                                shipmentObj_recIds.push(shipmentObj_recId);
-
-                                soStats[lineValues["custcol_anc_relatedlineuniquekey"]] = {};
+                                log.debug(`keptInfoForShipmentCreation["targetDeliveryDate"]`, keptInfoForShipmentCreation["targetDeliveryDate"])
+                                // shipmentObj.setValue({
+                                shipmentObj.setText({
+                                    fieldId : "custbody_anc_deliverydate",
+                                    text : keptInfoForShipmentCreation["targetDeliveryDate"]
+                                    // value : keptInfoForShipmentCreation["targetDeliveryDate"]
+                                })
                             }
 
+                            var shipmentObj_recId = shipmentObj.save({
+                                ignoreMandatoryFields : true
+                            });
+                            log.debug("shipmentObj_recId", shipmentObj_recId);
 
+                            shipmentObj_recIds.push(shipmentObj_recId);
+
+                            soStats[lineValues["custcol_anc_relatedlineuniquekey"]] = {};
                         }
+
+
+
+
+
+
                     }
                     else
                     {
@@ -956,9 +957,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-                redirect.toSearchResult({
-                    search: fitmentSubmitResultSearch
-                })
+                // redirect.toSearchResult({
+                //     search: fitmentSubmitResultSearch
+                // })
 
             }
             catch(e)
@@ -967,6 +968,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
             }
         }
 
+
+        var shipmentLineIdTracker = {};
         function getInputDetails(scriptContext)
         {
             try
@@ -1121,6 +1124,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             displayType : uiSw.FieldDisplayType.INLINE
                         },
                         {
+                            label : "Shipment Total Line Weight",
+                            type : "float",
+                            id : "custpage_ifr_linetotalweight",
+                            // sourceApiRespKey:"totalWeight",
+                            // targetShipmentColumn:"custbody_anc_shipment_utilizationrate",
+                            displayType : uiSw.FieldDisplayType.INLINE
+                        },
+                        {
                             label : "FTL Ave Tonnage",
                             type : "float",
                             id : "custpage_ifr_ftlavetonnage",
@@ -1265,9 +1276,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
                     //leg0
-                    var fitmentResponse = groupList_byleg0 && groupList_byleg0.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg0) : {list:[]};
+                    var fitmentResponse = groupList_byleg0 && groupList_byleg0.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg0, shipmentLineIdTracker) : {list:[]};
 
                     log.debug("fitmentResponse", fitmentResponse)
+
+                    log.debug("shipmentLineIdTracker leg0", shipmentLineIdTracker);
 
                     // no of rolls * weight / equipment weight = utilization
                     //total the weight of each equipment
@@ -1365,7 +1378,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-
+                                var sublistTotalLineWeight = 0;
                                 for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
                                 {
                                     var shipmentItems = shipmentRec.shipmentItems[c]
@@ -1376,10 +1389,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                     var resObjByColumnKey = lineDetails[0];
                                     log.debug("resObjByColumnKey", resObjByColumnKey);
 
+
+                                    sublistTotalLineWeight += (shipmentItems.totalWeight || 0)
+
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_nb",
                                         line : c,
                                         value : shipmentItems.nb || 12
+                                    })
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_linetotalweight",
+                                        line : c,
+                                        value : shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
@@ -1542,9 +1563,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                     }
 
                     //leg1
-                    var fitmentResponse = groupList_byleg1 && groupList_byleg1.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg1) : {list:[]};
+                    var fitmentResponse = groupList_byleg1 && groupList_byleg1.length > 0 ? ANC_lib.getFitmentResponse(groupList_byleg1, shipmentLineIdTracker) : {list:[]};
 
                     log.debug("fitmentResponse", fitmentResponse)
+
+                    log.debug("shipmentLineIdTracker leg1", shipmentLineIdTracker);
 
                     // no of rolls * weight / equipment weight = utilization
                     //total the weight of each equipment
@@ -1642,7 +1665,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-
+                                sublistTotalLineWeight = sublistTotalLineWeight ? sublistTotalLineWeight : 0;
                                 for(var c = 0 ; c < shipmentRec.shipmentItems.length ; c++)
                                 {
                                     var shipmentItems = shipmentRec.shipmentItems[c]
@@ -1654,10 +1677,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                     var resObjByColumnKey = lineDetails[0];
                                     log.debug("leg1 resObjByColumnKey", resObjByColumnKey);
 
+                                    sublistTotalLineWeight += (shipmentItems.totalWeight || 0)
+
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_nb",
                                         line : c,
                                         value : shipmentItems.nb || 12
+                                    })
+                                    fitmentReservationSublist.setSublistValue({
+                                        id : "custpage_ifr_linetotalweight",
+                                        line : c,
+                                        value : shipmentItems.nb * shipmentLineIdTracker[""+shipmentItems.itemId].weight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
