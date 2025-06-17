@@ -522,7 +522,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             //     value :transactionDateStr,
                             //     text :transactionDateStr
                             // })
-                            poRecObj.setValue({
+                            irRecObj.setValue({
                                 fieldId: "trandate",
                                 // value :new Date(),
                                 // text :transactionDateStr,
@@ -587,28 +587,35 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value :"1",
                         })
 
-                        poRecObj.setValue({
-                            fieldId : "externalid",
-                            value :loadID,
-                        })
                         // poRecObj.setValue({
+                        //     fieldId : "externalid",
+                        //     value :loadID,
+                        // })
+                        // vbRecObj.setValue({
                         //     fieldId : "custbody_work_order",
                         //     value :loadID,
                         // })
-                        poRecObj.setValue({
+                        vbRecObj.setValue({
                             fieldId : "custbody_purchase_order",
                             value :loadID,
                         })
                         if(targets.targetBol)
                         {
-                            poRecObj.setValue({
+                            vbRecObj.setValue({
                                 fieldId : "custbody4",
                                 value : targets.targetBol
                             })
                         }
                         if(targets.targetBol)
                         {
-                            poRecObj.setValue({
+                            vbRecObj.setValue({
+                                fieldId : "tranid",
+                                value : targets.targetBol
+                            })
+                        }
+                        if(targets.targetBol)
+                        {
+                            vbRecObj.setValue({
                                 fieldId : "custbody_wmid",
                                 value : targets.targetBol
                             })
