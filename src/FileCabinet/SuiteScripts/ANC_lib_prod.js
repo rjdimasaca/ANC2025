@@ -1360,11 +1360,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             ]
                                     });
 
+                                    customerId = searchCustomer_id(otherDetails)
+                                    consigneeId = searchConsignee_id(otherDetails)
                                     var searchResultCount = searchObj.runPaged().count;
                                     if(searchResultCount <= 0)
                                     {
-                                            customerId = searchCustomer_id(otherDetails)
-                                            consigneeId = searchConsignee_id(otherDetails)
                                             log.debug("no result for " + loadID, searchObj.filters)
                                     }
                                     else
@@ -1420,7 +1420,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     })
                                                     shipmentRecObj.setValue({
                                                             fieldId : "custbody_anc_equipment",
-                                                            value: 6 //TRTAMDV53
+                                                            value: 1 //TRTAMDV53
                                                     })
                                                     /*
                                                     shipmentRecObj.setValue({
@@ -1697,7 +1697,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getFitmentObj,
                     getLoadDetails,
                     prepLoad,
-                    CA_TAXCODE_MAPPING_BY_STATE_CODE
+                    CA_TAXCODE_MAPPING_BY_STATE_CODE,
+                    searchConsignee_id,
+                    searchCustomer_id
             }
 
     });

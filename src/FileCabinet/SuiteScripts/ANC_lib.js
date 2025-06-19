@@ -1737,7 +1737,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return getLoadDetails_result;
             }
 
-            function prepLoad(loadID, otherDetails={})
+            function prepLoad(loadID, otherDetails={}, updateShipment)
             {
                     var OVERRIDE_LOAD_FOR_TESTING = false;
                     var prepShipmentRecId = "";
@@ -1758,11 +1758,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             ]
                                     });
 
+                                    customerId = searchCustomer_id(otherDetails)
+                                    consigneeId = searchConsignee_id(otherDetails)
                                     var searchResultCount = searchObj.runPaged().count;
                                     if(searchResultCount <= 0)
                                     {
-                                            customerId = searchCustomer_id(otherDetails)
-                                            consigneeId = searchConsignee_id(otherDetails)
                                             log.debug("no result for " + loadID, searchObj.filters)
                                     }
                                     else
@@ -1771,7 +1771,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     prepShipmentRecId = res.id;
                                                     return false;
                                             })
-                                            if(OVERRIDE_LOAD_FOR_TESTING)
+                                            if(updateShipment)
                                             {
 
 
@@ -1818,7 +1818,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     })
                                                     shipmentRecObj.setValue({
                                                             fieldId : "custbody_anc_equipment",
-                                                            value: 6 //TRTAMDV53
+                                                            value: 1 //TRTAMDV53
                                                     })
                                                     /*
                                                     shipmentRecObj.setValue({
