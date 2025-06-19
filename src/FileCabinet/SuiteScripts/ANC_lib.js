@@ -1919,10 +1919,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             fieldId : "custbody_anc_equipment",
                                             value: 1 //TRTAMREF53
                                     })
-                                    shipmentRecObj.setValue({
-                                            fieldId : "location",
-                                            value: 9 //ANS Paper (Summary) : ANC Whitecourt Warehouse
-                                    });
+                                    // shipmentRecObj.setValue({
+                                    //         fieldId : "location",
+                                    //         value: 9 //ANS Paper (Summary) : ANC Whitecourt Warehouse
+                                    // });
 
                                     shipmentRecObj.setSublistValue({
                                             sublistId : "item",
@@ -2505,7 +2505,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getShipmentLocs,
                     getRelatedProdCap,
                     addLeadingZeroToMonths,
-                    getEquipmentList
+                    getEquipmentList,
+                    searchConsignee_id,
+                    searchCustomer_id
             }
 
     });
