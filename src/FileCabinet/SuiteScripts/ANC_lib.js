@@ -115,6 +115,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                 fields : {
                                         destinationcity : "custrecord_anc_lane_destinationcity",
                                         originwarehouse : "custrecord_anc_lane_originwarehouse",
+                                        originwarehousecity : "custrecord_anc_lane_originwarehousecity",
+                                        destination : "custrecord_anc_lane_destination",
+                                        crossdockwarehouse : "custrecord_anc_lane_cdw",
+                                        crossdockwarehousecity : "custrecord_anc_lane_crossdockcity",
                                 }
                         },
                         consignee : {
