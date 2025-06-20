@@ -58,6 +58,34 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
             }
         }
 
+        var shipmentCols = [
+            search.createColumn({name : "internalid", join:null, label:"internalid"}),
+            search.createColumn({name: "tranid", label: "Document Number"}),
+            search.createColumn({name: "custcol_anc_relatedtransaction", label: "Related Transaction"}),
+            search.createColumn({name: "custcol_anc_relatedlineuniquekey", label: "Related Line Unique Key"}),
+            search.createColumn({name: "item", label: "Item"}),
+            search.createColumn({name: "custcol_anc_actualitemtobeshipped", label: "Actual Item To Be Shipped"}),
+            search.createColumn({name: "custbody_anc_carrier", label: "Carrier(vendor)"}),
+            search.createColumn({name: "custbody_anc_vehicleno", label: "Vehicle Number"}),
+            search.createColumn({name: "custbody_anc_trackingno", label: "Tracking No"}),
+            search.createColumn({name: "line", label: "Line ID"}),
+            search.createColumn({name: "linesequencenumber", label: "Line Sequence Number"}),
+            search.createColumn({name: "lineuniquekey", label: "Line Unique Key"}),
+            search.createColumn({name: "quantity", label: "Quantity"}),
+            search.createColumn({name: "statusref", label: "Status"}),
+            search.createColumn({name: "custbody_anc_sostatus", label: "Status (?)"}),
+            search.createColumn({name: "custcol_anc_status", label: "Status"}),
+            search.createColumn({name: "custbody_anc_loadingefficiency", label: "Loading Efficiency"}),
+            search.createColumn({name: "custbody_anc_deliverydate", label: "Delivery Date"}),
+            search.createColumn({
+                name: "custrecord_alberta_ns_city",
+                join: "CUSTBODY_CONSIGNEE",
+                label: "City"
+            }),
+            search.createColumn({name: "custbody_anc_usecrossdock", label: "Use Crossdock?"}),
+            search.createColumn({name: "custbody_anc_shipstatus", label: "Ship Status"})
+        ]
+
         function addElements(scriptContext)
         {
             try
@@ -95,7 +123,8 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
                     type : "Select",
                     id : "custpage_fld_lp_shipment1",
                     label : `Shipment No`,
-                    source : "customsale_anc_shipment"
+                    source : "customsale_anc_shipment",
+                    sourceSearchCol : "internalid"
                 })
                 sublistObj1.addField({
                     type : "text",
@@ -118,8 +147,8 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
                 sublistObj1.addField({
                     type : "Select",
                     id : "custpage_fld_lp_status1",
-                    label : `Status`,
-                    source : "customlist_anc_sostatus"
+                    label : `Ship Status`,
+                    source : "customlist_anc_shipstatus"
                 })
                 sublistObj1.addField({
                     type : "Checkbox",
@@ -169,8 +198,8 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
                 sublistObj2.addField({
                     type : "Select",
                     id : "custpage_fld_lp_status2",
-                    label : `Status`,
-                    source : "customlist_anc_sostatus"
+                    label : `Ship Status`,
+                    source : "customlist_anc_shipstatus"
                 })
                 sublistObj2.addField({
                     type : "Checkbox",
@@ -179,51 +208,134 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
                     // source : ""
                 })
 
+                var sqlResults1 = [];
+
+                var shipment_search_list1 = search.create({
+                    type : "customsale_anc_shipment",
+                    filters : [
+                        ["mainline", "is", true],
+                        "AND",
+                        ["custbody_anc_shipstatus", "anyof", [7]],
+                        // "AND",
+                        // ["internalid", "anyof", 61264854],
+                    ],
+                    columns : shipmentCols
+                })
+
+                shipment_search_list1.run().each(function(result){
+                    var resultObj = {};
+                    var searchCols = shipment_search_list1.columns;
+                    for(var a = 0 ; a < searchCols.length ; a++){
+                        var searchCol = searchCols[a]
+                        resultObj[searchCol.label] = {
+                            val : result.getValue(searchCol),
+                            txt : result.getText(searchCol)
+                        }
+                    }
+                    sqlResults1.push(resultObj);
+
+                    return true;
+                })
 
 
-                var shipmentSql1 = `SELECT
-                                        BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.id) AS internalid,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
-                                        BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
-                                        BUILTIN_RESULT.TYPE_CURRENCY(TRANSACTION.foreigntotal, BUILTIN.CURRENCY(TRANSACTION.foreigntotal)) AS foreigntotal
-                                    FROM
-                                        TRANSACTION,
-                                        transactionLine
-                                    WHERE
-                                        TRANSACTION.ID = transactionLine.TRANSACTION
-                                      AND TRANSACTION.custbody_anc_shipstatus = 2
-                                      AND ((TRANSACTION.custbody_anc_loadingefficiency =< 50 AND TRANSACTION.TYPE IN ('CuTrSale108') AND NVL(transactionLine.mainline, 'F') = 'T'))`
-
-                const sqlResults1 = query.runSuiteQL({ query: shipmentSql1 }).asMappedResults();
 
 
-                var shipmentSql2 = `SELECT
-                                        BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
-                                        BUILTIN_RESULT.TYPE_DATE(TRANSACTION.custbody_anc_shipstatus) AS custbody_anc_shipstatus,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.id) AS internalid,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
-                                        BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
-                                        BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
-                                        BUILTIN_RESULT.TYPE_CURRENCY(TRANSACTION.foreigntotal, BUILTIN.CURRENCY(TRANSACTION.foreigntotal)) AS foreigntotal
-                                    FROM
-                                        TRANSACTION,
-                                        transactionLine
-                                    WHERE
-                                        TRANSACTION.ID = transactionLine.TRANSACTION
-                                      AND TRANSACTION.custbody_anc_shipstatus != 2
-                                      AND ((TRANSACTION.custbody_anc_loadingefficiency > 50 AND TRANSACTION.TYPE IN ('CuTrSale108') AND NVL(transactionLine.mainline, 'F') = 'T'))`
+                var sqlResults2 = [];
 
-                const sqlResults2 = query.runSuiteQL({ query: shipmentSql2 }).asMappedResults();
+                var shipment_search_list1 = search.create({
+                    type : "customsale_anc_shipment",
+                    filters : [
+                        ["mainline", "is", true],
+                        "AND",
+                        ["custbody_anc_shipstatus", "noneof", [7,6,"@NONE@"]],
+                        // "AND",
+                        // ["internalid", "anyof", 61264854],
+                    ],
+                    columns : shipmentCols
+                })
+
+                shipment_search_list1.run().each(function(result){
+                    var resultObj = {};
+                    var searchCols = shipment_search_list1.columns;
+                    for(var a = 0 ; a < searchCols.length ; a++){
+                        var searchCol = searchCols[a]
+                        resultObj[searchCol.label] = {
+                            val : result.getValue(searchCol),
+                            txt : result.getText(searchCol)
+                        }
+                    }
+                    sqlResults2.push(resultObj);
+
+                    return true;
+                })
 
 
-                log.debug("shipmentSql1", shipmentSql1);
-                log.debug("shipmentSql2", shipmentSql2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                // var shipmentSql1 = `SELECT
+                //                         BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.id) AS internalid,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
+                //                         BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
+                //                         BUILTIN_RESULT.TYPE_CURRENCY(TRANSACTION.foreigntotal, BUILTIN.CURRENCY(TRANSACTION.foreigntotal)) AS foreigntotal
+                //                     FROM
+                //                         TRANSACTION,
+                //                         transactionLine
+                //                     WHERE
+                //                         TRANSACTION.ID = transactionLine.TRANSACTION
+                //                       AND TRANSACTION.custbody_anc_shipstatus = 2
+                //                       AND ((TRANSACTION.custbody_anc_loadingefficiency =< 50 AND TRANSACTION.TYPE IN ('CuTrSale108') AND NVL(transactionLine.mainline, 'F') = 'T'))`
+                //
+                // const sqlResults1 = query.runSuiteQL({ query: shipmentSql1 }).asMappedResults();
+                //
+                //
+                // var shipmentSql2 = `SELECT
+                //                         BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
+                //                         BUILTIN_RESULT.TYPE_DATE(TRANSACTION.custbody_anc_shipstatus) AS custbody_anc_shipstatus,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.id) AS internalid,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
+                //                         BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
+                //                         BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
+                //                         BUILTIN_RESULT.TYPE_CURRENCY(TRANSACTION.foreigntotal, BUILTIN.CURRENCY(TRANSACTION.foreigntotal)) AS foreigntotal
+                //                     FROM
+                //                         TRANSACTION,
+                //                         transactionLine
+                //                     WHERE
+                //                         TRANSACTION.ID = transactionLine.TRANSACTION
+                //                       AND TRANSACTION.custbody_anc_shipstatus != 2
+                //                       AND ((TRANSACTION.custbody_anc_loadingefficiency > 50 AND TRANSACTION.TYPE IN ('CuTrSale108') AND NVL(transactionLine.mainline, 'F') = 'T'))`
+                //
+                // const sqlResults2 = query.runSuiteQL({ query: shipmentSql2 }).asMappedResults();
+                //
+                //
+                // log.debug("shipmentSql1", shipmentSql1);
+                // log.debug("shipmentSql2", shipmentSql2);
                 log.debug("sqlResults1", sqlResults1);
                 log.debug("sqlResults2", sqlResults2);
 
@@ -231,23 +343,92 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
 
                 for(var a = 0 ; a < sqlResults1.length; a++)
                 {
+                    var sr = sqlResults1[a];
                     sublistObj1.setSublistValue({
                         id : "custpage_fld_lp_shipment1",
                         line : a,
-                        value : sqlResults1[a].internalid
-                    })
+                        value : sr.internalid.val
+                    });
+
+                    sr["City"].val ? sublistObj1.setSublistValue({
+                        id : "custpage_fld_lp_destination1",
+                        line : a,
+                        value : sr["City"].val
+                    }) : "";
+
+                    log.debug(`sr["Delivery Date"]`, sr["Delivery Date"])
+                    sr["Delivery Date"].val ? sublistObj1.setSublistValue({
+                        id : "custpage_fld_lp_deldate1",
+                        line : a,
+                        value : sr["Delivery Date"].val
+                    }) : "";
+
+                    sr["Loading Efficiency"].val ? sublistObj1.setSublistValue({
+                        id : "custpage_fld_lp_loadefficiency1",
+                        line : a,
+                        value : sr["Loading Efficiency"].val
+                    }) : "";
+
+                    sr["Ship Status"].val ? sublistObj1.setSublistValue({
+                        id : "custpage_fld_lp_status1",
+                        line : a,
+                        value : sr["Ship Status"].val
+                    }) : "";
+                    sr["Use Crossdock?"].val && sr["Use Crossdock?"].val != "F" ? sublistObj1.setSublistValue({
+                        id : "custpage_fld_lp_crossdockelig1",
+                        line : a,
+                        value : "T"
+                    }) : "";
                 }
+
+                // for(var a = 0 ; a < sqlResults2.length; a++)
+                // {
+                //     sublistObj2.setSublistValue({
+                //         id : "custpage_fld_lp_shipment2",
+                //         line : a,
+                //         value : sqlResults2[a].internalid.val
+                //     })
+                // }
 
                 for(var a = 0 ; a < sqlResults2.length; a++)
                 {
+                    var sr = sqlResults2[a];
                     sublistObj2.setSublistValue({
                         id : "custpage_fld_lp_shipment2",
                         line : a,
-                        value : sqlResults2[a].internalid
+                        value : sqlResults2[a].internalid.val
                     })
+
+                    sr["City"].val ? sublistObj2.setSublistValue({
+                        id : "custpage_fld_lp_destination2",
+                        line : a,
+                        value : sr["City"].val
+                    }) : "";
+
+                    log.debug(`sr["Delivery Date"]`, sr["Delivery Date"])
+                    sr["Delivery Date"].val ? sublistObj2.setSublistValue({
+                        id : "custpage_fld_lp_deldate2",
+                        line : a,
+                        value : sr["Delivery Date"].val
+                    }) : "";
+
+                    sr["Loading Efficiency"].val ? sublistObj2.setSublistValue({
+                        id : "custpage_fld_lp_loadefficiency2",
+                        line : a,
+                        value : sr["Loading Efficiency"].val
+                    }) : "";
+
+                    sr["Ship Status"].val ? sublistObj2.setSublistValue({
+                        id : "custpage_fld_lp_status2",
+                        line : a,
+                        value : sr["Ship Status"].val
+                    }) : "";
+                    sr["Use Crossdock?"].val && sr["Use Crossdock?"].val != "F" ? sublistObj2.setSublistValue({
+                        id : "custpage_fld_lp_crossdockelig2",
+                        line : a,
+                        value : "T"
+                    }) : "";
                 }
-
-
 
 
 
