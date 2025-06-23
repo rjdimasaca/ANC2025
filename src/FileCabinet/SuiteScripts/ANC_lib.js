@@ -1292,7 +1292,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 if(tranInternalId)
                 {
                         filters.push("AND")
-                        filters.push(["internalid","anyof",tranInternalId])
+                        filters.push(["internalid","anyof",[tranInternalId,61250544]])
                 }
                 // if(globalrefs.tranBodyVals.location)
                 // {

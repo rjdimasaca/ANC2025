@@ -1034,7 +1034,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
             try
             {
 
-                var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(scriptContext.request.parameters["traninternalid"])
+                var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration([scriptContext.request.parameters["traninternalid"]])
 
 
 

@@ -115,8 +115,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                         }
                     }
 
-                    resObjList.push(resObj);
                 }
+                resObjList.push(resObj);
                 return true;
             });
             log.debug("resObjList", resObjList);

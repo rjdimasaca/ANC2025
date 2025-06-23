@@ -1232,7 +1232,8 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
                     //i need city_whsid
                     var laneSql = `
-                        SELECT lane.id as lane_id, cons.id as cons_id, 
+                        SELECT lane.id as lane_id,
+                               lane.custrecord_anc_lane_destination as cons_id,
                                lane.custrecord_anc_lane_destinationcity as lane_destcity,
                                lane.custrecord_anc_lane_originwarehouse as lane_origloc,
                                lane.custrecord_anc_lane_originwarehousecity as lane_origcity,
@@ -1255,12 +1256,10 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                lane.custrecord_anc_lane_ltt as lane_ltt,
                                lane.custrecord_anc_crossdockeligible as lane_xdockelig,
                         FROM ${ANC_lib.references.RECTYPES.lane.id} as lane 
-                            JOIN ${ANC_lib.references.RECTYPES.consignee.id} as cons 
-                                ON cons.ID = lane.custrecord_anc_lane_destination
                         WHERE
                             lane.isinactive = 'F'
                         AND 
-                            ${laneFiltersStr}
+                            (${laneFiltersStr})
                     `
 
                     // SELECT lane.id FROM customrecord_anc_shippinglanes as lane JOIN customrecord_alberta_ns_consignee_record as cons ON cons.ID = lane.custrecord_anc_lane_destination WHERE lane.isinactive = 'F' AND ( lane.custrecord_anc_lane_originwarehouse = '215' AND cons.ID = 198816)
@@ -1300,7 +1299,12 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                             fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
                             line : a
                         })
-                        lineVals.consigneeCity = lineDetailsSqlRes_byCons[lineVals.consignee].custrecord_alberta_ns_city || header_consigneeCity;
+                        log.debug("RESOLVE LINE CONSIGNEE lineVals", lineVals)
+
+                        lineVals.consigneeCity = lineDetailsSqlRes_byCons[""+lineVals.consignee][0].cons_city || header_consigneeCity;
+
+                        // log.debug("RESOLVE LINE CONSIGNEE lineVals", {lineVals, byCons:lineDetailsSqlRes_byCons[""+lineVals.consignee], byCons_consCity:lineDetailsSqlRes_byCons[""+lineVals.consignee].cons_city, header_consigneeCity})
+
                         lineVals.location = recObj.getSublistValue({
                             sublistId : "item",
                             fieldId : "location",
