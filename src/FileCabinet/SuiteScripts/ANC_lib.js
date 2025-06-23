@@ -1013,6 +1013,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     {
 
 
+                                            //TODO
+                                            //06232025 whats wrong here, why get a blank
+                                            //test via fitement : https://1116623-sb2.app.netsuite.com/app/site/hosting/scriptlet.nl?script=5573&deploy=1&compid=1116623_SB2&traninternalid=61265755&processid=fitmentcheck
+                                            //SO62882 + 61265756, trigger via SO62882
+                                            //FIXME
                                             log.debug("xdock=t rawRequestData", rawRequestData);
                                             log.debug("xdock=t before push fitmentRequestData", fitmentRequestData);
                                             log.debug("xdock=t before push fitmentRequestData.orderItems", fitmentRequestData.orderItems);
@@ -1282,6 +1287,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
         function groupOrderLinesForShipmentGeneration(tranInternalId)
         {
+                tranInternalId = tranInternalId.concat(61265756);
                 var filters = [
                         ["type","anyof","SalesOrd"],
                         "AND",
@@ -1292,7 +1298,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                 if(tranInternalId)
                 {
                         filters.push("AND")
-                        filters.push(["internalid","anyof",[tranInternalId,61250544]])
+                        // filters.push(["internalid","anyof",[tranInternalId,61250544]])
+                        filters.push(["internalid","anyof",tranInternalId])
+                        // filters.push(["internalid","anyof",[tranInternalId]])
                 }
                 // if(globalrefs.tranBodyVals.location)
                 // {

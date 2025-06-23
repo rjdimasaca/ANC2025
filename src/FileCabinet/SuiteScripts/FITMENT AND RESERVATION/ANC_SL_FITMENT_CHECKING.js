@@ -330,7 +330,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
             var fitmentReservationSublist = form.addSublist({
                 label : "custpage_sublist_test1" + "_" + 1 + "_" + 1,
-                type : "LIST",
+                type : "INLINEEDITOR",
                 id : "custpage_sublist_test1",
                 // tab : subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`].id
                 // tab : mapping[`${srGroupedByDeliveryDate[date][0].origkeys}`]
@@ -343,14 +343,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
             var fitmentReservationSublist = form.addSublist({
@@ -368,14 +368,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
 
@@ -394,14 +394,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
             var fitmentReservationSublist = form.addSublist({
@@ -419,14 +419,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
         }
 

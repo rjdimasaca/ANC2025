@@ -1410,6 +1410,12 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                 //not xdock eligible, auto refer to direct lowest cost
                                 else
                                 {
+                                    recObj.setSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_usecrossdock",
+                                        line : a,
+                                        value : false
+                                    })
                                     //only if direct lowest cost equip is defined
                                     if(lane_lceq)
                                     {
@@ -1442,6 +1448,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                 //only if direct lowest cost equip is defined
                                 var lane_ftteq = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftteq
                                 var lane_ftt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftt
+
+                                recObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_usecrossdock",
+                                    line : a,
+                                    value : false
+                                })
+
                                 if(lane_ftteq)
                                 {
                                     recObj.setSublistValue({
