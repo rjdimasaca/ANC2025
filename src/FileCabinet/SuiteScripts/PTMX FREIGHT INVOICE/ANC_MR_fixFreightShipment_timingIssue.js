@@ -74,7 +74,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                     ],
                 columns:
                     [
-                        search.createColumn({name: "entity", label: "Name"}),
+                        // search.createColumn({name: "entity", label: "Name"}),
                         search.createColumn({name: "custbody_consignee", label: "Consignee"}),
                         search.createColumn({name: "custbody_anc_equipment", label: "Equipment"}),
                         search.createColumn({name: "custbody4", label: "BOL"}),
@@ -84,7 +84,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                             label: "Transport Mode"
                         }),
                         search.createColumn({name: "custbody_anc_shipment_leg", label: "Leg"}),
-                        search.createColumn({name: "shipstate", label: "Ship State"}),
+                        // search.createColumn({name: "shipstate", label: "Ship State"}),
                         search.createColumn({
                             name: "custrecord_alberta_ns_ship_addrprovince",
                             join: "CUSTBODY_CONSIGNEE",
@@ -191,6 +191,12 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                 var loadId = mapVal.BOL.val;
 
 
+
+                var otherDetails = {};
+                var customerId = "";
+                var consigneeId = "";
+                var bookingNo = "";
+                var custbody_wm_jointshipmentno = "";
                 //INV
                 if(loadId)
                 {
@@ -223,11 +229,6 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                     customrecord_anc_integration_config_logsSearchObj.isPublic = true;
                     // var ssId = customrecord_anc_integration_config_logsSearchObj.save();
                     // log.debug("ssId", ssId);
-                    var otherDetails = {};
-                    var customerId = "";
-                    var consigneeId = "";
-                    var bookingNo = "";
-                    var custbody_wm_jointshipmentno = "";
                     log.debug("customrecord_anc_integration_config_logsSearchObj result count",searchResultCount);
                     customrecord_anc_integration_config_logsSearchObj.run().each(function(result){
                         // .run().each has a limit of 4,000 results
@@ -236,7 +237,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                         log.debug("requestBodyStr", requestBodyStr);
 
                         var endIndex = requestBodyStr.indexOf(',"LoadOrderList"');
-                        var requestBodyStr = requestBodyStr.substring(0, endIndex) + '}}}';
+                        requestBodyStr = requestBodyStr.substring(0, endIndex) + '}}}';
 
                         log.debug("requestBodyStr after substr", requestBodyStr);
 
