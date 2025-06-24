@@ -829,38 +829,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                         log.debug("totalLoadWeight", totalLoadWeight);
                         // totalLoadWeight = 4000;
-                        transportationMaxWeight = 50000;
-                        var equipmentList_filtered = equipmentList.filter(function(elem){
-                            if(elem.eq_internalid == keptInfoForShipmentCreation["equipment"])
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                return false;
-                            }
-                        })
-
-                        if(equipmentList_filtered.length > 0)
-                        {
-                            transportationMaxWeight = equipmentList_filtered[0].eq_weightcap || 0
-                        }
-
-                        shipmentUtilRate = 0;
-                        if(transportationMaxWeight)
-                        {
-                            shipmentUtilRate = (100 * (totalLoadWeight/transportationMaxWeight));
-                        }
-
-
-                        log.debug("shipmentUtilRate", shipmentUtilRate);
-
+                        var computeLoadUtilization_result = computeLoadUtilization(equipmentList, {line_equipment:keptInfoForShipmentCreation["equipment"]}, totalLoadWeight);
 
                         shipmentObj.setValue({
                             sublistId : "item",
                             fieldId : "custbody_anc_loadingefficiency",
                             // line : targetIndex,
-                            value : shipmentUtilRate
+                            value : computeLoadUtilization_result.shipmentUtilRate
                         })
 
                         if(doCreateShipment)
@@ -1036,7 +1011,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                 var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration([scriptContext.request.parameters["traninternalid"]])
 
-
+                equipmentList = ANC_lib.getEquipmentList();
 
 
                 // globalrefs.tranBodyVals.location
@@ -1456,10 +1431,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         line : c,
                                         value : shipmentItems.nb || 12
                                     })
+                                    var totalLoadWeight = shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_linetotalweight",
                                         line : c,
-                                        value : shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
+                                        value : totalLoadWeight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
@@ -1510,6 +1486,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                             value : (resObjByColumnKey.line_equipment)
                                         })
                                     }
+
+                                    var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, resObjByColumnKey, totalLoadWeight);
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_ftlavepercentutil",
+                                            line : c,
+                                            value : computeLoadUtilization_result.shipmentUtilRate/*resObjByColumnKey.line_equipmentmaxweight / shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight*/
+                                        })
+                                    }
+
                                     if(resObjByColumnKey.line_quantity)
                                     {
                                         fitmentReservationSublist.setSublistValue({
@@ -1743,10 +1731,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         line : c,
                                         value : shipmentItems.nb || 12
                                     })
+                                    var totalLoadWeight = shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_linetotalweight",
                                         line : c,
-                                        value : shipmentItems.nb * shipmentLineIdTracker[""+shipmentItems.itemId].weight
+                                        value : totalLoadWeight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
@@ -1795,6 +1784,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                             id : "custpage_col_ifr_equipment",
                                             line : c,
                                             value : (resObjByColumnKey.line_equipment)
+                                        })
+                                    }
+                                    var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, resObjByColumnKey, totalLoadWeight);
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_ftlavepercentutil",
+                                            line : c,
+                                            value : computeLoadUtilization_result.shipmentUtilRate/*resObjByColumnKey.line_equipmentmaxweight / shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight*/
                                         })
                                     }
                                     if(resObjByColumnKey.line_quantity)
