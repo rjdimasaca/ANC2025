@@ -1197,7 +1197,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
         function groupOrderLinesForShipmentGeneration(tranInternalId)
         {
-                tranInternalId = tranInternalId.concat(61265756);
+                // tranInternalId = tranInternalId.concat(61265756);
                 var filters = [
                         ["type","anyof","SalesOrd"],
                         "AND",
