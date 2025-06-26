@@ -95,26 +95,26 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                             var sql =
                                 `Select
-                         sf.id as sf_id,
-                         sf.custrecord_anc_pf_grade as sf_grade,
-                         sf.custrecord_anc_pf_allocation as sf_allocation,
-                         sf.custrecord_anc_pf_year as sf_year,
-                         sf.custrecord_anc_pf_month as sf_month,
-                         sf.custrecord_anc_pf_consignee as sf_consignee,
-                         sf.custrecord_anc_pf_customer as sf_customer,
-                         y.name as y_name,
-                         m.name as m_name,
+                                         sf.id as sf_id,
+                                         sf.custrecord_anc_pf_grade as sf_grade,
+                                         sf.custrecord_anc_pf_allocation as sf_allocation,
+                                         sf.custrecord_anc_pf_year as sf_year,
+                                         sf.custrecord_anc_pf_month as sf_month,
+                                         sf.custrecord_anc_pf_consignee as sf_consignee,
+                                         sf.custrecord_anc_pf_customer as sf_customer,
+                                         y.name as y_name,
+                                         m.name as m_name,
 
-                        FROM
-                        customrecord_anc_pf_ as sf
-                        JOIN
-                        customrecord_anc_pf_years as y ON y.id = sf.custrecord_anc_pf_year
-                        JOIN
-                        customrecord_anc_pf_months as m ON m.id = sf.custrecord_anc_pf_month
+                                 FROM
+                                         customrecord_anc_pf_ as sf
+                                                 JOIN
+                                         customrecord_anc_pf_years as y ON y.id = sf.custrecord_anc_pf_year
+                                                 JOIN
+                                         customrecord_anc_pf_months as m ON m.id = sf.custrecord_anc_pf_month
 
-                        WHERE
-                        ${sqlFilters_text}
-                 `
+                                 WHERE
+                                         ${sqlFilters_text}
+                                `
 
                             log.debug("sql", sql)
 

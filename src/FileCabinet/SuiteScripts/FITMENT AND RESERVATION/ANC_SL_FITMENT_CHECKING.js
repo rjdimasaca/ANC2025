@@ -829,7 +829,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                         log.debug("totalLoadWeight", totalLoadWeight);
                         // totalLoadWeight = 4000;
-                        var computeLoadUtilization_result = computeLoadUtilization(equipmentList, {line_equipment:keptInfoForShipmentCreation["equipment"]}, totalLoadWeight);
+                        var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, {line_equipment:keptInfoForShipmentCreation["equipment"]}, totalLoadWeight);
 
                         shipmentObj.setValue({
                             sublistId : "item",
@@ -991,9 +991,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-                // redirect.toSearchResult({
-                //     search: fitmentSubmitResultSearch
-                // })
+                redirect.toSearchResult({
+                    search: fitmentSubmitResultSearch
+                })
 
             }
             catch(e)
