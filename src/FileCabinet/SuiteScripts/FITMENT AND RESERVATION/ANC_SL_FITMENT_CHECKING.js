@@ -490,6 +490,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             type : "customsale_anc_shipment",
                             isDynamic : true
                         });
+
+                        // var recObj = nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId());
+                        // recObj.setFieldValue("memo", "✅✅✅")
+                        // nlapiSubmitRecord(recObj)
+
+                        shipmentObj.setValue({
+                            fieldId : "memo",
+                            value : "✅✅✅"
+                        })
+
                         shipmentObj.setValue({
                             fieldId : "entity",
                             value : scriptContext.request.parameters["custpage_trancustomer"] || 106127 //TODO hardcoded

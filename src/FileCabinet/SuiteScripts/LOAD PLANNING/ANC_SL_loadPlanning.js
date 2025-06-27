@@ -24,12 +24,89 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
         const onRequest = (scriptContext) =>
         {
             try {
-                loadPlanningUi(scriptContext);
+                if(scriptContext.request.method == "GET")
+                {
+                    loadPlanningUi(scriptContext);
+                }
+                else if(scriptContext.request.method == "POST")
+                {
+                    processShipmentInput(scriptContext);
+
+                }
+
             }
             catch(e)
             {
                 log.error("ERROR in function onRequest", e.message)
             }
+        }
+
+        function processShipmentInput(scriptContext)
+        {
+            var shipmentInput = getShipmentInputs(scriptContext);
+
+            var shipmentsAndOrders = getShipmentsAndOrders(scriptContext);
+
+            var shipmentsAndOrderlines = getShipmentsAndOrderlines(scriptContext);
+        }
+
+        function getShipmentInputs(scriptContext)
+        {
+            var respObj = {};
+            try
+            {
+                log.debug("scriptContext.request", scriptContext.request)
+                log.debug("scriptContext.request.parameters", scriptContext.request.parameters);
+
+                var sublist1Count = scriptContext.request.getSublistCount({
+                    id : "custpage_subtab_lp_sublist1label"
+                });
+
+                log.debug("sublist1Count", sublist1Count)
+                for(var a = 0 ; a < sublist1Count ; a++)
+                {
+                    var sublist1_cbVal = scriptContext.request.getSublistValue({
+                        id : "custpage_subtab_lp_sublist1label",
+                        fieldId : "custpage_fld_lp_select",
+                        line : a
+                    })
+                    log.debug("sublist1_cbVal", sublist1_cbVal);
+
+                }
+            }
+            catch(e)
+            {
+                log.error("ERROR in function getShipmentInputs")
+            }
+            return respObj;
+        }
+
+        function getShipmentsAndOrders(scriptContext)
+        {
+            var respObj = {};
+            try
+            {
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function getShipmentsAndOrders")
+            }
+            return respObj;
+        }
+
+        function getShipmentsAndOrderlines(scriptContext)
+        {
+            var respObj = {};
+            try
+            {
+
+            }
+            catch(e)
+            {
+                log.error("ERROR in function getShipmentsAndOrderlines")
+            }
+            return respObj;
         }
 
         function loadPlanningUi(scriptContext)
