@@ -100,6 +100,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
 
                 integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
 
+                //AS OF 06192025 - ROD raised this issue to Mike, he suggest do not create anything if it is not marked final
+                if(!IsFinalInvoice && IsFinalInvoice != "true")
+                {
+                    log.audit("NOT MARKED AS FINAL, REJECT", loadID);
+                    throw {success:false, message: "NO LONGER processing payloads NOT marked as FINAL as of June 19,2025MT 15:15pm", request:JSON.stringify(requestBody)}
+                }
+
                 var prepLoad_result = ANC_lib.prepLoad(loadID)
                 log.debug("prepLoad_result", prepLoad_result);
 
@@ -245,6 +252,57 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             id : poId,
                         });
 
+                        //as of 06252025
+                        //make sure to use the new vendor
+                        // var poId = lookupPo(_result.list[0];
+                        var carrierId = requestBody.carrierID || requestBody.CarrierID;
+                        var carrierInternalid = "";
+                        var vendorSearchObj = search.create({
+                            type : "vendor",
+                            filters : [
+                                ["externalid", "anyof", [carrierId, "CAR"+carrierId]]
+                            ],
+                        })
+
+                        var sr = vendorSearchObj.run();
+
+                        sr.each(function(res){
+                            carrierInternalid = res.id;
+                            //no just get the first result
+                            return false;
+                        })
+
+                        if(!carrierInternalid)
+                        {
+                            respMsg ={success:false, message : "Cannot resolve Vendor/Carrier with externalid : " + carrierId, requestBody};
+                            throw respMsg;
+                        }
+
+                        var currentEntity = poRecObj.getValue({
+                            fieldId : "entity",
+                            value : carrierInternalid
+                        });
+                        if(carrierInternalid != currentEntity)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "entity",
+                                value : carrierInternalid
+                            })
+                        }
+
+                        /*
+                        5 is ANC, as of 16202025/06232025 CODY confirmed that all freight should go to ANS
+                        Cody, alyssa and katherine found this issue
+                        Rod explained that i let the system default the subsidiary because its not defined in the payload
+                        Cody said existing issues regarding this should be okay since ANC is still the parent subsidiary
+                        but should be all to ANS going forward
+                        rod warned that they need to make sure ANS is applied to freight vendors now that im forcing ANS as subsidiary
+                        */
+                        poRecObj.setValue({
+                            fieldId : "subsidiary",
+                            value : 5
+                        })
+
                         if(targets.targetCons)
                         {
                             poRecObj.setValue({
@@ -381,6 +439,19 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                 entity : carrierInternalid
                             }
                         });
+
+                        /*
+                        5 is ANC, as of 16202025/06232025 CODY confirmed that all freight should go to ANS
+                        Cody, alyssa and katherine found this issue
+                        Rod explained that i let the system default the subsidiary because its not defined in the payload
+                        Cody said existing issues regarding this should be okay since ANC is still the parent subsidiary
+                        but should be all to ANS going forward
+                        rod warned that they need to make sure ANS is applied to freight vendors now that im forcing ANS as subsidiary
+                        */
+                        poRecObj.setValue({
+                            fieldId : "subsidiary",
+                            value : 5
+                        })
 
                         if(targets.targetCons)
                         {

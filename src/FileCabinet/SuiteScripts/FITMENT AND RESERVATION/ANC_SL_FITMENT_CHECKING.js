@@ -330,7 +330,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
             var fitmentReservationSublist = form.addSublist({
                 label : "custpage_sublist_test1" + "_" + 1 + "_" + 1,
-                type : "LIST",
+                type : "INLINEEDITOR",
                 id : "custpage_sublist_test1",
                 // tab : subtabs[`${srGroupedByDeliveryDate[date][0].origkeys}`].id
                 // tab : mapping[`${srGroupedByDeliveryDate[date][0].origkeys}`]
@@ -343,14 +343,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
             var fitmentReservationSublist = form.addSublist({
@@ -368,14 +368,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
 
@@ -394,14 +394,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
 
             var fitmentReservationSublist = form.addSublist({
@@ -419,14 +419,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                 id : "custpage_fld_test1",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
             fitmentReservationSublist.addField({
                 label : "field test 2",
                 id : "custpage_fld_test2",
                 // tab : "custpage_sublist_test1",
                 // container : "custpage_sublist_test1",
-                type : "select"
+                type : "text"
             })
         }
 
@@ -490,6 +490,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                             type : "customsale_anc_shipment",
                             isDynamic : true
                         });
+
+                        // var recObj = nlapiLoadRecord(nlapiGetRecordType(), nlapiGetRecordId());
+                        // recObj.setFieldValue("memo", "✅✅✅")
+                        // nlapiSubmitRecord(recObj)
+
+                        shipmentObj.setValue({
+                            fieldId : "memo",
+                            value : "✅✅✅"
+                        })
+
                         shipmentObj.setValue({
                             fieldId : "entity",
                             value : scriptContext.request.parameters["custpage_trancustomer"] || 106127 //TODO hardcoded
@@ -829,38 +839,13 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
                         log.debug("totalLoadWeight", totalLoadWeight);
                         // totalLoadWeight = 4000;
-                        transportationMaxWeight = 50000;
-                        var equipmentList_filtered = equipmentList.filter(function(elem){
-                            if(elem.eq_internalid == keptInfoForShipmentCreation["equipment"])
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                return false;
-                            }
-                        })
-
-                        if(equipmentList_filtered.length > 0)
-                        {
-                            transportationMaxWeight = equipmentList_filtered[0].eq_weightcap || 0
-                        }
-
-                        shipmentUtilRate = 0;
-                        if(transportationMaxWeight)
-                        {
-                            shipmentUtilRate = (100 * (totalLoadWeight/transportationMaxWeight));
-                        }
-
-
-                        log.debug("shipmentUtilRate", shipmentUtilRate);
-
+                        var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, {line_equipment:keptInfoForShipmentCreation["equipment"]}, totalLoadWeight);
 
                         shipmentObj.setValue({
                             sublistId : "item",
                             fieldId : "custbody_anc_loadingefficiency",
                             // line : targetIndex,
-                            value : shipmentUtilRate
+                            value : computeLoadUtilization_result.shipmentUtilRate
                         })
 
                         if(doCreateShipment)
@@ -1016,9 +1001,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
 
 
 
-                // redirect.toSearchResult({
-                //     search: fitmentSubmitResultSearch
-                // })
+                redirect.toSearchResult({
+                    search: fitmentSubmitResultSearch
+                })
 
             }
             catch(e)
@@ -1034,9 +1019,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
             try
             {
 
-                var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(scriptContext.request.parameters["traninternalid"])
+                var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration([scriptContext.request.parameters["traninternalid"]])
 
-
+                equipmentList = ANC_lib.getEquipmentList();
 
 
                 // globalrefs.tranBodyVals.location
@@ -1456,10 +1441,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         line : c,
                                         value : shipmentItems.nb || 12
                                     })
+                                    var totalLoadWeight = shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_linetotalweight",
                                         line : c,
-                                        value : shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
+                                        value : totalLoadWeight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
@@ -1510,6 +1496,18 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                             value : (resObjByColumnKey.line_equipment)
                                         })
                                     }
+
+                                    var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, resObjByColumnKey, totalLoadWeight);
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_ftlavepercentutil",
+                                            line : c,
+                                            value : computeLoadUtilization_result.shipmentUtilRate/*resObjByColumnKey.line_equipmentmaxweight / shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight*/
+                                        })
+                                    }
+
                                     if(resObjByColumnKey.line_quantity)
                                     {
                                         fitmentReservationSublist.setSublistValue({
@@ -1743,10 +1741,11 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                         line : c,
                                         value : shipmentItems.nb || 12
                                     })
+                                    var totalLoadWeight = shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight
                                     fitmentReservationSublist.setSublistValue({
                                         id : "custpage_ifr_linetotalweight",
                                         line : c,
-                                        value : shipmentItems.nb * shipmentLineIdTracker[""+shipmentItems.itemId].weight
+                                        value : totalLoadWeight
                                     })
 
                                     fitmentReservationSublist.setSublistValue({
@@ -1795,6 +1794,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                                             id : "custpage_col_ifr_equipment",
                                             line : c,
                                             value : (resObjByColumnKey.line_equipment)
+                                        })
+                                    }
+                                    var computeLoadUtilization_result = ANC_lib.computeLoadUtilization(equipmentList, resObjByColumnKey, totalLoadWeight);
+
+                                    if(resObjByColumnKey.line_equipment)
+                                    {
+                                        fitmentReservationSublist.setSublistValue({
+                                            id : "custpage_ifr_ftlavepercentutil",
+                                            line : c,
+                                            value : computeLoadUtilization_result.shipmentUtilRate/*resObjByColumnKey.line_equipmentmaxweight / shipmentItems.nb * shipmentLineIdTracker[shipmentItems.itemId].weight*/
                                         })
                                     }
                                     if(resObjByColumnKey.line_quantity)

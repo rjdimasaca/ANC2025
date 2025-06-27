@@ -2,6 +2,7 @@
  * @NApiVersion 2.1
  */
 
+/*CHANGELOG: do not create new shipments if it exists already. added line of code to terminate function and return the shipment found*/
 //delete integration logs
 // var arr = nlapiSearchRecord(nlapiGetRecordType());
 // for(var a = 0 ; a < arr.length ; a++)
@@ -1474,6 +1475,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                                                     return prepShipmentRecId;
                                             }
+                                            return prepShipmentRecId;
                                     }
 
 

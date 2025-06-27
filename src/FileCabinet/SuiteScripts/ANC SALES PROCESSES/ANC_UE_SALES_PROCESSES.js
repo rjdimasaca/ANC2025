@@ -1184,37 +1184,46 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
                     var lineDetailsSql = `
                         SELECT
-                            BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber /*{transactionlines.linesequencenumber#RAW}*/,
-                            BUILTIN_RESULT.TYPE_INTEGER(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID") AS "cons_id" /*{transactionlines.custcol_consignee.id#RAW}*/,
-                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD.custrecord_alberta_ns_city) AS custrecord_alberta_ns_city /*{transactionlines.custcol_consignee.custrecord_alberta_ns_city#RAW}*/,
-                            BUILTIN_RESULT.TYPE_INTEGER(transactionLine.uniquekey) AS uniquekey /*{transactionlines.uniquekey#RAW}*/,
-                            BUILTIN_RESULT.TYPE_INTEGER("LOCATION"."ID") AS loc_id /*{transactionlines.location.id#RAW}*/
+                            BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS loc_city,
+                            BUILTIN_RESULT.TYPE_STRING(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD.custrecord_alberta_ns_city) AS cons_city,
+                            BUILTIN_RESULT.TYPE_INTEGER(CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD.ID) AS cons_id,
+                            BUILTIN_RESULT.TYPE_INTEGER(Location_SUB.id_join) AS loc_id
                         FROM
-                            "TRANSACTION",
+                            TRANSACTION,
                             CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD,
-                            "LOCATION",
+                            (SELECT
+                                 LOCATION.ID AS id_join,
+                                 LocationMainAddress.city AS city
+                             FROM
+                                 LOCATION,
+                                 LocationMainAddress
+                             WHERE
+                                 LOCATION.mainaddress = LocationMainAddress.nkey(+)
+                            ) Location_SUB,
                             transactionLine
                         WHERE
-                            (((transactionLine.custcol_consignee = CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID"(+) AND transactionLine."LOCATION" = "LOCATION"."ID"(+)) AND "TRANSACTION"."ID" = transactionLine."TRANSACTION"))
-                          AND ((CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD."ID" IS NOT NULL AND transactionLine."TRANSACTION" IN ('${recObj.id}') AND NVL(transactionLine.mainline, 'F') = 'F'))
+                            (((transactionLine.custcol_consignee = CUSTOMRECORD_ALBERTA_NS_CONSIGNEE_RECORD.ID(+) AND transactionLine.LOCATION = Location_SUB.id_join(+)) AND TRANSACTION.ID = transactionLine.TRANSACTION))
+                          AND ((TRANSACTION.ID IN ('${recObj.id}') AND NVL(transactionLine.mainline, 'F') = 'F' AND NVL(transactionLine.taxline, 'F') = 'F'))
                     `
 
                     var lineDetailsSqlRes = query.runSuiteQL({ query: lineDetailsSql }).asMappedResults();
                     lineDetailsSqlRes_byCons = groupBy(lineDetailsSqlRes, "cons_id")
-                    lineDetailsSqlRes_byCity_loc = groupByKeys(lineDetailsSqlRes, ["custrecord_alberta_ns_city", "loc_id"])
+                    lineDetailsSqlRes_byLoc = groupBy(lineDetailsSqlRes, "loc_id")
+                    lineDetailsSqlRes_byCity_loc = groupByKeys(lineDetailsSqlRes, ["cons_city", "loc_id"])
 
                     log.debug("lineDetailsSqlRes_byCons", lineDetailsSqlRes_byCons);
                     log.debug("lineDetailsSqlRes_byCity_loc", lineDetailsSqlRes_byCity_loc);
+                    log.debug("lineDetailsSqlRes_byLoc", lineDetailsSqlRes_byLoc);
 
                     var laneFiltersArray = [];
                     for(var city_loc in lineDetailsSqlRes_byCity_loc)
                     {
-                        var consigneeCity = lineDetailsSqlRes_byCity_loc[city_loc][0].custrecord_alberta_ns_city ? lineDetailsSqlRes_byCity_loc[city_loc][0].custrecord_alberta_ns_city : header_consigneeCity;
-                        var originWarehouse = lineDetailsSqlRes_byCity_loc[city_loc][0].loc_id ? lineDetailsSqlRes_byCity_loc[city_loc][0].loc_id : header_originWarehouse;
+                        var consigneeCity = lineDetailsSqlRes_byCity_loc[city_loc][0].cons_city ? lineDetailsSqlRes_byCity_loc[city_loc][0].cons_city : header_consigneeCity;
+                        var originWarehouse = lineDetailsSqlRes_byCity_loc[city_loc][0].loc_city ? lineDetailsSqlRes_byCity_loc[city_loc][0].loc_city : lineDetailsSqlRes_byLoc[header_originWarehouse].loc_city;
                         laneFiltersArray.push(
                             `(
-                            ${ANC_lib.references.RECTYPES.lane.fields.originwarehouse} = '${originWarehouse}'
-                            AND ${ANC_lib.references.RECTYPES.consignee.fields.city} = '${consigneeCity}'
+                            ${ANC_lib.references.RECTYPES.lane.fields.originwarehousecity} = '${originWarehouse}'
+                            AND ${ANC_lib.references.RECTYPES.lane.fields.destinationcity} = '${consigneeCity}'
                             )`
                         )
                     }
@@ -1223,9 +1232,11 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
 
                     //i need city_whsid
                     var laneSql = `
-                        SELECT lane.id as lane_id, cons.id as cons_id, 
+                        SELECT lane.id as lane_id,
+                               lane.custrecord_anc_lane_destination as cons_id,
                                lane.custrecord_anc_lane_destinationcity as lane_destcity,
                                lane.custrecord_anc_lane_originwarehouse as lane_origloc,
+                               lane.custrecord_anc_lane_originwarehousecity as lane_origcity,
                                
                                lane.custrecord_anc_lane_cdw as lane_xdockloc,
                                lane.custrecord_anc_lane_crossdockcity as lane_xdockcity,
@@ -1245,12 +1256,10 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                lane.custrecord_anc_lane_ltt as lane_ltt,
                                lane.custrecord_anc_crossdockeligible as lane_xdockelig,
                         FROM ${ANC_lib.references.RECTYPES.lane.id} as lane 
-                            JOIN ${ANC_lib.references.RECTYPES.consignee.id} as cons 
-                                ON cons.ID = lane.custrecord_anc_lane_destination
                         WHERE
                             lane.isinactive = 'F'
                         AND 
-                            ${laneFiltersStr}
+                            (${laneFiltersStr})
                     `
 
                     // SELECT lane.id FROM customrecord_anc_shippinglanes as lane JOIN customrecord_alberta_ns_consignee_record as cons ON cons.ID = lane.custrecord_anc_lane_destination WHERE lane.isinactive = 'F' AND ( lane.custrecord_anc_lane_originwarehouse = '215' AND cons.ID = 198816)
@@ -1261,7 +1270,7 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                     log.debug("laneSqlResults", laneSqlResults)
 
 
-                    laneSqlResults_byCity_loc = groupByKeys(laneSqlResults, ["lane_destcity", "lane_origloc"]);
+                    laneSqlResults_byCity_loc = groupByKeys(laneSqlResults, ["lane_destcity", "lane_origcity"]);
 
                     log.debug("laneSqlResults_byCity_loc", laneSqlResults_byCity_loc);
 
@@ -1290,16 +1299,22 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                             fieldId : ANC_lib.references.SO_COLUMNS.CONSIGNEE,
                             line : a
                         })
-                        lineVals.consigneeCity = lineDetailsSqlRes_byCons[lineVals.consignee].custrecord_alberta_ns_city || header_consigneeCity;
+                        log.debug("RESOLVE LINE CONSIGNEE lineVals", lineVals)
+
+                        lineVals.consigneeCity = lineDetailsSqlRes_byCons[""+lineVals.consignee][0].cons_city || header_consigneeCity;
+
+                        // log.debug("RESOLVE LINE CONSIGNEE lineVals", {lineVals, byCons:lineDetailsSqlRes_byCons[""+lineVals.consignee], byCons_consCity:lineDetailsSqlRes_byCons[""+lineVals.consignee].cons_city, header_consigneeCity})
+
                         lineVals.location = recObj.getSublistValue({
                             sublistId : "item",
                             fieldId : "location",
                             line : a
                         })
                         lineVals.location = lineVals.location ? lineVals.location : header_originWarehouse;
+                        lineVals.origincity = lineDetailsSqlRes_byLoc[""+lineVals.location][0].loc_city
 
 
-                        var line_destCity_origloc = lineVals.consigneeCity + "_" + lineVals.location
+                        var line_destCity_origloc = lineVals.consigneeCity + "_" + lineVals.origincity
                         log.debug("setting shippinglane index" + a, {a, line_destCity_origloc})
                         if(laneSqlResults_byCity_loc[line_destCity_origloc])
                         {
@@ -1395,6 +1410,12 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                 //not xdock eligible, auto refer to direct lowest cost
                                 else
                                 {
+                                    recObj.setSublistValue({
+                                        sublistId : "item",
+                                        fieldId : "custcol_anc_usecrossdock",
+                                        line : a,
+                                        value : false
+                                    })
                                     //only if direct lowest cost equip is defined
                                     if(lane_lceq)
                                     {
@@ -1427,6 +1448,14 @@ define(['/SuiteScripts/ANC_lib.js','N/query', 'N/format', 'N/search', 'N/https',
                                 //only if direct lowest cost equip is defined
                                 var lane_ftteq = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftteq
                                 var lane_ftt = laneSqlResults_byCity_loc[line_destCity_origloc][0].lane_ftt
+
+                                recObj.setSublistValue({
+                                    sublistId : "item",
+                                    fieldId : "custcol_anc_usecrossdock",
+                                    line : a,
+                                    value : false
+                                })
+
                                 if(lane_ftteq)
                                 {
                                     recObj.setSublistValue({
