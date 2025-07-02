@@ -100,7 +100,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
         const addElements = (scriptContext) => {
             try
             {
+                var lineUrlsObj = {};
                 var lineUrls = [];
+                var lineFitmentIcons = [];
                 if (scriptContext.type == "view" /*|| scriptContext.type == "edit"*/) {
 
 
@@ -112,6 +114,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
                     for(var j = 0 ; j < elemList.length; j++)
                     {
                         lineUrls = [];
+                        lineFitmentIcons = [];
                         var groupElem = elemList[j];
 
                         var base_fitmentAndReserveUiUrl = "/app/site/hosting/scriptlet.nl?script=5576&deploy=1";
@@ -154,15 +157,33 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
                                 substitutionUiUrl += "&tranlinesequence=" + (Number(a) + 1)
 
                                 // substitutionUiUrl += "&othercompf=" + JSON.stringify(filteredArr);
+
+                                var lineFitmentIcon = scriptContext.newRecord.getSublistValue({sublistId : "item", fieldId : "custcol_anc_fitment", line : a});
+
                                 lineUrls.push(substitutionUiUrl);
+                                lineFitmentIcons.push(lineFitmentIcon)
                             }
                         }
 
                         log.debug("lineUrls", lineUrls);
+                        log.debug("lineFitmentIcons", lineFitmentIcons);
+                        lineUrlsObj.lineUrls = lineUrlsObj.lineUrls;
+                        lineUrlsObj.lineFitmentIcons = lineFitmentIcons;
 
                         var inlineHtmlFieldValue = `
                         <script>
                         jQuery(document).ready(function() {
+                            
+                            
+                            //makeElementClickable
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
                             // alert(12345);
                             var anc_minimized_ui = false;
                             
@@ -191,10 +212,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
                                 rows.each(function(index, elem){
                                     
                                     var lineUrls = ${JSON.stringify(lineUrls)};
+                                    var lineFitmentIcons = ${JSON.stringify(lineFitmentIcons)};
                                     
                                     // console.log("lineUrls", lineUrls);
                                     
                                     window["lineUrl_${groupElem.name}" + index] = lineUrls[index]
+                                    window["lineFitmentIcons_${groupElem.name}" + index] = lineFitmentIcons[index]
+                                    console.log("lineFitmentIcons", lineFitmentIcons)
+                                    console.log("lineUrls", lineUrls)
                                 
                                 //TODO you may not have to plug the functions or details into WINDOWS object, see see ANC_UE_SALES_PROCESSES.js it may have been done here already.
                                     if(index==0)
@@ -221,14 +246,26 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/ui/di
                                         }
                                         else
                                         {
-                                            // newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><p>${groupElem.rowTitle}<br/><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
-                                            //
-                                            // newTdHtml += (index-1) + ', \\'popupWindow\\', \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></p></td>'
-                                            
-                                            newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
+                                            if(${groupElem.replicateIcon})
+                                            {
+                                                newTdHtml += '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><p style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}' + (index-1) + ')"' +
+                                                 '' + ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup">' + lineFitmentIcons[index-1] + '</p></td>' +
+                                                  '' + lineFitmentIcons[index-1] + '';
+                                                // newTdHtml += ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></p></td>'
+                                            }
+                                            else
+                                            {
+                                                newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
+                                                newTdHtml += (index-1) + ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
+                                            }
+                                            // newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><p>' + lineFitmentIcons[index-1] + '</p><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
                                     
+                                            // newTdHtml = '<td class="minimize_ui_elem_td0${groupElem.name}" align="center"><p>${'window.lineFitmentIcons_' + groupElem.name}' + (index-1) + '</p><img width="${groupElem.iconWidth}" height="${groupElem.iconHeight}" src="${groupElem.icon}" style="cursor: pointer;" onclick="window.open(window.lineUrl_${groupElem.name}';
+                                    
+                                            // //as of 06272025 mike wants a clickable asci based on a stored field
+                                            
                                             // newTdHtml += (index-1) + ',' + "'" + (index-1) + 'popupWindow${groupElem.name},' + ' \\'popupWindow${groupElem.name}\\', \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
-                                            newTdHtml += (index-1) + ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
+                                            // newTdHtml += (index-1) + ',' + "'" + "popupWindow${groupElem.name}" + (index-1) + "'," + ' \\'width=700,height=700,scrollbars=yes\\'); return false;" alt="Click to open popup"></td>'
                                 
                                         }
                                         
