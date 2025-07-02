@@ -11,205 +11,205 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
     (query, record, runtime, search, https) => {
 
-        const foo = () => {
+            const foo = () => {
 
-        }
+            }
 
-        const bar = () => {
+            const bar = () => {
 
-        }
+            }
 
-        var salesForecastJobFolderId = 392686;
+            var salesForecastJobFolderId = 392686;
 
-        const references = {
-                SO_COLUMNS : {
-                        GRADE : "custcol_anc_grade",
-                        CONSIGNEE : "custcol_consignee",
-                        DELIVERYDATE : "custcol_anc_deliverydate",
-                        SHIPDATE : "custcol_anc_shipdate",
-                        PRODUCTIONDATE : "custcol_anc_productiondate",
-                        SALESFORECAST : "custcol_anc_customeralloc_caid",
-                        SHIPMENTCAPACITY : "custcol_anc_shipmentcap_id",
-                        PRODUCTIONCAPACITYMONTH : "custcol_anc_prodcapmonth_id",
-                        PRODUCTIONCAPACITYWEEK : "custcol_anc_prodcapweek_id",
-                        LINESTATUS : {
-                                id : "custcol_anc_status",
-                                options : {
-                                        "APPROVED" : {val:1, text:"APPROVED"},
-                                        "PENDING" : {val:2, text:"PENDING"},
-                                        "REQUIRED" : {val:3, text:"REQUIRED"},
-                                        "SHIPPED" : {val:4, text:"SHIPPED"},
-                                }
-                        },
-                        TRANSITLOCATION : {
-                                id : "custcol_anc_transitlocation",
-                        },
-                        TRANSITTIME : {
-                                id : "custcol_anc_transittime",
-                        },
-                        TRANSITOPTMETHOD : {
-                                id : "custcol_anc_transitoptmethod",
-                        },
-                        EQUIPMENT : {
-                                id : "custcol_anc_equipment",
-                        },
-                        EQUIPMENT : {
-                                id : "custcol_anc_equipment",
-                        },
-                        LDCDATE : {
-                                id : "custcol_anc_ldcdate",
-                        },
-                        PRESSRUNDATE : {
-                                id : "custcol_anc_pressrundate",
-                        },
-                        PRESSRUNDATE : {
-                                id : "custcol_anc_pressrundate",
-                        },
-                        PRESSRUNDATE : {
-                                id : "custcol_anc_pressrundate",
-                        },
-                        EXPECTEDTONNAGE : {
-                                id : "custcol_anc_expectedtonnage",
-                        },
-                        TOTALROLLS : {
-                                id : "custcol_anc_totalrolls",
-                        },
-                        ROLLSPERPACK : {
-                                id : "custcol_anc_rollsperpack",
-                        },
-                        WRAPTYPE : {
-                                id : "custcol_anc_wraptype",
-                        },
-                        SHIPPINGLANE : {
-                                id : "custcol_anc_shippinglane",
-                        },
-                        ROLLSONHAND : {
-                                id : "custcol_anc_rollsonhand",
-                        },
-                        RESERVEDROLLS : {
-                                id : "custcol_anc_reservedrolls",
-                        },
-                        BACKORDERROLLS : {
-                                id : "custcol_anc_backorderrolls",
-                        },
-                        CONSIGNEECOL : {
-                                id : "custcol_consignee",
-                        },
+            const references = {
+                    SO_COLUMNS : {
+                            GRADE : "custcol_anc_grade",
+                            CONSIGNEE : "custcol_consignee",
+                            DELIVERYDATE : "custcol_anc_deliverydate",
+                            SHIPDATE : "custcol_anc_shipdate",
+                            PRODUCTIONDATE : "custcol_anc_productiondate",
+                            SALESFORECAST : "custcol_anc_customeralloc_caid",
+                            SHIPMENTCAPACITY : "custcol_anc_shipmentcap_id",
+                            PRODUCTIONCAPACITYMONTH : "custcol_anc_prodcapmonth_id",
+                            PRODUCTIONCAPACITYWEEK : "custcol_anc_prodcapweek_id",
+                            LINESTATUS : {
+                                    id : "custcol_anc_status",
+                                    options : {
+                                            "APPROVED" : {val:1, text:"APPROVED"},
+                                            "PENDING" : {val:2, text:"PENDING"},
+                                            "REQUIRED" : {val:3, text:"REQUIRED"},
+                                            "SHIPPED" : {val:4, text:"SHIPPED"},
+                                    }
+                            },
+                            TRANSITLOCATION : {
+                                    id : "custcol_anc_transitlocation",
+                            },
+                            TRANSITTIME : {
+                                    id : "custcol_anc_transittime",
+                            },
+                            TRANSITOPTMETHOD : {
+                                    id : "custcol_anc_transitoptmethod",
+                            },
+                            EQUIPMENT : {
+                                    id : "custcol_anc_equipment",
+                            },
+                            EQUIPMENT : {
+                                    id : "custcol_anc_equipment",
+                            },
+                            LDCDATE : {
+                                    id : "custcol_anc_ldcdate",
+                            },
+                            PRESSRUNDATE : {
+                                    id : "custcol_anc_pressrundate",
+                            },
+                            PRESSRUNDATE : {
+                                    id : "custcol_anc_pressrundate",
+                            },
+                            PRESSRUNDATE : {
+                                    id : "custcol_anc_pressrundate",
+                            },
+                            EXPECTEDTONNAGE : {
+                                    id : "custcol_anc_expectedtonnage",
+                            },
+                            TOTALROLLS : {
+                                    id : "custcol_anc_totalrolls",
+                            },
+                            ROLLSPERPACK : {
+                                    id : "custcol_anc_rollsperpack",
+                            },
+                            WRAPTYPE : {
+                                    id : "custcol_anc_wraptype",
+                            },
+                            SHIPPINGLANE : {
+                                    id : "custcol_anc_shippinglane",
+                            },
+                            ROLLSONHAND : {
+                                    id : "custcol_anc_rollsonhand",
+                            },
+                            RESERVEDROLLS : {
+                                    id : "custcol_anc_reservedrolls",
+                            },
+                            BACKORDERROLLS : {
+                                    id : "custcol_anc_backorderrolls",
+                            },
+                            CONSIGNEECOL : {
+                                    id : "custcol_consignee",
+                            },
 
-                },
-                SALESFORECAST : {
-                        FIELDS : {
-                                CUSTOMER : "custrecord_anc_pf_customer",
-                                GRADE : "custrecord_anc_pf_grade",
-                                CONSIGNEE : "custrecord_anc_pf_consignee",
-                                MONTH : "custrecord_anc_pf_month",
-                                YEAR : "custrecord_anc_pf_year",
-                                COMPOSITEKEY : "custrecord_anc_pf_compositekey",
-                                ALLOCATION : "custrecord_anc_pf_allocation",
-                                NAME : "name",
-                        },
-                },
-                RECTYPES : {
-                        lane : {
-                                id:"customrecord_anc_shippinglanes",
-                                fields : {
-                                        destinationcity : "custrecord_anc_lane_destinationcity",
-                                        originwarehouse : "custrecord_anc_lane_originwarehouse",
-                                        originwarehousecity : "custrecord_anc_lane_originwarehousecity",
-                                        destination : "custrecord_anc_lane_destination",
-                                        crossdockwarehouse : "custrecord_anc_lane_cdw",
-                                        crossdockwarehousecity : "custrecord_anc_lane_crossdockcity",
-                                }
-                        },
-                        consignee : {
-                                id:"customrecord_alberta_ns_consignee_record",
-                                fields : {
-                                        city : "custrecord_alberta_ns_city",
-                                }
-                        },
-                        production_forecast : {
-                                id: "customrecord_production_forecast",
-                                fields: {
-                                        month: "custrecord_prodfc_month",
-                                        quantity: "custrecord_prodfc_plannedprodpmcap",
-                                        year: "custrecord_prodfc_year",
-                                        name: "name",
-                                },
-                        },
-                        production_year : {
-                                id:"customrecord_anc_pf_years",
-                                fields : {
-                                        month : "name",
-                                        quantity : "name",
-                                        year : "custrecord_prodfc_year",
-                                        name : "name",
-                                },
-                                sublists : {
-                                        salesforecast : "recmachcustrecord_anc_pf_year",
-                                        productionforecast : "recmachcustrecord_prodfc_year"
-                                }
-                        },
-                        shipment : {
-                                id : "CuTrSale108" //FIXME
-                        },
-                        months : {
-                                id : "customrecord_anc_pf_months"
-                        },
-                        shipmentcapacity : {
-                                id : "customrecord_anc_dailyshipmentcap"
-                        }
-                }
-        }
+                    },
+                    SALESFORECAST : {
+                            FIELDS : {
+                                    CUSTOMER : "custrecord_anc_pf_customer",
+                                    GRADE : "custrecord_anc_pf_grade",
+                                    CONSIGNEE : "custrecord_anc_pf_consignee",
+                                    MONTH : "custrecord_anc_pf_month",
+                                    YEAR : "custrecord_anc_pf_year",
+                                    COMPOSITEKEY : "custrecord_anc_pf_compositekey",
+                                    ALLOCATION : "custrecord_anc_pf_allocation",
+                                    NAME : "name",
+                            },
+                    },
+                    RECTYPES : {
+                            lane : {
+                                    id:"customrecord_anc_shippinglanes",
+                                    fields : {
+                                            destinationcity : "custrecord_anc_lane_destinationcity",
+                                            originwarehouse : "custrecord_anc_lane_originwarehouse",
+                                            originwarehousecity : "custrecord_anc_lane_originwarehousecity",
+                                            destination : "custrecord_anc_lane_destination",
+                                            crossdockwarehouse : "custrecord_anc_lane_cdw",
+                                            crossdockwarehousecity : "custrecord_anc_lane_crossdockcity",
+                                    }
+                            },
+                            consignee : {
+                                    id:"customrecord_alberta_ns_consignee_record",
+                                    fields : {
+                                            city : "custrecord_alberta_ns_city",
+                                    }
+                            },
+                            production_forecast : {
+                                    id: "customrecord_production_forecast",
+                                    fields: {
+                                            month: "custrecord_prodfc_month",
+                                            quantity: "custrecord_prodfc_plannedprodpmcap",
+                                            year: "custrecord_prodfc_year",
+                                            name: "name",
+                                    },
+                            },
+                            production_year : {
+                                    id:"customrecord_anc_pf_years",
+                                    fields : {
+                                            month : "name",
+                                            quantity : "name",
+                                            year : "custrecord_prodfc_year",
+                                            name : "name",
+                                    },
+                                    sublists : {
+                                            salesforecast : "recmachcustrecord_anc_pf_year",
+                                            productionforecast : "recmachcustrecord_prodfc_year"
+                                    }
+                            },
+                            shipment : {
+                                    id : "CuTrSale108" //FIXME
+                            },
+                            months : {
+                                    id : "customrecord_anc_pf_months"
+                            },
+                            shipmentcapacity : {
+                                    id : "customrecord_anc_dailyshipmentcap"
+                            }
+                    }
+            }
 
-        function getRelatedForecasts(tranInternalid, lineValList)
-        {
-                var compositeKeyResults = {};
-                try
-                {
-                        var forecastFilters = getForecastFilters(tranInternalid, lineValList);
-                        var sqlFilters_text = forecastFilters.join(" OR ")
+            function getRelatedForecasts(tranInternalid, lineValList)
+            {
+                    var compositeKeyResults = {};
+                    try
+                    {
+                            var forecastFilters = getForecastFilters(tranInternalid, lineValList);
+                            var sqlFilters_text = forecastFilters.join(" OR ")
 
-                        log.debug("getRelatedForecasts sqlFilters_text", sqlFilters_text)
+                            log.debug("getRelatedForecasts sqlFilters_text", sqlFilters_text)
 
-                        var sql =
-                            `Select
-                         sf.id as sf_id,
-                         sf.custrecord_anc_pf_grade as sf_grade,
-                         sf.custrecord_anc_pf_allocation as sf_allocation,
-                         sf.custrecord_anc_pf_year as sf_year,
-                         sf.custrecord_anc_pf_month as sf_month,
-                         sf.custrecord_anc_pf_consignee as sf_consignee,
-                         sf.custrecord_anc_pf_customer as sf_customer,
-                         y.name as y_name,
-                         m.name as m_name,
+                            var sql =
+                                `Select
+                                         sf.id as sf_id,
+                                         sf.custrecord_anc_pf_grade as sf_grade,
+                                         sf.custrecord_anc_pf_allocation as sf_allocation,
+                                         sf.custrecord_anc_pf_year as sf_year,
+                                         sf.custrecord_anc_pf_month as sf_month,
+                                         sf.custrecord_anc_pf_consignee as sf_consignee,
+                                         sf.custrecord_anc_pf_customer as sf_customer,
+                                         y.name as y_name,
+                                         m.name as m_name,
 
-                        FROM
-                        customrecord_anc_pf_ as sf
-                        JOIN
-                        customrecord_anc_pf_years as y ON y.id = sf.custrecord_anc_pf_year
-                        JOIN
-                        customrecord_anc_pf_months as m ON m.id = sf.custrecord_anc_pf_month
+                                 FROM
+                                         customrecord_anc_pf_ as sf
+                                                 JOIN
+                                         customrecord_anc_pf_years as y ON y.id = sf.custrecord_anc_pf_year
+                                                 JOIN
+                                         customrecord_anc_pf_months as m ON m.id = sf.custrecord_anc_pf_month
 
-                        WHERE
-                        ${sqlFilters_text}
-                 `
+                                 WHERE
+                                         ${sqlFilters_text}
+                                `
 
-                        log.debug("sql", sql)
+                            log.debug("sql", sql)
 
-                        const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
+                            const sqlResults = query.runSuiteQL({ query: sql }).asMappedResults();
 
-                        log.debug("sqlResults", sqlResults);
+                            log.debug("sqlResults", sqlResults);
 
-                        var keyOrder = ["sf_customer", "sf_consignee", "sf_grade", "sf_month", "sf_year"]
-                        compositeKeyResults = buildCompositeKeys(keyOrder, sqlResults)
-                }
-                catch(e)
-                {
-                        log.error("ERROR in fucntion getForecasts", e)
-                }
+                            var keyOrder = ["sf_customer", "sf_consignee", "sf_grade", "sf_month", "sf_year"]
+                            compositeKeyResults = buildCompositeKeys(keyOrder, sqlResults)
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in fucntion getForecasts", e)
+                    }
 
-                return compositeKeyResults;
-        }
+                    return compositeKeyResults;
+            }
 
 
             function getRelatedShipCap(tranInternalid, lineValList)
@@ -224,16 +224,16 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                             var sql =
                                 `Select
-                         sc.id as sc_id,
-                         sc.custrecord_anc_dsc_loc as sc_location,
-                         sc.custrecord_anc_dsc_fulldate as sc_fulldate
+                                         sc.id as sc_id,
+                                         sc.custrecord_anc_dsc_loc as sc_location,
+                                         sc.custrecord_anc_dsc_fulldate as sc_fulldate
 
-                        FROM
-                        customrecord_anc_dailyshipmentcap as sc
+                                 FROM
+                                         customrecord_anc_dailyshipmentcap as sc
 
-                        WHERE
-                        ${sqlFilters_text}
-                 `
+                                 WHERE
+                                         ${sqlFilters_text}
+                                `
 
                             log.debug("sql", sql)
 
@@ -288,62 +288,62 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return filters;
             }
 
-        const buildCompositeKeys = (keyOrder, forecastObj) =>
-        {
-                var buildCompositeKeys = {forecastObj : forecastObj, groupedByCompositekey : {}};
-                if(!keyOrder)
-                {
-                        keyOrder = ["customer", "consignee", "grade", "month", "year"]
-                }
+            const buildCompositeKeys = (keyOrder, forecastObj) =>
+            {
+                    var buildCompositeKeys = {forecastObj : forecastObj, groupedByCompositekey : {}};
+                    if(!keyOrder)
+                    {
+                            keyOrder = ["customer", "consignee", "grade", "month", "year"]
+                    }
 
-                if(Array.isArray(forecastObj))
-                {
-                        for(var a = 0 ; a < forecastObj.length ; a++)
-                        {
-                                var compositekey = "";
-                                var listOfCompositeElems = [];
-                                for(var b = 0 ; b < keyOrder.length ; b++)
-                                {
-                                        listOfCompositeElems.push(forecastObj[a][keyOrder[b]]);
-                                }
-                                compositekey = listOfCompositeElems.join("_");
+                    if(Array.isArray(forecastObj))
+                    {
+                            for(var a = 0 ; a < forecastObj.length ; a++)
+                            {
+                                    var compositekey = "";
+                                    var listOfCompositeElems = [];
+                                    for(var b = 0 ; b < keyOrder.length ; b++)
+                                    {
+                                            listOfCompositeElems.push(forecastObj[a][keyOrder[b]]);
+                                    }
+                                    compositekey = listOfCompositeElems.join("_");
 
-                                forecastObj[a].compositekey = compositekey;
+                                    forecastObj[a].compositekey = compositekey;
 
-                                buildCompositeKeys.groupedByCompositekey[compositekey] = forecastObj[a];
-                        }
-                }
-                else
-                {
-                        var compositekey = "";
-                        var listOfCompositeElems = [];
-                        for(var b = 0 ; b < keyOrder.length ; b++)
-                        {
-                                listOfCompositeElems.push(forecastObj[keyOrder[b]]);
-                        }
-                        compositekey = listOfCompositeElems.join("_");
-                        forecastObj.compositekey = compositekey;
-                        // buildCompositeKeys.groupedByCompositekey[compositekey] = forecastObj;
-                }
+                                    buildCompositeKeys.groupedByCompositekey[compositekey] = forecastObj[a];
+                            }
+                    }
+                    else
+                    {
+                            var compositekey = "";
+                            var listOfCompositeElems = [];
+                            for(var b = 0 ; b < keyOrder.length ; b++)
+                            {
+                                    listOfCompositeElems.push(forecastObj[keyOrder[b]]);
+                            }
+                            compositekey = listOfCompositeElems.join("_");
+                            forecastObj.compositekey = compositekey;
+                            // buildCompositeKeys.groupedByCompositekey[compositekey] = forecastObj;
+                    }
 
-                log.debug("buildCompositeKeys forecastObj", forecastObj);
-                log.debug("buildCompositeKeys buildCompositeKeys", buildCompositeKeys);
-                return buildCompositeKeys
-        }
+                    log.debug("buildCompositeKeys forecastObj", forecastObj);
+                    log.debug("buildCompositeKeys buildCompositeKeys", buildCompositeKeys);
+                    return buildCompositeKeys
+            }
 
-        const getForecastFilters = (tranInternalId, lineValList) =>
-        {
-                var forecastFilters = [];
-                try
-                {
-                        log.debug("getForecastFilters lineValList.length", lineValList.length)
-                        for(var a = 0 ; a < lineValList.length ; a++)
-                        {
-                                var lineVals = lineValList[a];
-                                log.debug("getForecastFilters lineVals", lineVals)
-                                if(lineVals.customer && lineVals.grade && lineVals.consignee && lineVals.month && lineVals.year)
-                                {
-                                        var sqlForecastFilter = `
+            const getForecastFilters = (tranInternalId, lineValList) =>
+            {
+                    var forecastFilters = [];
+                    try
+                    {
+                            log.debug("getForecastFilters lineValList.length", lineValList.length)
+                            for(var a = 0 ; a < lineValList.length ; a++)
+                            {
+                                    var lineVals = lineValList[a];
+                                    log.debug("getForecastFilters lineVals", lineVals)
+                                    if(lineVals.customer && lineVals.grade && lineVals.consignee && lineVals.month && lineVals.year)
+                                    {
+                                            var sqlForecastFilter = `
                                         (
                                         ${lineVals.customer} = sf.${references.SALESFORECAST.FIELDS.CUSTOMER}
                                         AND
@@ -360,19 +360,19 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                 )
                                         )
                                         `
-                                        forecastFilters.push(sqlForecastFilter)
-                                }
-                        }
+                                            forecastFilters.push(sqlForecastFilter)
+                                    }
+                            }
 
-                        log.debug("getForecastFilters forecastFilters", forecastFilters);
-                }
-                catch(e)
-                {
-                        log.error("ERROR in function getForecastFilters")
-                }
+                            log.debug("getForecastFilters forecastFilters", forecastFilters);
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getForecastFilters")
+                    }
 
-                return forecastFilters;
-        }
+                    return forecastFilters;
+            }
 
             var yearMapping = {
                     "2020" : 1,
@@ -634,7 +634,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                         filters
                                 ],
                             columns:
-                                cols
+                            cols
                     });
                     var searchResultCount = customrecord_anc_tagsSearchObj.runPaged().count;
                     log.debug("customrecord_anc_tagsSearchObj result count",searchResultCount);
@@ -660,228 +660,229 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             }
 
             var MINIMIZE_UI = {
-                elemList : [
-                        {
-                                name : "warehouse_and_logistics",
-                                list : [],
-                                title : "Logistics",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG",
-                                properties : [
+                    elemList : [
+                            {
+                                    name : "warehouse_and_logistics",
+                                    list : [],
+                                    title : "Logistics",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p>Logistics<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p>Logistics<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Logistics",
-                                rowTitle : "Logistics",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 9,
-                                addtlParams : "&minimizeui=warehouse_and_logistics"
-                        },
-                        {
-                                name : "orderquantity_and_inventorystatus",
-                                list : [],
-                                title : "Inventory",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203538&c=1116623_SB2&h=GBFNo186_VXtycKD8lQ8h1BqLzd9c6FG3wq_rEZNvsLpQU9N",
-                                properties : [
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Logistics",
+                                    rowTitle : "Logistics",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 9,
+                                    addtlParams : "&minimizeui=warehouse_and_logistics"
+                            },
+                            {
+                                    name : "orderquantity_and_inventorystatus",
+                                    list : [],
+                                    title : "Inventory",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203538&c=1116623_SB2&h=GBFNo186_VXtycKD8lQ8h1BqLzd9c6FG3wq_rEZNvsLpQU9N",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p>Qty&Status<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p>Qty&Status<br/><img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Inventory",
-                                rowTitle : "Qty<br/>Status",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 9,
-                                addtlParams : "&minimizeui=orderquantity_and_inventorystatus"
-                        },
-                        {
-                                name : "product_and_packaging",
-                                list : [],
-                                title : "Packaging",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203539&c=1116623_SB2&h=Al2AWzDaC39Xoch4LmAX2-WdvZ-DGfERnRBArgrJctLb72QV",
-                                properties : [
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Inventory",
+                                    rowTitle : "Qty<br/>Status",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 9,
+                                    addtlParams : "&minimizeui=orderquantity_and_inventorystatus"
+                            },
+                            {
+                                    name : "product_and_packaging",
+                                    list : [],
+                                    title : "Packaging",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203539&c=1116623_SB2&h=Al2AWzDaC39Xoch4LmAX2-WdvZ-DGfERnRBArgrJctLb72QV",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Packaging",
-                                rowTitle : "Packaging",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 9,
-                                addtlParams : "&minimizeui=product_and_packaging"
-                        },
-                        {
-                                name : "customer_and_shipping_information",
-                                list : [],
-                                title : "Customer & Shipping Information",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
-                                properties : [
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Packaging",
+                                    rowTitle : "Packaging",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 9,
+                                    addtlParams : "&minimizeui=product_and_packaging"
+                            },
+                            {
+                                    name : "customer_and_shipping_information",
+                                    list : [],
+                                    title : "Customer & Shipping Information",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Shipping",
-                                rowTitle : "Shipping",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 9,
-                                addtlParams : "&minimizeui=customer_and_shipping"
-                        },
-                        {
-                                name : "shipments",
-                                list : [],
-                                title : "Shipments",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
-                                properties : [
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Shipping",
+                                    rowTitle : "Shipping",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 9,
+                                    addtlParams : "&minimizeui=customer_and_shipping"
+                            },
+                            {
+                                    name : "shipments",
+                                    list : [],
+                                    title : "Fitment",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Shipments",
-                                rowTitle : "Shipments",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 10,
-                                addtlParams : "&minimizeui=shipments"
-                        },
-                        // {
-                        //     name : "graderun_reservation",
-                        //     list : [],
-                        //     title : "Grade Run Reservation",
-                        //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203558&c=1116623_SB2&h=pD37UzYzvN7o6bv03_Q0xtV7QvmUzmLnabI8wV-cDD8Qj-Hx",
-                        //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
-                        //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
-                        //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
-                        //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
-                        //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
-                        //     properties : [
-                        //
-                        //     ],
-                        //     tdElemHtml : [
-                        //         `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-                        //
-                        //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                        //     ],
-                        //     targetScriptId : "customscript_anc_sl_salesprocesses",
-                        //     targetDeploymentId : "customdeploy_anc_sl_salesprocesses",
-                        //     headerTitle : "Grade Run<br/>Reservation",
-                        //     rowTitle : "",
-                        //     iconWidth : "50px",
-                        //     iconHeight : "50px",
-                        //     position : 0,
-                        //     addtlParams : "&processid=grreservation"
-                        // },
-                        {
-                                name : "scheduling_and_keydates",
-                                list : [],
-                                title : "Key Dates",
-                                icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
-                                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
-                                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
-                                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
-                                // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
-                                properties : [
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Shipments",
+                                    rowTitle : "Shipments",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 10,
+                                    addtlParams : "&minimizeui=shipments",
+                                    replicateIcon : true
+                            },
+                            // {
+                            //     name : "graderun_reservation",
+                            //     list : [],
+                            //     title : "Grade Run Reservation",
+                            //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203558&c=1116623_SB2&h=pD37UzYzvN7o6bv03_Q0xtV7QvmUzmLnabI8wV-cDD8Qj-Hx",
+                            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
+                            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
+                            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
+                            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
+                            //     // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
+                            //     properties : [
+                            //
+                            //     ],
+                            //     tdElemHtml : [
+                            //         `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                            //
+                            //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                            //     ],
+                            //     targetScriptId : "customscript_anc_sl_salesprocesses",
+                            //     targetDeploymentId : "customdeploy_anc_sl_salesprocesses",
+                            //     headerTitle : "Grade Run<br/>Reservation",
+                            //     rowTitle : "",
+                            //     iconWidth : "25px",
+                            //     iconWidth : "25px",
+                            //     position : 0,
+                            //     addtlParams : "&processid=grreservation"
+                            // },
+                            {
+                                    name : "scheduling_and_keydates",
+                                    list : [],
+                                    title : "Key Dates",
+                                    icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203556&c=1116623_SB2&h=9LRWts-XaNsvfWEGThTpxop3PPh_vw9a5NL8XkmR0s-IMKXQ",
+                                    // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203552&c=1116623_SB2&h=MN-utZwPfu8HdYVArnZgof3D9B7h0I8-zrYC9jESuG41PgRG",
+                                    // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203548&c=1116623_SB2&h=bmBfsZKAzX1cWJW3k6JWscc898dfKvCqn4-HlAnnSmEdv9b-",
+                                    // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203546&c=1116623_SB2&h=b78Hwg-A3GdVaZkoRGhCGPfUdZ-46PpS4e87hlLXZCd31zlg",
+                                    // icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203547&c=1116623_SB2&h=T3_gjlsgsuFfQOjmnJ88n0duN5T6UHxs17J4UTxsfshVHFn0",
+                                    properties : [
 
-                                ],
-                                tdElemHtml : [
-                                        `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                                    ],
+                                    tdElemHtml : [
+                                            `<td align="center"><p><img width="100px" height="100px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
 
-                                        ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                                ],
-                                targetScriptId : "customscript_anc_sl_minimize_ui",
-                                targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
-                                headerTitle : "Key Dates",
-                                rowTitle : "",
-                                iconWidth : "50px",
-                                iconHeight : "50px",
-                                position : 9,
-                                addtlParams : "&minimizeui=scheduling_and_keydates"
-                        },
-                        // {
-                        //     name : "fitment_check",
-                        //     list : [],
-                        //     title : "Fitment Check",
-                        //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203554&c=1116623_SB2&h=kTJFfuyMLg3xSqJ3X2VCVHc9OqW4GxxNPE8KEga83kzlgzYJ",
-                        //     properties : [
-                        //
-                        //     ],
-                        //     tdElemHtml : [
-                        //         `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
-                        //
-                        //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
-                        //     ],
-                        //     // tdElementStart:`<td class="minimize_ui_elem_td0TEST" align="center"><p>TEST1<br/><img width="25px" height="25px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203519&c=1116623_SB2&h=LtlOhAYTLDyMXRBethELwZMrys0xDpb03GNVp9glCEtxUR3q" style="cursor: pointer;" onclick="nlExtOpenWindow(window.lineUrl_`,
-                        //     // tdElementEnd:`', 'childdrecord', 700, 700, this, true,'');</p></td>`,
-                        //     // tdElementStart:'<td class="minimize_ui_elem_td0fitment_check" align="center"><p>Fitment<br/>Check<br/><img width="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL" height="25px" src="25px" style="cursor: pointer;" onclick="window.open(window.lineUrl_',
-                        //     // tdElementEnd:', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>',
-                        //
-                        //
-                        //     targetScriptId : "customscript_anc_sl_fitmentchecking",
-                        //     targetDeploymentId : "customdeploy_anc_sl_fitmentchecking",
-                        //     headerTitle : "Fitment<br/>Check",
-                        //     rowTitle : "",
-                        //     iconWidth : "50px",
-                        //     iconHeight : "50px",
-                        //     position : 15,
-                        //     addtlParams : ""
-                        // }
-
-
+                                            ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                                    ],
+                                    targetScriptId : "customscript_anc_sl_minimize_ui",
+                                    targetDeploymentId : "customdeploy_anc_sl_minimize_ui",
+                                    headerTitle : "Key Dates",
+                                    rowTitle : "",
+                                    iconWidth : "25px",
+                                    iconWidth : "25px",
+                                    position : 9,
+                                    addtlParams : "&minimizeui=scheduling_and_keydates"
+                            },
+                            // {
+                            //     name : "fitment_check",
+                            //     list : [],
+                            //     title : "Fitment Check",
+                            //     icon : "https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203554&c=1116623_SB2&h=kTJFfuyMLg3xSqJ3X2VCVHc9OqW4GxxNPE8KEga83kzlgzYJ",
+                            //     properties : [
+                            //
+                            //     ],
+                            //     tdElemHtml : [
+                            //         `<td align="center"><p>Product<br/>&<br/>Packaging<img width="75px" height="75px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203525&c=1116623_SB2&h=2o0tcA7GgL-Ks2Zfeomc6r_d4v-ly5uw_wONtpN70kpJzyuG" style="cursor: pointer;" onclick="window.open(window.lineUrl_`,
+                            //
+                            //         ', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>'
+                            //     ],
+                            //     // tdElementStart:`<td class="minimize_ui_elem_td0TEST" align="center"><p>TEST1<br/><img width="25px" height="25px" src="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203519&c=1116623_SB2&h=LtlOhAYTLDyMXRBethELwZMrys0xDpb03GNVp9glCEtxUR3q" style="cursor: pointer;" onclick="nlExtOpenWindow(window.lineUrl_`,
+                            //     // tdElementEnd:`', 'childdrecord', 700, 700, this, true,'');</p></td>`,
+                            //     // tdElementStart:'<td class="minimize_ui_elem_td0fitment_check" align="center"><p>Fitment<br/>Check<br/><img width="https://1116623-sb2.app.netsuite.com/core/media/media.nl?id=9203540&c=1116623_SB2&h=qADtKTHIw11x-nfVLN4KLPPcRqNKm5HmGa960KpNFbYInydL" height="25px" src="25px" style="cursor: pointer;" onclick="window.open(window.lineUrl_',
+                            //     // tdElementEnd:', \'popupWindow\', \'width=700,height=700,scrollbars=yes\'); return false;" alt="Click to open popup"></p></td>',
+                            //
+                            //
+                            //     targetScriptId : "customscript_anc_sl_fitmentchecking",
+                            //     targetDeploymentId : "customdeploy_anc_sl_fitmentchecking",
+                            //     headerTitle : "Fitment<br/>Check",
+                            //     rowTitle : "",
+                            //     iconWidth : "25px",
+                            //     iconWidth : "25px",
+                            //     position : 15,
+                            //     addtlParams : ""
+                            // }
 
 
-                ]
+
+
+                    ]
             }
 
             var FREIGHTINVOICE = {
-                        accessorial_mapping : {
-                                //FUEL SURCHARGE IS NOT AN ACCESSORIAL
+                    accessorial_mapping : {
+                            //FUEL SURCHARGE IS NOT AN ACCESSORIAL
                             // "Fuel Surcharge" : 12231, //Newsprint Freight : Fuel Surcharge (Truck - Percent of Freight),
                             "Unknown Accessorial Line" : 188338,
                             "Detention Charge" : 27415
-                        },
-                        "DEFAULT_FUELSURCHARGE_item" : 12231,
-                        "NF_item_truck_to_cust" : "12493", //Newsprint Freight
-                        "NF_item_truck_to_whs" : "68403", //Prepaid Newsprint Freight
-                        "NF_item_rail_to_cust" : "12493", //Newsprint Freight
-                        "NF_item_rail_to_whs" : "68403", //Prepaid Newsprint Freight
-                        "FUELSURCHARGE_item_truck_to_cust" : 12231, //Fuel Surcharge (Truck - Percent of Freight)
-                        "FUELSURCHARGE_item_truck_to_whs" : 68407, //Prepaid Fuel Surcharge (Truck - Percent of Freight)
-                        "FUELSURCHARGE_item_rail_to_cust" : 12232, //Fuel Surcharge (Rail - $/mile)
-                        "FUELSURCHARGE_item_rail_to_whs" : 68406, //Prepaid Fuel Surcharge (Rail - $/mile)
-                        TAXCODES : {
-                                "TAXCODE_NONTAXABLE82" : 82
-                        },
-                        TEMPORARY_ITEM : "188748", //FIXME
-                        DEFAULTCUSTOMER : 549160, //FIXME
-                        DEFAULTCONSIGNEE : 305737 //FIXME
-                }
+                    },
+                    "DEFAULT_FUELSURCHARGE_item" : 12231,
+                    "NF_item_truck_to_cust" : "12493", //Newsprint Freight
+                    "NF_item_truck_to_whs" : "68403", //Prepaid Newsprint Freight
+                    "NF_item_rail_to_cust" : "12493", //Newsprint Freight
+                    "NF_item_rail_to_whs" : "68403", //Prepaid Newsprint Freight
+                    "FUELSURCHARGE_item_truck_to_cust" : 12231, //Fuel Surcharge (Truck - Percent of Freight)
+                    "FUELSURCHARGE_item_truck_to_whs" : 68407, //Prepaid Fuel Surcharge (Truck - Percent of Freight)
+                    "FUELSURCHARGE_item_rail_to_cust" : 12232, //Fuel Surcharge (Rail - $/mile)
+                    "FUELSURCHARGE_item_rail_to_whs" : 68406, //Prepaid Fuel Surcharge (Rail - $/mile)
+                    TAXCODES : {
+                            "TAXCODE_NONTAXABLE82" : 82
+                    },
+                    TEMPORARY_ITEM : "188748", //FIXME
+                    DEFAULTCUSTOMER : 549160, //FIXME
+                    DEFAULTCONSIGNEE : 305737 //FIXME
+            }
 
 
             function generateShipments(fitmentRequestData) {
@@ -932,7 +933,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             {
                     //MULTIPLE LINES
                     log.debug("getFitmentResponse group_init_to_final", group_init_to_final)
-                        //8
+                    //8
 
                     //EXAMPLE
                     // group_init_to_final = [
@@ -1147,34 +1148,150 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             log.error("ERROR in function getFitmentResponse leg2", e);
                                     }
                             }
+                            else if(group_init_to_final.line_usecrossdock && group_init_to_final.line_usecrossdock != "F")
+                            {
+                                    var rawRequestData = group_init_to_final
+                                    var fitmentRequestData = {};
+                                    fitmentRequestData.JurisdictionName = "Canada" || group_init_to_final.lane_originloc_country; //TODO
+
+                                    fitmentRequestData.vehicleName = group_init_to_final.line_equipmenttext/* || "TRTAMDV53"*/; //TODO REMOVE THIS FALLBACK DEFAULT
+                                    // fitmentRequestData.transportationMode = "TRUCK"; //TODO
+                                    //TODO DEFAULTS to TRUCK if not configured
+                                    fitmentRequestData.transportationMode = group_init_to_final.line_equipment_typetext ? (group_init_to_final.line_equipment_typetext).toUpperCase() : "TRUCK"; //TODO
+                                    fitmentRequestData.orderItems = [];
+                                    try
+                                    {
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : "188522",
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 85.09,
+                                            //         Weight : 645.2,
+                                            //         Nb : 70,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                            // fitmentRequestData.orderItems.push(
+                                            //     {
+                                            //         ItemId : "188537",
+                                            //         Diameter : 127, //TODO
+                                            //         Width : 88.90,
+                                            //         Weight : 673.1,
+                                            //         Nb : 28,
+                                            //         Type : 1,
+                                            //         RPP : 1,
+                                            //     }
+                                            // )
+                                            //TODO
+
+                                            log.debug("xdock=t rawRequestData", rawRequestData);
+
+                                            for(var a = 0 ; a < rawRequestData.length ; a++)
+                                            {
+                                                    fitmentRequestData.orderItems.push(
+                                                        {
+                                                                ItemId : rawRequestData[a].line_uniquekey,
+                                                                Diameter : Number(rawRequestData[a].line_item_rolldiametertext) || 127, //TODO
+                                                                Width : Number(rawRequestData[a].line_item_rollwidthtext) || 88.90,
+                                                                Weight : rawRequestData[a].line_item_basis_weight || 673.1,
+                                                                Nb : rawRequestData[a].line_quantity,
+                                                                Type : /*rawRequestData[a].line_transitoptmethod || */1, //ALWAYS TRUCK OR IT WILL ERROR OUT
+                                                                RPP : rawRequestData[a].line_item_rollsperpack || 1,
+                                                        }
+                                                    )
+
+                                                    // fitmentRequestData.orderItems.push(
+                                                    //     {
+                                                    //         ItemId : rawRequestData[a].line_uniquekey,
+                                                    //         Diameter : 127, //TODO
+                                                    //         Width : 88.90,
+                                                    //         Weight : 673.1,
+                                                    //         Nb : 28,
+                                                    //         Type : 1,
+                                                    //         RPP : 1,
+                                                    //     }
+                                                    // )
+                                            }
+
+                                            log.debug("fitmentRequestData", fitmentRequestData)
+
+                                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                                            var connection_timeStamp_start = new Date().getTime();
+
+                                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                                            var connection_timeStamp_end = new Date().getTime();
+
+                                            log.debug("straightleg connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                                            log.debug("straightleg rawResp.body", rawResp.body)
+
+                                            fitmentResponse.list.push(rawResp)
+                                            // return rawResp;
+
+                                            // var fitmentObj = {
+                                            //     equipment: "1",
+                                            //     ftlcount: "1",
+                                            //     ftlavetonnage: "1",
+                                            //     ftlavecostperton: "1",
+                                            //     ftlavepercentutil: "1",
+                                            //     ltltonnage: "1",
+                                            //     ltlpercentutil: "1",
+                                            //     ltlrolls: "1",
+                                            //     loadid: "1",
+                                            //     loadnumber: "1",
+                                            //     weightplanned: "weight planned",
+                                            //     percentage: "10",
+                                            // };
+                                            // fitmentResponse.list.push(fitmentObj)
+                                            //
+                                            // var fitmentObj = {
+                                            //     equipment: "1",
+                                            //     ftlcount: "2",
+                                            //     ftlavetonnage: "2",
+                                            //     ftlavecostperton: "2",
+                                            //     ftlavepercentutil: "2",
+                                            //     ltltonnage: "2",
+                                            //     ltlpercentutil: "2",
+                                            //     ltlrolls: "2",
+                                            //     loadid: "2",
+                                            //     loadnumber: "2",
+                                            //     weightplanned: "weight planned",
+                                            //     percentage: "10",
+                                            // };
+                                            // fitmentResponse.list.push(fitmentObj)
+
+                                            //FOR LEG2
+                                    }
+                                    catch(e)
+                                    {
+                                            log.error("ERROR in function getFitmentResponse leg1", e);
+                                    }
+                            }
 
 
+                            log.debug("LEG1 fitmentRequestData", fitmentRequestData)
 
+                            fitmentRequestData = JSON.stringify(fitmentRequestData)
+
+                            var connection_timeStamp_start = new Date().getTime();
+
+                            var rawResp = PTMX.generateShipments(fitmentRequestData);
+
+                            var connection_timeStamp_end = new Date().getTime();
+
+                            log.debug("LEG1 connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
+
+                            log.debug("LEG1 rawResp.body", rawResp.body)
+
+                            fitmentResponse.list.push(rawResp)
 
 
 
 
                     }
-
-
-                    //call this outside of the loop, the loop is just all about compiling .orderLines
-                    log.debug("LEG1 fitmentRequestData", fitmentRequestData)
-
-                    fitmentRequestData = JSON.stringify(fitmentRequestData)
-
-                    var connection_timeStamp_start = new Date().getTime();
-
-                    var rawResp = PTMX.generateShipments(fitmentRequestData);
-
-                    var connection_timeStamp_end = new Date().getTime();
-
-                    log.debug("LEG1 connection time stats", {connection_timeStamp_start, connection_timeStamp_end, duration: connection_timeStamp_start - connection_timeStamp_end})
-
-                    log.debug("LEG1 rawResp.body", rawResp.body)
-
-                    fitmentResponse.list.push(rawResp)
-
-
                     // if(group_init_to_final.line_usecrossdock && group_init_to_final.line_usecrossdock != "F")
                     // {
                     //         group_init_to_final.line_usecrossdock
@@ -1184,214 +1301,209 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                     //first leg, if it requires cross dock expect 2 legs already
 
-                    //TODO
-                    //FIXME
-                    /*{"JurisdictionName":"Canada","vehicleName":"5TRTAMHTR53","transportationMode":"TRUCK","orderItems":[{"ItemId":"69371262","Diameter":100,"Width":200,"Weight":"500","Nb":"60","Type":1,"RPP":1},{"ItemId":"69371326","Diameter":100,"Width":200,"Weight":"500","Nb":"60","Type":1,"RPP":1}]}*/
-                    /*{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"An error occurred while processing your request.","status":500,"detail":"Command 'GenerateShipments' failed: Vehicle XML invalid: Invalid XML"}*/
-
 
 
                     log.debug("getFitmentResponse fitmentResponse", fitmentResponse);
                     return fitmentResponse;
             }
 
-        function groupOrderLinesForShipmentGeneration(tranInternalId)
-        {
-                // tranInternalId = tranInternalId.concat(61265756);
-                var filters = [
-                        ["type","anyof","SalesOrd"],
-                        "AND",
-                        ["mainline","is","F"],
-                        "AND",
-                        ["taxline","is","F"],
-                ];
-                if(tranInternalId)
-                {
-                        filters.push("AND")
-                        // filters.push(["internalid","anyof",[tranInternalId,61250544]])
-                        filters.push(["internalid","anyof",tranInternalId])
-                        // filters.push(["internalid","anyof",[tranInternalId]])
-                }
-                // if(globalrefs.tranBodyVals.location)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["location","anyof",globalrefs.tranBodyVals.location])
-                // }
-                // if(globalrefs.tranItemVals.deliverydate)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["trandate","on",globalrefs.tranItemVals.deliverydate])
-                // }
-                // if(globalrefs.tranItemVals.destinationid)
-                // {
-                //     filters.push("AND")
-                //     filters.push(["line.cseg_anc_dstnation","anyof",globalrefs.tranItemVals.destinationid])
-                // }
+            function groupOrderLinesForShipmentGeneration(tranInternalId)
+            {
+                    // tranInternalId = tranInternalId.concat(61265756);
+                    var filters = [
+                            ["type","anyof","SalesOrd"],
+                            "AND",
+                            ["mainline","is","F"],
+                            "AND",
+                            ["taxline","is","F"],
+                    ];
+                    if(tranInternalId)
+                    {
+                            filters.push("AND")
+                            // filters.push(["internalid","anyof",[tranInternalId,61250544]])
+                            filters.push(["internalid","anyof",tranInternalId])
+                            // filters.push(["internalid","anyof",[tranInternalId]])
+                    }
+                    // if(globalrefs.tranBodyVals.location)
+                    // {
+                    //     filters.push("AND")
+                    //     filters.push(["location","anyof",globalrefs.tranBodyVals.location])
+                    // }
+                    // if(globalrefs.tranItemVals.deliverydate)
+                    // {
+                    //     filters.push("AND")
+                    //     filters.push(["trandate","on",globalrefs.tranItemVals.deliverydate])
+                    // }
+                    // if(globalrefs.tranItemVals.destinationid)
+                    // {
+                    //     filters.push("AND")
+                    //     filters.push(["line.cseg_anc_dstnation","anyof",globalrefs.tranItemVals.destinationid])
+                    // }
 
-                log.debug("filters", filters)
+                    log.debug("filters", filters)
 
-                var salesorderSearchObj = search.create({
-                        type: "salesorder",
-                        filters: filters,
-                        columns:
-                            [
-                                    search.createColumn({name: "internalid", label: "internalid"}),
-                                    search.createColumn({name: "statusref", label: "status"}),
-                                    search.createColumn({name: "mainname", label: "entity"}),
-                                    search.createColumn({name: "item", label: "line_item"}),
-                                    search.createColumn({
-                                            name: "parent",
-                                            join: "item",
-                                            label: "line_item_parent"
-                                    }),
-                                    search.createColumn({name: "quantity", label: "line_quantity"}),
-                                    search.createColumn({name: "location", label: "line_location"}),
-                                    search.createColumn({name: "line", label: "line_id"}),
-                                    search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
-                                    search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
-                                    search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
-                                    search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
-                                    //TODO you dont need it as result, only as filter, you need to join to line
-                                    // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
-                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
-                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
-                                    search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
-                                    search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
-                                    search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
-                                    search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
-                                    search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
-                                    search.createColumn({
-                                            name: "custrecord_anc_lane_originwarehousecntry",
-                                            join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                            label: "lane_originloc_country"
-                                    }),
-                                    // search.createColumn({
-                                    //         name: "custrecord_anc_lane_originwarehousecntry",
-                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                    //         label: "lane_originloc_country"
-                                    // }),
-                                    // search.createColumn({
-                                    //         name: "custrecord_anc_lane_originwarehousecntry",
-                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                    //         label: "lane_originloc_country"
-                                    // }),
-                                    // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
-                                    search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
-                                    search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
-                                    search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
-                                    search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
-                                    search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
-                                    search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
-                                    search.createColumn({
-                                            name: "custitem_anc_rolldiameter",
-                                            join: "item",
-                                            label: "line_item_rolldiameter"
-                                    }),
-                                    search.createColumn({
-                                            name: "custitem_anc_rollwidth",
-                                            join: "item",
-                                            label: "line_item_rollwidth"
-                                    }),
-                                    search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
-                                    search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
-                                    search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
-                                    search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
-                                    search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
-                                    search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
-                                    search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
-                            ]
-                });
-                var searchResultCount = salesorderSearchObj.runPaged().count;
-                log.debug("salesorderSearchObj result count",searchResultCount);
-                // salesorderSearchObj.run().each(function(result){
-                //     // .run().each has a limit of 4,000 results
-                //     return true;
-                // });
+                    var salesorderSearchObj = search.create({
+                            type: "salesorder",
+                            filters: filters,
+                            columns:
+                                [
+                                        search.createColumn({name: "internalid", label: "internalid"}),
+                                        search.createColumn({name: "statusref", label: "status"}),
+                                        search.createColumn({name: "mainname", label: "entity"}),
+                                        search.createColumn({name: "item", label: "line_item"}),
+                                        search.createColumn({
+                                                name: "parent",
+                                                join: "item",
+                                                label: "line_item_parent"
+                                        }),
+                                        search.createColumn({name: "quantity", label: "line_quantity"}),
+                                        search.createColumn({name: "location", label: "line_location"}),
+                                        search.createColumn({name: "line", label: "line_id"}),
+                                        search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
+                                        search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
+                                        search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
+                                        search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
+                                        //TODO you dont need it as result, only as filter, you need to join to line
+                                        // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
+                                        search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
+                                        search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
+                                        search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
+                                        search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
+                                        search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                                        search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
+                                        search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
+                                        search.createColumn({
+                                                name: "custrecord_anc_lane_originwarehousecntry",
+                                                join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                                label: "lane_originloc_country"
+                                        }),
+                                        // search.createColumn({
+                                        //         name: "custrecord_anc_lane_originwarehousecntry",
+                                        //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                        //         label: "lane_originloc_country"
+                                        // }),
+                                        // search.createColumn({
+                                        //         name: "custrecord_anc_lane_originwarehousecntry",
+                                        //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                        //         label: "lane_originloc_country"
+                                        // }),
+                                        // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
+                                        search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
+                                        search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
+                                        search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
+                                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
+                                        search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
+                                        search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
+                                        search.createColumn({
+                                                name: "custitem_anc_rolldiameter",
+                                                join: "item",
+                                                label: "line_item_rolldiameter"
+                                        }),
+                                        search.createColumn({
+                                                name: "custitem_anc_rollwidth",
+                                                join: "item",
+                                                label: "line_item_rollwidth"
+                                        }),
+                                        search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
+                                        search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
+                                        search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
+                                        search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
+                                        search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
+                                        search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
+                                        search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
+                                ]
+                    });
+                    var searchResultCount = salesorderSearchObj.runPaged().count;
+                    log.debug("salesorderSearchObj result count",searchResultCount);
+                    // salesorderSearchObj.run().each(function(result){
+                    //     // .run().each has a limit of 4,000 results
+                    //     return true;
+                    // });
 
-                var sr = getResults(salesorderSearchObj.run());
+                    var sr = getResults(salesorderSearchObj.run());
 
-                var firstLocationId = "";
-                var firstLocationText = "";
-                var srToObjects = sr.map(function(res){
-                        // var res = sr[a];
+                    var firstLocationId = "";
+                    var firstLocationText = "";
+                    var srToObjects = sr.map(function(res){
+                            // var res = sr[a];
 
-                        var columns = res.columns;
+                            var columns = res.columns;
 
-                        var resObjByColumnKey = {}
-                        columns.forEach(function(column) {
-                                var label = column.label || column.name; // Fallback to name if label is unavailable
-                                var value = res.getValue(column);
+                            var resObjByColumnKey = {}
+                            columns.forEach(function(column) {
+                                    var label = column.label || column.name; // Fallback to name if label is unavailable
+                                    var value = res.getValue(column);
 
-                                // if(label == "line_deliverydate")
-                                // {
-                                //     resObjByColumnKey.line_deliverydatetext = res.getText(column);
-                                // }
+                                    // if(label == "line_deliverydate")
+                                    // {
+                                    //     resObjByColumnKey.line_deliverydatetext = res.getText(column);
+                                    // }
 
-                                resObjByColumnKey[label] = value;
-
-
-                                if(label == "line_location")
-                                {
-                                        if(!firstLocationId)
-                                        {
-                                                firstLocationId = res.getValue(column);
-                                        }
-                                        if(!firstLocationText)
-                                        {
-                                                firstLocationText = res.getText(column);
-                                        }
-
-                                        resObjByColumnKey.line_location = firstLocationId;
-                                        resObjByColumnKey.line_locationtext = firstLocationText;
-                                }
-                                if(label == "line_consignee")
-                                {
-                                        resObjByColumnKey.line_consigneetext = res.getText(column);
-                                }
-                                if(label == "line_equipment")
-                                {
-                                        resObjByColumnKey.line_equipmenttext = res.getText(column);
-                                }
-                                if(label == "line_crossdock_country")
-                                {
-                                        resObjByColumnKey.line_crossdock_countrytext = res.getText(column);
-                                        // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
-                                }
-                                if(label == "lane_originloc_country")
-                                {
-                                        resObjByColumnKey.lane_originloc_countrytext = res.getText(column);
-                                        // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
-                                }
-                                if(label == "line_equipment_type")
-                                {
-                                        resObjByColumnKey.line_equipment_typetext = res.getText(column);
-                                }
-                                if(label == "line_item_rollwidth")
-                                {
-                                        resObjByColumnKey.line_item_rollwidthtext = res.getText(column);
-                                }
-                                if(label == "line_item_rolldiameter")
-                                {
-                                        resObjByColumnKey.line_item_rolldiametertext = res.getText(column);
-                                }
-                        });
-
-                        resObjByColumnKey.id = res.id
+                                    resObjByColumnKey[label] = value;
 
 
+                                    if(label == "line_location")
+                                    {
+                                            if(!firstLocationId)
+                                            {
+                                                    firstLocationId = res.getValue(column);
+                                            }
+                                            if(!firstLocationText)
+                                            {
+                                                    firstLocationText = res.getText(column);
+                                            }
 
-                        return resObjByColumnKey;
-                })
-                log.debug("srToObjects", srToObjects)
+                                            resObjByColumnKey.line_location = firstLocationId;
+                                            resObjByColumnKey.line_locationtext = firstLocationText;
+                                    }
+                                    if(label == "line_consignee")
+                                    {
+                                            resObjByColumnKey.line_consigneetext = res.getText(column);
+                                    }
+                                    if(label == "line_equipment")
+                                    {
+                                            resObjByColumnKey.line_equipmenttext = res.getText(column);
+                                    }
+                                    if(label == "line_crossdock_country")
+                                    {
+                                            resObjByColumnKey.line_crossdock_countrytext = res.getText(column);
+                                            // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
+                                    }
+                                    if(label == "lane_originloc_country")
+                                    {
+                                            resObjByColumnKey.lane_originloc_countrytext = res.getText(column);
+                                            // resObjByColumnKey.line_crossdock_countrytext = res.getValue(column);
+                                    }
+                                    if(label == "line_equipment_type")
+                                    {
+                                            resObjByColumnKey.line_equipment_typetext = res.getText(column);
+                                    }
+                                    if(label == "line_item_rollwidth")
+                                    {
+                                            resObjByColumnKey.line_item_rollwidthtext = res.getText(column);
+                                    }
+                                    if(label == "line_item_rolldiameter")
+                                    {
+                                            resObjByColumnKey.line_item_rolldiametertext = res.getText(column);
+                                    }
+                            });
 
-                // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
-                // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
-                // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
-                var srGroupedByDeliveryDate = groupByOrigcityDestcity(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", "line_equipmenttext"])
-                log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
+                            resObjByColumnKey.id = res.id
 
-                return srGroupedByDeliveryDate
-        }
+
+
+                            return resObjByColumnKey;
+                    })
+                    log.debug("srToObjects", srToObjects)
+
+                    // var srGroupedByDeliveryDate = groupBy(srToObjects, "line_shipdate")
+                    // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "line_consigneetext", /*"line_equipmenttext"*/])
+                    // var srGroupedByDeliveryDate = groupByKeys(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", /*"line_equipmenttext"*/])
+                    var srGroupedByDeliveryDate = groupByOrigcityDestcity(srToObjects, ["line_shipdate", "line_locationtext", "custrecord_anc_lane_destinationcity", "line_equipmenttext"])
+                    log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
+
+                    return srGroupedByDeliveryDate
+            }
 
             var getResults = function getResults(set) {
                     var holder = [];
@@ -1517,31 +1629,32 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                                             //TODO dont work on LEG2, let this be taken care of LOAD PLANNING PHASE
                                             //TODO just look at LEG1s of crossdocked orderlines, and leg0 or in other words DIRECT
-                                            //
-                                            // //LEG2
-                                            //
-                                            // var obj2 = JSON.parse(JSON.stringify(obj))
-                                            // for(var a = 0 ; a < property.length; a++)
-                                            // {
-                                            //         origkeys += separator + (obj2[property[a]] || "");
-                                            //         if(property[a] == "line_locationtext")
-                                            //         {
-                                            //                 obj2["orig_"+property[a]] = obj2["line_locationtext"];
-                                            //                 obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
-                                            //         }
-                                            //         key +=  separator + (obj2[property[a]] || "");
-                                            // }
-                                            // obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
-                                            // obj2["orig_line_location"] = obj2["line_location"];
-                                            // obj2.custpage_ifr_leg = "2";
-                                            // obj2.subtabname = obj2["line_uniquekey"];
-                                            // obj2.origkeys = origkeys;
-                                            // // key += "|"
-                                            //
-                                            // if (!straightObj["leg2"]) {
-                                            //         straightObj.leg2 = [];
-                                            // }
-                                            // straightObj.leg2.push(obj2);
+                                            //TODO as of 06302025 Mike said only legs2 are directly to be generated on Fitment Check instead, contrary to the above
+
+                                            //LEG2
+
+                                            var obj2 = JSON.parse(JSON.stringify(obj))
+                                            for(var a = 0 ; a < property.length; a++)
+                                            {
+                                                    origkeys += separator + (obj2[property[a]] || "");
+                                                    if(property[a] == "line_locationtext")
+                                                    {
+                                                            obj2["orig_"+property[a]] = obj2["line_locationtext"];
+                                                            obj2[property[a]] = obj2["custrecord_anc_lane_crossdockcity"];
+                                                    }
+                                                    key +=  separator + (obj2[property[a]] || "");
+                                            }
+                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                                            obj2["orig_line_location"] = obj2["line_location"];
+                                            obj2.custpage_ifr_leg = "2";
+                                            obj2.subtabname = obj2["line_uniquekey"];
+                                            obj2.origkeys = origkeys;
+                                            // key += "|"
+
+                                            if (!straightObj["leg2"]) {
+                                                    straightObj.leg2 = [];
+                                            }
+                                            straightObj.leg2.push(obj2);
                                     }
 
                                     return acc;
@@ -2000,25 +2113,25 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             function querySoPastLdc(obj)
             {
                     var sql = `SELECT
-                    BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
-                    BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS transactioninternalid /*{transactionnumber#RAW}*/,
-                BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
-                    transactionLine.linesequencenumber as transactionlinenum,
-                BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
-                BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity /*{transactionlines.quantity#RAW}*/,
-                transactionLine.custcol_anc_ldcdate AS ldcdate, 
-                (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
-                    FROM
-                    "TRANSACTION",
-                        transactionLine
-                    WHERE
-                    "TRANSACTION"."ID" = transactionLine."TRANSACTION" 
-                      
-                      AND NVL(transactionLine.taxline, 'F') = 'F'
+                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
+                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS transactioninternalid /*{transactionnumber#RAW}*/,
+                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
+                                       transactionLine.linesequencenumber as transactionlinenum,
+                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
+                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity /*{transactionlines.quantity#RAW}*/,
+                                       transactionLine.custcol_anc_ldcdate AS ldcdate,
+                                       (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
+                               FROM
+                                       "TRANSACTION",
+                                       transactionLine
+                               WHERE
+                                       "TRANSACTION"."ID" = transactionLine."TRANSACTION"
 
-                      AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) ${obj.dayspassedoper || "="} ${obj.dayspassed || 1} THEN 1 ELSE 1 END = 1)
-                      
-                      AND transactionLine.quantity IS NOT NULL
+                                 AND NVL(transactionLine.taxline, 'F') = 'F'
+
+                                 AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) ${obj.dayspassedoper || "="} ${obj.dayspassed || 1} THEN 1 ELSE 1 END = 1)
+
+                                 AND transactionLine.quantity IS NOT NULL
 
                     `
 
@@ -2175,10 +2288,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     var functionOutput = {};
                     try
                     {
-                        if(obj.recObj)
-                        {
-                                var linesDetails = getLinesDetails(obj);
-                        }
+                            if(obj.recObj)
+                            {
+                                    var linesDetails = getLinesDetails(obj);
+                            }
                     }
                     catch(e)
                     {
@@ -2193,9 +2306,9 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     var functionOutput = {};
                     try
                     {
-                        var lineCount = obj.recObj.getLineCount({
-                                sublistId : "item"
-                        })
+                            var lineCount = obj.recObj.getLineCount({
+                                    sublistId : "item"
+                            })
 
                             for(var a = 0 ; a < lineCount ; a++)
                             {
@@ -2281,8 +2394,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             CUSTOMRECORD_ANC_PRODUCTION_CAPACITY
                                     WHERE
                                             (
-                                            ${filterText}
-                                            )
+                                                    ${filterText}
+                                                    )
                             `
 
                             log.debug("getRelatedProdCap sql", sql)
@@ -2374,11 +2487,11 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                             var sql =
                                 `Select
-                                 eq.id as eq_internalid,
-                                 eq.custrecord_anc_equipmentweightcap as eq_weightcap,
-                                 eq.custrecord_anc_transportmode as eq_transportmode
-                                FROM
-                                customrecord_anc_equipment as eq`
+                                         eq.id as eq_internalid,
+                                         eq.custrecord_anc_equipmentweightcap as eq_weightcap,
+                                         eq.custrecord_anc_transportmode as eq_transportmode
+                                 FROM
+                                         customrecord_anc_equipment as eq`
 
 
                             log.debug("getEquipmentList sql", sql)
