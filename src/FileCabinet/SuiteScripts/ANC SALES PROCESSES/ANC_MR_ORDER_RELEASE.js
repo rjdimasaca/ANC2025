@@ -63,11 +63,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 
             log.debug("mapContext", mapContext);
 
             var value = mapContext.value;
-            value = JSON.parse(value);
-            var transactioninternalid = value.transactioninternalid;
+            if((typeof value).toLowerCase() != 'object')
+            {
+                value = JSON.parse(value);
+            }
+
+            log.debug("mapContext value", value);
+            var traninternalid = value.traninternalid;
+            log.debug("mapContext traninternalid", traninternalid);
 
             mapContext.write({
-                key : transactioninternalid,
+                key : traninternalid,
                 value : value
             })
         }
@@ -91,27 +97,51 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 
         {
             try
             {
+                log.debug("reduce reduceContext", reduceContext);
+
                 var tranInternalid = reduceContext.key;
                 log.debug("reduce tranInternalid", tranInternalid);
 
+                if((typeof reduceContext).toLowerCase() != 'object')
+                {
+                    reduceContext = JSON.parse(reduceContext);
+                }
+
                 var values = reduceContext.values;
+                if(!reduceContext.value && (typeof values).toLowerCase() != 'object')
+                {
+                    values = JSON.parse(values);
+                }
+                else {
+                    values
+                }
                 log.debug("reduce values", values);
                 var values = values.map(function(elem){
-                    return JSON.parse(elem);
+                    if((typeof elem).toLowerCase() != 'object')
+                    {
+                        elem = JSON.parse(elem);
+                    }
+                    return elem;
                 })
                 // values = JSON.parse(values);
                 log.debug("reduce values after parse", values);
                 var pastLdcLinesSqlResults = values;
-                var syncLinesPastLdcSyncResults = ANC_lib.syncLinesPastLdc(pastLdcLinesSqlResults)
+
+                var groupedByInternalId = ANC_lib.groupBy(pastLdcLinesSqlResults, "traninternalid");
+                var syncLinesPastLdcSyncResults_json = ANC_lib.prepareOrderPayload(groupedByInternalId);
+
+                var syncLinesPastLdcSyncResults = ANC_lib.syncLinesPastLdc(syncLinesPastLdcSyncResults_json)
 
                 log.debug("syncLinesPastLdcSyncResults", syncLinesPastLdcSyncResults);
-                // var updateLinesPastLdcResults = ANC_lib.updateLinesPastLdc(recObj, pastLdcLinesSqlResults)
+                // var updateLinesPastLdcResults = ANC_lib.updateLinesPastLdc(recObj, pastLdcLinesSqlResults);
             }
             catch(e)
             {
                 log.error("ERROR in function reduce", e)
             }
         }
+
+
 
 
         /**

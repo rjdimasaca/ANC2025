@@ -2114,7 +2114,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             {
                     var sql = `SELECT
                                        BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS transactioninternalid /*{transactionnumber#RAW}*/,
+                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS tranInternalid /*{transactionnumber#RAW}*/,
                                        BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
                                        transactionLine.linesequencenumber as transactionlinenum,
                                        BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
@@ -2134,9 +2134,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                  AND transactionLine.quantity IS NOT NULL
 
                     `
-                    var sql = `SELECT BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
+                    var sql = `SELECT BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.ID) AS tranInternalid,
+                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
                                       BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS entitytitle,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS ent_entitytitle,
                                       BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addressee) AS addressee,
                                       BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addr1) AS addr1,
                                       BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.city) AS city,
@@ -2152,23 +2153,23 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
                                       BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.zip) AS zip,
                                       BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.country) AS country,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS externalid,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS ent_externalid,
                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.transactionnumber) AS transactionnumber,
                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS CATEGORY,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS fullname,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS email,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS ent_CATEGORY,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS ent_fullname,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS ent_email,
                                       BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
                                       BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber,
                                       BUILTIN_RESULT.TYPE_INTEGER(item.LOCATION) AS LOCATION,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS addressee_1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS addr1_1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS city_1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS state_1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS zip_1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS country_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS loc_addressee,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS loc_addr1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS loc_city,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS loc_state,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS loc_zip,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS loc_country,
                                       BUILTIN_RESULT.TYPE_INTEGER(transactionLine.item) AS item,
-                                      BUILTIN_RESULT.TYPE_STRING(item.fullname) AS fullname_1,
+                                      BUILTIN_RESULT.TYPE_STRING(item.fullname) AS item_fullname,
                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered,
                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity, (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
 
@@ -2228,36 +2229,26 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return sqlResults
             }
 
+            //TODO deprecate or discontinue, delete completely if needed.
             var syncLinesPastLdcUrl = "https://loadfitting.anchub.ca/loadfitting/generateshipments"
 
             function syncLinesPastLdc(obj)
             {
-                    var syncLinesPastLdc_result = {};
-                    syncLinesPastLdc_result.by_transactioninternalid = [];
+                    var syncLinesPastLdc_result = obj || {};
+                    syncLinesPastLdc_result.by_tranInternalid = [];
                     syncLinesPastLdc_result.responseList = [];
-                    var groupedByInternalId = groupBy(obj, "transactioninternalid");
 
-                    for(var tranInternalId in groupedByInternalId)
-                    {
-                            log.debug("groupedByInternalId", groupedByInternalId);
+                    log.debug("obj", obj);
 
-                            var requestData = preparePastLdcSyncData(groupedByInternalId[tranInternalId])
+                    var rawResp = callPastLdcUrl(obj)
 
-                            var rawResp = callPastLdcUrl(requestData)
+                    syncLinesPastLdc_result.responseList.push(rawResp);
 
-                            syncLinesPastLdc_result[tranInternalId] = (rawResp);
-                            syncLinesPastLdc_result.responseList.push(rawResp);
-                    }
-
-                    log.debug("syncLinesPastLdc", syncLinesPastLdc)
+                    log.debug("syncLinesPastLdc_result", syncLinesPastLdc_result)
 
                     return syncLinesPastLdc_result;
             }
 
-            function preparePastLdcSyncData(obj)
-            {
-
-            }
 
             function updateLinesPastLdc(recObj, obj)
             {
@@ -2287,6 +2278,204 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     updateLinesPastLdc.orderedByLineId = orderedByLineId;
                     log.debug("updateLinesPastLdc", updateLinesPastLdc)
                     return updateLinesPastLdc;
+            }
+
+            function prepareOrderPayload(objByInternalid)
+            {
+                    var singleOrderPayload = {};
+
+
+
+
+                    for(var internalid in objByInternalid)
+                    {
+                            var detail = objByInternalid[internalid];
+                            if(detail && detail.length > 0)
+                            {
+
+                                    log.debug("prepareOrderPayload detail", detail);
+                                    singleOrderPayload =
+                                        {
+                                                // ===========================
+                                                // Order Header
+                                                // ===========================
+                                                "OrderHeader": {
+                                                        "millOrderNumber":     detail[0].custcol_anc_millordernum || "",   // Mill / ERP master order
+                                                        "purchaseOrderNumber": detail[0].otherrefnum || "",  // Customer’s PO reference
+                                                        "orderStatus":         "New",      // New | Amended | Cancelled | Completed
+                                                        "version":             1,          // Document version (1 = first issue) //TODO
+
+                                                        /* ---------- Buyer Party ---------- */
+                                                        "buyerParty": {
+                                                                //TODO list of possible ways to find the buyer
+                                                                "partyIdentifiers": [
+                                                                        { "partyIdentifierType": "Internal", "value": detail[0].ent_entitytitle },
+                                                                        { "partyIdentifierType": "GLN",      "value": detail[0].ent_externalid } //TODO
+                                                                ],
+                                                                "nameAddress": {
+                                                                        "name1":      detail[0].addr1,
+                                                                        "address1":   detail[0].addr1,
+                                                                        "city":       detail[0].city,
+                                                                        "region":     detail[0].state,
+                                                                        "postalCode": detail[0].zip,
+                                                                        "country":    detail[0].country
+
+                                                                },
+                                                                //TODO list array
+                                                                "contacts": [
+                                                                        {
+                                                                                "contactType": detail[0].ent_category,
+                                                                                "contactName": detail[0].ent_fullname,
+                                                                                "email":       ent_email
+                                                                        }
+                                                                ],
+                                                                //TODO list array
+                                                                "notes": [
+                                                                        { "noteType": "Shipping", "note": "Credit check before shipping" }
+                                                                ]
+                                                        },
+
+                                                        "isInternal":       false,     // true = internal transfer (no invoice)
+                                                        "orderPurpose":     "Customer",// Customer | Customer Cull | Stock | Stock Cull
+                                                        //TODO list array
+                                                        "orderHeaderNotes": [
+                                                                { "noteType": "Planner", "note": "Urgent order – please expedite delivery." }
+                                                        ]
+                                                },
+
+                                                // ===========================
+                                                // Order Line Items
+                                                // ===========================
+
+                                        }
+                            }
+
+                            //safe to be inside the loop
+                            singleOrderPayload["lineItems"] = [];
+                            singleOrderPayload = buildLineItems(singleOrderPayload, detail);
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    // for(var internalid in objByInternalid)
+                    // {
+                    //     singleOrderPayload.OrderHeader = {
+                    //         millOrderNumber : "",
+                    //         purchaseOrderNumber: "",
+                    //         orderStatus : "NEW",
+                    //         version : 1,
+                    //         buyerParty : {
+                    //             partyIdentifiers
+                    //         }
+                    //     }
+                    //
+                    //     // singleOrderPayload.OrderHeader.buyerParty
+                    //
+                    //     ;
+                    // }
+
+                    log.debug("singleOrderPayload", singleOrderPayload)
+                    return singleOrderPayload;
+            }
+
+            function buildLineItems(singleOrderPayload, detail)
+            {
+                    for(var a = 0 ; a < detail.length ; a++)
+                    {
+                            var arrayElem = [
+                                    {
+                                            "millOrderLineItemNumber":      detail[a].custcol_anc_millordernum,
+                                            "purchaseOrderLineItemNumber":  detail[a].linesequencenumber,
+                                            "lineItemStatusType":          "New", //TODO
+
+                                            "product": {
+                                                    "sku":          detail[a].item_fullname,
+                                                    "grade":        detail[a].item_grade,
+                                                    "rollWidth":    { "value": detail[a].item_rollwidth, "uom": "mm" },
+                                                    "rollDiameter": { "value": detail[a].item_rolldiameter, "uom": "mm" },
+                                                    "core":         detail[a].item_rollcore,
+                                                    "wrapType":     detail[a].item_rollwraptype,
+                                                    "rollPerPack":  detail[a].item_rollperpack
+                                            },
+
+                                            "labelMark": "WALGREENS",
+                                            "quantity":  { "value": 100, "uom": "MetricTon" },
+
+                                            "orderItemNotes": [
+                                                    { "noteType": "Packaging", "note": "Deliver in moisture-resistant packaging." }
+                                            ],
+
+                                            /* ---------- mill shipment plan ---------- */
+                                            "shipmentSchedule": [
+                                                    {
+                                                            "shipmentRequestedDate": "2025-07-01",
+                                                            "quantity":             { "value": 50, "uom": "MetricTon" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General", "note": "First half of order" }
+                                                            ]
+                                                    },
+                                                    {
+                                                            "shipmentRequestedDate": "2025-07-15",
+                                                            "quantity":             { "value": 50, "uom": "MetricTon" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General", "note": "Second half of order" }
+                                                            ]
+                                                    }
+                                            ]
+                                    },
+
+                                    /* ---------- second line ---------- */
+                                    {
+                                            "millOrderLineItemNumber":      2,
+                                            "purchaseOrderLineItemNumber":  2,
+                                            "lineItemStatusType":          "New",
+
+                                            "product": {
+                                                    "sku":          "NPB66HT-1000-0800-NSTA-BB-RPP2",
+                                                    "grade":        "NPB66HT",
+                                                    "rollWidth":    { "value": 1000, "uom": "mm" },
+                                                    "rollDiameter": { "value": 800,  "uom": "mm" },
+                                                    "core":         "NSTA",
+                                                    "wrapType":     "BB",
+                                                    "rollPerPack":  2
+                                            },
+
+                                            "labelMark": "LIBERTY TIMES",
+                                            "quantity":  { "value": 6, "uom": "Roll" },
+
+                                            "orderItemNotes": [
+                                                    { "noteType": "Handling", "note": "Pack rolls securely to prevent damage." }
+                                            ],
+
+                                            "shipmentSchedule": [
+                                                    {
+                                                            "shipmentRequestedDate": "2025-07-15",
+                                                            "quantity":             { "value": 6, "uom": "Roll" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General", "note": "Single shipment for this item" }
+                                                            ]
+                                                    }
+                                            ]
+                                    }
+                            ]
+
+                            singleOrderPayload["lineItems"].push(arrayElem);
+                    }
+
+
+                    return singleOrderPayload;
             }
 
 
@@ -2655,7 +2844,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getEquipmentList,
                     searchConsignee_id,
                     searchCustomer_id,
-                    computeLoadUtilization
+                    computeLoadUtilization,
+                    prepareOrderPayload
             }
 
     });
