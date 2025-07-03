@@ -1644,7 +1644,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     }
                                                     key +=  separator + (obj2[property[a]] || "");
                                             }
-                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"].replace();
                                             obj2["orig_line_location"] = obj2["line_location"];
                                             obj2.custpage_ifr_leg = "2";
                                             obj2.subtabname = obj2["line_uniquekey"];
@@ -2134,8 +2134,89 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                  AND transactionLine.quantity IS NOT NULL
 
                     `
+                    var sql = `SELECT BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
+                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS entitytitle,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addressee) AS addressee,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addr1) AS addr1,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.city) AS city,
+                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_equipment) AS custcol_anc_equipment,
+                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
+                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_transportmode) AS custbody_anc_transportmode,
+                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.units) AS units,
+                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_certification) AS custbody_anc_certification,
+                                      BUILTIN_RESULT.TYPE_BOOLEAN(transactionLine.custcol_anc_shipall) AS custcol_anc_shipall,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.state) AS state,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_millordernum) AS custcol_anc_millordernum,
+                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody4) AS custbody4,
+                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.zip) AS zip,
+                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.country) AS country,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS externalid,
+                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.transactionnumber) AS transactionnumber,
+                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS CATEGORY,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS fullname,
+                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS email,
+                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
+                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber,
+                                      BUILTIN_RESULT.TYPE_INTEGER(item.LOCATION) AS LOCATION,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS addressee_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS addr1_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS city_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS state_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS zip_1,
+                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS country_1,
+                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.item) AS item,
+                                      BUILTIN_RESULT.TYPE_STRING(item.fullname) AS fullname_1,
+                                      BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered,
+                                      BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity, (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
 
-                    sql += buildTranIdFilter(obj).filterStr;
+                               FROM
+
+                                       TRANSACTION,
+                                       transactionBillingAddress,
+                                       (SELECT
+                                                entity.ID AS ID,
+                                                entity.ID AS id_join,
+                                                entity.entitytitle AS entitytitle,
+                                                entity.externalid AS externalid,
+                                                Contact.CATEGORY AS CATEGORY,
+                                                Contact.fullname AS fullname,
+                                                Contact.email AS email
+                                        FROM
+                                                entity,
+                                                Contact
+                                        WHERE
+                                                entity.contact = Contact.ID(+)
+                                       ) entity_SUB,
+                                       item,
+                                       (SELECT
+                                                LOCATION.ID AS id_join,
+                                                LocationMainAddress.addressee AS addressee,
+                                                LocationMainAddress.addr1 AS addr1,
+                                                LocationMainAddress.city AS city,
+                                                LocationMainAddress.state AS state,
+                                                LocationMainAddress.zip AS zip,
+                                                LocationMainAddress.country AS country
+                                        FROM
+                                                LOCATION,
+                                                LocationMainAddress
+                                        WHERE
+                                                LOCATION.mainaddress = LocationMainAddress.nkey(+)
+                                       ) Location_SUB,
+                                       transactionLine
+
+                               WHERE
+
+                                       (((((TRANSACTION.billingaddress = transactionBillingAddress.nkey(+) AND TRANSACTION.entity = entity_SUB.ID(+)) AND transactionLine.item = item.ID(+)) AND transactionLine.LOCATION = Location_SUB.id_join(+)) AND TRANSACTION.ID = transactionLine.TRANSACTION))
+                                 AND (( TRANSACTION.ID IN (61265756) AND transactionLine.quantity IS NOT NULL AND NVL(transactionLine.taxline, 'F') = 'F')) AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END = 1) AND transactionLine.quantity IS NOT NULL
+                    `
+
+                    if(obj && obj.length > 0)
+                    {
+                            sql += buildTranIdFilter(obj).filterStr;
+                    }
 
                     // sql+= `
                     // AND (("TRANSACTION"."ID" = 61250543 AND transactionLine.quantity IS NOT NULL))`
