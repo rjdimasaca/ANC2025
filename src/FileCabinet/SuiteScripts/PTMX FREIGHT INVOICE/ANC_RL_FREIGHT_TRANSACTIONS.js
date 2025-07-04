@@ -282,7 +282,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "entity",
                             value : carrierInternalid
                         });
-                        if(carrierInternalid != currentEntity)
+                        if(carrierInternalid && (carrierInternalid != currentEntity))
                         {
                             poRecObj.setValue({
                                 fieldId : "entity",
