@@ -2326,7 +2326,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                                         {
                                                                                 "contactType": detail[0].ent_category,
                                                                                 "contactName": detail[0].ent_fullname,
-                                                                                "email":       ent_email
+                                                                                "email":       detail[0].ent_email
                                                                         }
                                                                 ],
                                                                 //TODO list array
@@ -2411,10 +2411,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             },
 
                                             "labelMark": "WALGREENS",
-                                            "quantity":  { "value": 100, "uom": "MetricTon" },
+                                            "quantity":  { "value": detail[a].custcol_anc_orderweight || detail[a].quantity, "uom": "MetricTon" },
 
                                             "orderItemNotes": [
-                                                    { "noteType": "Packaging", "note": "Deliver in moisture-resistant packaging." }
+                                                    { "noteType": "//TODO Packaging", "note": "//TODO Deliver in moisture-resistant packaging." }
                                             ],
 
                                             /* ---------- mill shipment plan ---------- */

@@ -132,6 +132,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 
 
                 var syncLinesPastLdcSyncResults = ANC_lib.syncLinesPastLdc(syncLinesPastLdcSyncResults_json)
 
+                log.debug("syncLinesPastLdcSyncResults_json.OrderHeader", syncLinesPastLdcSyncResults_json.OrderHeader)
+                log.debug("syncLinesPastLdcSyncResults_json.lineItems[0]", syncLinesPastLdcSyncResults_json.lineItems[0])
+                log.debug("syncLinesPastLdcSyncResults_json.lineItems[1]", syncLinesPastLdcSyncResults_json.lineItems[1])
+
                 log.debug("syncLinesPastLdcSyncResults", syncLinesPastLdcSyncResults);
                 // var updateLinesPastLdcResults = ANC_lib.updateLinesPastLdc(recObj, pastLdcLinesSqlResults);
             }
