@@ -2,9 +2,9 @@
  * @NApiVersion 2.1
  * @NScriptType Restlet
  */
-define([],
-    
-    () => {
+define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/search', 'N/url'],
+
+    (ANC_lib, https, record, runtime, search, url) => {
         /**
          * Defines the function that is executed when a GET request is sent to a RESTlet.
          * @param {Object} requestParams - Parameters from HTTP request URL; parameters passed as an Object (for all supported
@@ -40,7 +40,27 @@ define([],
          * @since 2015.2
          */
         const post = (requestBody) => {
+                var integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{request:JSON.stringify(requestBody)});
+                try
+                {
+                        respMsg = {
+                                success:true,
+                                message: `Hello, you connected to ANC NETSUITE ${runtime.accountId} : ${runtime.envType} : RAIL INVOICE API`,
+                                api_message : "This endpoint is under development",
+                                requestBody: requestBody
+                        }
+                }
+                catch(e)
+                {
+                        log.error("ERROR in ANC_RL_FREIGHT_RAIL_INVOICE.js function post", e)
+                        respMsg={success:false, message: "ERROR caught: " + JSON.stringify(e), requestBody};
+                }
+                respMsg.integrationLogId = integrationLogId;
+                respMsgStr = JSON.stringify(respMsg);
 
+                integrationLogId = ANC_lib.submitIntegrationLog(integrationLogId,{response:respMsgStr});
+                log.debug(integrationLogId, integrationLogId)
+                return respMsgStr
         }
 
         /**

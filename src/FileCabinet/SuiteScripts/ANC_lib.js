@@ -2112,107 +2112,198 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
             function querySoPastLdc(obj)
             {
-                    var sql = `SELECT
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS tranInternalid /*{transactionnumber#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
-                                       transactionLine.linesequencenumber as transactionlinenum,
-                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity /*{transactionlines.quantity#RAW}*/,
-                                       transactionLine.custcol_anc_ldcdate AS ldcdate,
-                                       (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
-                               FROM
-                                       "TRANSACTION",
-                                       transactionLine
-                               WHERE
-                                       "TRANSACTION"."ID" = transactionLine."TRANSACTION"
+                    var sql = `
+                            SELECT
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.ID) AS tranInternalid,
+                                    BUILTIN_RESULT.TYPE_STRING(t.otherrefnum) AS otherrefnum,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.entity) AS entity,
+                                    BUILTIN_RESULT.TYPE_STRING(e.entitytitle) AS ent_entitytitle,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.addressee) AS addressee,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.addr1) AS addr1,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.city) AS city,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.custcol_anc_equipment) AS custcol_anc_equipment,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_transportmode) AS custbody_anc_transportmode,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.units) AS units,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_certification) AS custbody_anc_certification,
+                                    BUILTIN_RESULT.TYPE_BOOLEAN(tl.custcol_anc_shipall) AS custcol_anc_shipall,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.state) AS state,
+                                    BUILTIN_RESULT.TYPE_STRING(tl.custcol_anc_millordernum) AS custcol_anc_millordernum,
+                                    BUILTIN_RESULT.TYPE_STRING(t.custbody4) AS custbody4,
+                                    BUILTIN_RESULT.TYPE_STRING(t.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.zip) AS zip,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.country) AS country,
+                                    BUILTIN_RESULT.TYPE_STRING(e.externalid) AS ent_externalid,
+                                    BUILTIN_RESULT.TYPE_STRING(t.transactionnumber) AS transactionnumber,
+                                    BUILTIN_RESULT.TYPE_STRING(t.tranid) AS tranid,
+                                    BUILTIN_RESULT.TYPE_STRING(e.CATEGORY) AS ent_CATEGORY,
+                                    BUILTIN_RESULT.TYPE_STRING(e.fullname) AS ent_fullname,
+                                    BUILTIN_RESULT.TYPE_STRING(e.email) AS ent_email,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.linesequencenumber) AS linesequencenumber,
+                                    BUILTIN_RESULT.TYPE_INTEGER(i.LOCATION) AS LOCATION,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.addressee) AS loc_addressee,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.addr1) AS loc_addr1,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.city) AS loc_city,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.state) AS loc_state,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.zip) AS loc_zip,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.country) AS loc_country,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.item) AS item,
+                                    BUILTIN_RESULT.TYPE_STRING(i.fullname) AS item_fullname,
 
-                                 AND NVL(transactionLine.taxline, 'F') = 'F'
+                                    -- Matrix options via BUILTIN.DF()
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rollcore)) AS custitem_anc_rollcore,
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rolldiameter)) AS custitem_anc_rolldiameter,
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rollwidth)) AS custitem_anc_rollwidth,
 
-                                 AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) ${obj.dayspassedoper || "="} ${obj.dayspassed || 1} THEN 1 ELSE 1 END = 1)
+                                    BUILTIN_RESULT.TYPE_FLOAT(tl.quantitybackordered) AS quantitybackordered,
+                                    BUILTIN_RESULT.TYPE_FLOAT(tl.quantity) AS quantity,
 
-                                 AND transactionLine.quantity IS NOT NULL
+                                    (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(tl.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) AS ldcdayspast
 
+                            FROM
+                                    TRANSACTION t
+
+                                            INNER JOIN transactionLine tl
+                                                       ON t.ID = tl.TRANSACTION
+
+                                            LEFT JOIN transactionBillingAddress tb
+                                                      ON t.billingaddress = tb.nkey
+
+                                            LEFT JOIN (
+                                            SELECT
+                                                    en.ID AS ID,
+                                                    en.entitytitle AS entitytitle,
+                                                    en.externalid AS externalid,
+                                                    c.CATEGORY AS CATEGORY,
+                                                    c.fullname AS fullname,
+                                                    c.email AS email
+                                            FROM entity en
+                                                         LEFT JOIN Contact c
+                                                                   ON en.contact = c.ID
+                                    ) e
+                                                      ON t.entity = e.ID
+
+                                            LEFT JOIN item i
+                                                      ON tl.item = i.ID
+
+                                            LEFT JOIN (
+                                            SELECT
+                                                    l.ID AS id_join,
+                                                    la.addressee,
+                                                    la.addr1,
+                                                    la.city,
+                                                    la.state,
+                                                    la.zip,
+                                                    la.country
+                                            FROM LOCATION l
+                                                         LEFT JOIN LocationMainAddress la
+                                                                   ON l.mainaddress = la.nkey
+                                    ) loc
+                                                      ON tl.LOCATION = loc.id_join
+
+                            WHERE
+                                    t.ID IN (61265756)
+                              AND tl.quantity IS NOT NULL
+                              AND NVL(tl.taxline, 'F') = 'F'
+                              AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(tl.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) = 1
                     `
-                    var sql = `SELECT BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.ID) AS tranInternalid,
-                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
-                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS ent_entitytitle,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addressee) AS addressee,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addr1) AS addr1,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.city) AS city,
-                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_equipment) AS custcol_anc_equipment,
-                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
-                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_transportmode) AS custbody_anc_transportmode,
-                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.units) AS units,
-                                      BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_certification) AS custbody_anc_certification,
-                                      BUILTIN_RESULT.TYPE_BOOLEAN(transactionLine.custcol_anc_shipall) AS custcol_anc_shipall,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.state) AS state,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_millordernum) AS custcol_anc_millordernum,
-                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody4) AS custbody4,
-                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.zip) AS zip,
-                                      BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.country) AS country,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS ent_externalid,
-                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.transactionnumber) AS transactionnumber,
-                                      BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS ent_CATEGORY,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS ent_fullname,
-                                      BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS ent_email,
-                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
-                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber,
-                                      BUILTIN_RESULT.TYPE_INTEGER(item.LOCATION) AS LOCATION,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS loc_addressee,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS loc_addr1,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS loc_city,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS loc_state,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS loc_zip,
-                                      BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS loc_country,
-                                      BUILTIN_RESULT.TYPE_INTEGER(transactionLine.item) AS item,
-                                      BUILTIN_RESULT.TYPE_STRING(item.fullname) AS item_fullname,
-                                      BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered,
-                                      BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity, (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
 
-                               FROM
-
-                                       TRANSACTION,
-                                       transactionBillingAddress,
-                                       (SELECT
-                                                entity.ID AS ID,
-                                                entity.ID AS id_join,
-                                                entity.entitytitle AS entitytitle,
-                                                entity.externalid AS externalid,
-                                                Contact.CATEGORY AS CATEGORY,
-                                                Contact.fullname AS fullname,
-                                                Contact.email AS email
-                                        FROM
-                                                entity,
-                                                Contact
-                                        WHERE
-                                                entity.contact = Contact.ID(+)
-                                       ) entity_SUB,
-                                       item,
-                                       (SELECT
-                                                LOCATION.ID AS id_join,
-                                                LocationMainAddress.addressee AS addressee,
-                                                LocationMainAddress.addr1 AS addr1,
-                                                LocationMainAddress.city AS city,
-                                                LocationMainAddress.state AS state,
-                                                LocationMainAddress.zip AS zip,
-                                                LocationMainAddress.country AS country
-                                        FROM
-                                                LOCATION,
-                                                LocationMainAddress
-                                        WHERE
-                                                LOCATION.mainaddress = LocationMainAddress.nkey(+)
-                                       ) Location_SUB,
-                                       transactionLine
-
-                               WHERE
-
-                                       (((((TRANSACTION.billingaddress = transactionBillingAddress.nkey(+) AND TRANSACTION.entity = entity_SUB.ID(+)) AND transactionLine.item = item.ID(+)) AND transactionLine.LOCATION = Location_SUB.id_join(+)) AND TRANSACTION.ID = transactionLine.TRANSACTION))
-                                 AND (( TRANSACTION.ID IN (61265756) AND transactionLine.quantity IS NOT NULL AND NVL(transactionLine.taxline, 'F') = 'F')) AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END = 1) AND transactionLine.quantity IS NOT NULL
-                    `
+                    // var sql = `SELECT
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.ID) AS tranInternalid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS ent_entitytitle,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addressee) AS addressee,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addr1) AS addr1,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.city) AS city,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_equipment) AS custcol_anc_equipment,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_transportmode) AS custbody_anc_transportmode,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.units) AS units,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_certification) AS custbody_anc_certification,
+                    //                    BUILTIN_RESULT.TYPE_BOOLEAN(transactionLine.custcol_anc_shipall) AS custcol_anc_shipall,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.state) AS state,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_millordernum) AS custcol_anc_millordernum,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody4) AS custbody4,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.zip) AS zip,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.country) AS country,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS ent_externalid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.transactionnumber) AS transactionnumber,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS ent_CATEGORY,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS ent_fullname,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS ent_email,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(item.LOCATION) AS LOCATION,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS loc_addressee,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS loc_addr1,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS loc_city,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS loc_state,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS loc_zip,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS loc_country,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.item) AS item,
+                    //                    BUILTIN_RESULT.TYPE_STRING(item.fullname) AS item_fullname,
+                    //
+                    //                    -- Corrected matrix option values using BUILTIN.DF()
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rollcore)) AS custitem_anc_rollcore,
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rolldiameter)) AS custitem_anc_rolldiameter,
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rollwidth)) AS custitem_anc_rollwidth,
+                    //
+                    //                    BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered,
+                    //                    BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity,
+                    //
+                    //                    (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) AS ldcdayspast
+                    //
+                    //            FROM
+                    //                    TRANSACTION,
+                    //                    transactionBillingAddress,
+                    //                    (
+                    //                            SELECT
+                    //                                    entity.ID AS ID,
+                    //                                    entity.ID AS id_join,
+                    //                                    entity.entitytitle AS entitytitle,
+                    //                                    entity.externalid AS externalid,
+                    //                                    Contact.CATEGORY AS CATEGORY,
+                    //                                    Contact.fullname AS fullname,
+                    //                                    Contact.email AS email
+                    //                            FROM
+                    //                                    entity,
+                    //                                    Contact
+                    //                            WHERE
+                    //                                    entity.contact = Contact.ID(+)
+                    //                    ) entity_SUB,
+                    //                    item,
+                    //                    (
+                    //                            SELECT
+                    //                                    LOCATION.ID AS id_join,
+                    //                                    LocationMainAddress.addressee AS addressee,
+                    //                                    LocationMainAddress.addr1 AS addr1,
+                    //                                    LocationMainAddress.city AS city,
+                    //                                    LocationMainAddress.state AS state,
+                    //                                    LocationMainAddress.zip AS zip,
+                    //                                    LocationMainAddress.country AS country
+                    //                            FROM
+                    //                                    LOCATION,
+                    //                                    LocationMainAddress
+                    //                            WHERE
+                    //                                    LOCATION.mainaddress = LocationMainAddress.nkey(+)
+                    //                    ) Location_SUB,
+                    //                    transactionLine
+                    //
+                    //            WHERE
+                    //                    TRANSACTION.billingaddress = transactionBillingAddress.nkey(+)
+                    //              AND TRANSACTION.entity = entity_SUB.ID(+)
+                    //              AND transactionLine.item = item.ID(+)
+                    //              AND transactionLine.LOCATION = Location_SUB.id_join(+)
+                    //              AND TRANSACTION.ID = transactionLine.TRANSACTION
+                    //              AND TRANSACTION.ID IN (61265756)
+                    //              AND transactionLine.quantity IS NOT NULL
+                    //              AND NVL(transactionLine.taxline, 'F') = 'F'
+                    //              AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) = 1
+                    // `
 
                     if(obj && obj.length > 0)
                     {
@@ -2398,20 +2489,20 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     {
                                             "millOrderLineItemNumber":      detail[a].custcol_anc_millordernum,
                                             "purchaseOrderLineItemNumber":  detail[a].linesequencenumber,
-                                            "lineItemStatusType":          "New", //TODO
+                                            "lineItemStatusType":          "New //TODO",
 
                                             "product": {
                                                     "sku":          detail[a].item_fullname,
                                                     "grade":        detail[a].item_grade,
-                                                    "rollWidth":    { "value": detail[a].item_rollwidth, "uom": "mm" },
-                                                    "rollDiameter": { "value": detail[a].item_rolldiameter, "uom": "mm" },
-                                                    "core":         detail[a].item_rollcore,
+                                                    "rollWidth":    { "value": detail[a].custitem_anc_rollwidth, "uom": "mm //TODO" },
+                                                    "rollDiameter": { "value": detail[a].custitem_anc_rolldiameter, "uom": "mm //TODO" },
+                                                    "core":         detail[a].custitem_anc_rollcore,
                                                     "wrapType":     detail[a].item_rollwraptype,
                                                     "rollPerPack":  detail[a].item_rollperpack
                                             },
 
-                                            "labelMark": "WALGREENS",
-                                            "quantity":  { "value": detail[a].custcol_anc_orderweight || detail[a].quantity, "uom": "MetricTon" },
+                                            "labelMark": "WALGREENS //TODO",
+                                            "quantity":  { "value": detail[a].custcol_anc_orderweight || detail[a].quantity, "uom": "MetricTon //TODO" },
 
                                             "orderItemNotes": [
                                                     { "noteType": "//TODO Packaging", "note": "//TODO Deliver in moisture-resistant packaging." }
@@ -2420,17 +2511,17 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                             /* ---------- mill shipment plan ---------- */
                                             "shipmentSchedule": [
                                                     {
-                                                            "shipmentRequestedDate": "2025-07-01",
-                                                            "quantity":             { "value": 50, "uom": "MetricTon" },
+                                                            "shipmentRequestedDate": detail[a].custcol_anc_shipdate ,
+                                                            "quantity":             { "value": "50 //TODO", "uom": "MetricTon //TODO" },
                                                             "shipmentNotes": [
-                                                                    { "noteType": "General", "note": "First half of order" }
+                                                                    { "noteType": "General //TODO", "note": "First half of order //TODO" }
                                                             ]
                                                     },
                                                     {
-                                                            "shipmentRequestedDate": "2025-07-15",
-                                                            "quantity":             { "value": 50, "uom": "MetricTon" },
+                                                            "shipmentRequestedDate": "2025-07-15 //TODO",
+                                                            "quantity":             { "value": "50 //TODO", "uom": "MetricTon //TODO" },
                                                             "shipmentNotes": [
-                                                                    { "noteType": "General", "note": "Second half of order" }
+                                                                    { "noteType": "General //TODO", "note": "Second half of order //TODO" }
                                                             ]
                                                     }
                                             ]
