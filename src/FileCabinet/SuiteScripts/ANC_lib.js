@@ -1644,7 +1644,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                     }
                                                     key +=  separator + (obj2[property[a]] || "");
                                             }
-                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"];
+                                            obj2["orig_custrecord_anc_lane_destinationcity"] = obj2["custrecord_anc_lane_destinationcity"].replace();
                                             obj2["orig_line_location"] = obj2["line_location"];
                                             obj2.custpage_ifr_leg = "2";
                                             obj2.subtabname = obj2["line_uniquekey"];
@@ -2112,30 +2112,203 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
             function querySoPastLdc(obj)
             {
-                    var sql = `SELECT
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".transactionnumber) AS transactionnumber /*{transactionnumber#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".ID) AS transactioninternalid /*{transactionnumber#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_STRING("TRANSACTION".tranid) AS tranid /*{tranid#RAW}*/,
-                                       transactionLine.linesequencenumber as transactionlinenum,
-                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered /*{transactionlines.quantitybackordered#RAW}*/,
-                                       BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity /*{transactionlines.quantity#RAW}*/,
-                                       transactionLine.custcol_anc_ldcdate AS ldcdate,
-                                       (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) as ldcdayspast
-                               FROM
-                                       "TRANSACTION",
-                                       transactionLine
-                               WHERE
-                                       "TRANSACTION"."ID" = transactionLine."TRANSACTION"
+                    var sql = `
+                            SELECT
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.ID) AS tranInternalid,
+                                    BUILTIN_RESULT.TYPE_STRING(t.otherrefnum) AS otherrefnum,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.entity) AS entity,
+                                    BUILTIN_RESULT.TYPE_STRING(e.entitytitle) AS ent_entitytitle,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.addressee) AS addressee,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.addr1) AS addr1,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.city) AS city,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.custcol_anc_equipment) AS custcol_anc_equipment,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_transportmode) AS custbody_anc_transportmode,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.units) AS units,
+                                    BUILTIN_RESULT.TYPE_INTEGER(t.custbody_anc_certification) AS custbody_anc_certification,
+                                    BUILTIN_RESULT.TYPE_BOOLEAN(tl.custcol_anc_shipall) AS custcol_anc_shipall,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.state) AS state,
+                                    BUILTIN_RESULT.TYPE_STRING(tl.custcol_anc_millordernum) AS custcol_anc_millordernum,
+                                    BUILTIN_RESULT.TYPE_STRING(t.custbody4) AS custbody4,
+                                    BUILTIN_RESULT.TYPE_STRING(t.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.zip) AS zip,
+                                    BUILTIN_RESULT.TYPE_STRING(tb.country) AS country,
+                                    BUILTIN_RESULT.TYPE_STRING(e.externalid) AS ent_externalid,
+                                    BUILTIN_RESULT.TYPE_STRING(t.transactionnumber) AS transactionnumber,
+                                    BUILTIN_RESULT.TYPE_STRING(t.tranid) AS tranid,
+                                    BUILTIN_RESULT.TYPE_STRING(e.CATEGORY) AS ent_CATEGORY,
+                                    BUILTIN_RESULT.TYPE_STRING(e.fullname) AS ent_fullname,
+                                    BUILTIN_RESULT.TYPE_STRING(e.email) AS ent_email,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.linesequencenumber) AS linesequencenumber,
+                                    BUILTIN_RESULT.TYPE_INTEGER(i.LOCATION) AS LOCATION,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.addressee) AS loc_addressee,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.addr1) AS loc_addr1,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.city) AS loc_city,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.state) AS loc_state,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.zip) AS loc_zip,
+                                    BUILTIN_RESULT.TYPE_STRING(loc.country) AS loc_country,
+                                    BUILTIN_RESULT.TYPE_INTEGER(tl.item) AS item,
+                                    BUILTIN_RESULT.TYPE_STRING(i.fullname) AS item_fullname,
 
-                                 AND NVL(transactionLine.taxline, 'F') = 'F'
+                                    -- Matrix options via BUILTIN.DF()
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rollcore)) AS custitem_anc_rollcore,
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rolldiameter)) AS custitem_anc_rolldiameter,
+                                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(i.custitem_anc_rollwidth)) AS custitem_anc_rollwidth,
 
-                                 AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) ${obj.dayspassedoper || "="} ${obj.dayspassed || 1} THEN 1 ELSE 1 END = 1)
+                                    BUILTIN_RESULT.TYPE_FLOAT(tl.quantitybackordered) AS quantitybackordered,
+                                    BUILTIN_RESULT.TYPE_FLOAT(tl.quantity) AS quantity,
 
-                                 AND transactionLine.quantity IS NOT NULL
+                                    (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(tl.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) AS ldcdayspast
 
+                            FROM
+                                    TRANSACTION t
+
+                                            INNER JOIN transactionLine tl
+                                                       ON t.ID = tl.TRANSACTION
+
+                                            LEFT JOIN transactionBillingAddress tb
+                                                      ON t.billingaddress = tb.nkey
+
+                                            LEFT JOIN (
+                                            SELECT
+                                                    en.ID AS ID,
+                                                    en.entitytitle AS entitytitle,
+                                                    en.externalid AS externalid,
+                                                    c.CATEGORY AS CATEGORY,
+                                                    c.fullname AS fullname,
+                                                    c.email AS email
+                                            FROM entity en
+                                                         LEFT JOIN Contact c
+                                                                   ON en.contact = c.ID
+                                    ) e
+                                                      ON t.entity = e.ID
+
+                                            LEFT JOIN item i
+                                                      ON tl.item = i.ID
+
+                                            LEFT JOIN (
+                                            SELECT
+                                                    l.ID AS id_join,
+                                                    la.addressee,
+                                                    la.addr1,
+                                                    la.city,
+                                                    la.state,
+                                                    la.zip,
+                                                    la.country
+                                            FROM LOCATION l
+                                                         LEFT JOIN LocationMainAddress la
+                                                                   ON l.mainaddress = la.nkey
+                                    ) loc
+                                                      ON tl.LOCATION = loc.id_join
+
+                            WHERE
+                                    t.ID IN (61265756)
+                              AND tl.quantity IS NOT NULL
+                              AND NVL(tl.taxline, 'F') = 'F'
+                              AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(tl.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) = 1
                     `
 
-                    sql += buildTranIdFilter(obj).filterStr;
+                    // var sql = `SELECT
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.ID) AS tranInternalid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.otherrefnum) AS otherrefnum,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.entitytitle) AS ent_entitytitle,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addressee) AS addressee,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.addr1) AS addr1,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.city) AS city,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_equipment) AS custcol_anc_equipment,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_vehicleno) AS custbody_anc_vehicleno,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_transportmode) AS custbody_anc_transportmode,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.units) AS units,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.custbody_anc_certification) AS custbody_anc_certification,
+                    //                    BUILTIN_RESULT.TYPE_BOOLEAN(transactionLine.custcol_anc_shipall) AS custcol_anc_shipall,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.state) AS state,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_millordernum) AS custcol_anc_millordernum,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody4) AS custbody4,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_wm_millordernumber) AS custbody_wm_millordernumber,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.zip) AS zip,
+                    //                    BUILTIN_RESULT.TYPE_STRING(transactionBillingAddress.country) AS country,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.externalid) AS ent_externalid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.transactionnumber) AS transactionnumber,
+                    //                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.CATEGORY) AS ent_CATEGORY,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.fullname) AS ent_fullname,
+                    //                    BUILTIN_RESULT.TYPE_STRING(entity_SUB.email) AS ent_email,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_consigneealtaddress) AS custcol_anc_consigneealtaddress,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.linesequencenumber) AS linesequencenumber,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(item.LOCATION) AS LOCATION,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.addressee) AS loc_addressee,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.addr1) AS loc_addr1,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.city) AS loc_city,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.state) AS loc_state,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.zip) AS loc_zip,
+                    //                    BUILTIN_RESULT.TYPE_STRING(Location_SUB.country) AS loc_country,
+                    //                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.item) AS item,
+                    //                    BUILTIN_RESULT.TYPE_STRING(item.fullname) AS item_fullname,
+                    //
+                    //                    -- Corrected matrix option values using BUILTIN.DF()
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rollcore)) AS custitem_anc_rollcore,
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rolldiameter)) AS custitem_anc_rolldiameter,
+                    //                    BUILTIN_RESULT.TYPE_STRING(BUILTIN.DF(item.custitem_anc_rollwidth)) AS custitem_anc_rollwidth,
+                    //
+                    //                    BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantitybackordered) AS quantitybackordered,
+                    //                    BUILTIN_RESULT.TYPE_FLOAT(transactionLine.quantity) AS quantity,
+                    //
+                    //                    (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) AS ldcdayspast
+                    //
+                    //            FROM
+                    //                    TRANSACTION,
+                    //                    transactionBillingAddress,
+                    //                    (
+                    //                            SELECT
+                    //                                    entity.ID AS ID,
+                    //                                    entity.ID AS id_join,
+                    //                                    entity.entitytitle AS entitytitle,
+                    //                                    entity.externalid AS externalid,
+                    //                                    Contact.CATEGORY AS CATEGORY,
+                    //                                    Contact.fullname AS fullname,
+                    //                                    Contact.email AS email
+                    //                            FROM
+                    //                                    entity,
+                    //                                    Contact
+                    //                            WHERE
+                    //                                    entity.contact = Contact.ID(+)
+                    //                    ) entity_SUB,
+                    //                    item,
+                    //                    (
+                    //                            SELECT
+                    //                                    LOCATION.ID AS id_join,
+                    //                                    LocationMainAddress.addressee AS addressee,
+                    //                                    LocationMainAddress.addr1 AS addr1,
+                    //                                    LocationMainAddress.city AS city,
+                    //                                    LocationMainAddress.state AS state,
+                    //                                    LocationMainAddress.zip AS zip,
+                    //                                    LocationMainAddress.country AS country
+                    //                            FROM
+                    //                                    LOCATION,
+                    //                                    LocationMainAddress
+                    //                            WHERE
+                    //                                    LOCATION.mainaddress = LocationMainAddress.nkey(+)
+                    //                    ) Location_SUB,
+                    //                    transactionLine
+                    //
+                    //            WHERE
+                    //                    TRANSACTION.billingaddress = transactionBillingAddress.nkey(+)
+                    //              AND TRANSACTION.entity = entity_SUB.ID(+)
+                    //              AND transactionLine.item = item.ID(+)
+                    //              AND transactionLine.LOCATION = Location_SUB.id_join(+)
+                    //              AND TRANSACTION.ID = transactionLine.TRANSACTION
+                    //              AND TRANSACTION.ID IN (61265756)
+                    //              AND transactionLine.quantity IS NOT NULL
+                    //              AND NVL(transactionLine.taxline, 'F') = 'F'
+                    //              AND (CASE WHEN TRUNC(CURRENT_DATE) - TRUNC(transactionLine.custcol_anc_ldcdate) > 1 THEN 1 ELSE 1 END) = 1
+                    // `
+
+                    if(obj && obj.length > 0)
+                    {
+                            sql += buildTranIdFilter(obj).filterStr;
+                    }
 
                     // sql+= `
                     // AND (("TRANSACTION"."ID" = 61250543 AND transactionLine.quantity IS NOT NULL))`
@@ -2147,36 +2320,26 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return sqlResults
             }
 
+            //TODO deprecate or discontinue, delete completely if needed.
             var syncLinesPastLdcUrl = "https://loadfitting.anchub.ca/loadfitting/generateshipments"
 
             function syncLinesPastLdc(obj)
             {
-                    var syncLinesPastLdc_result = {};
-                    syncLinesPastLdc_result.by_transactioninternalid = [];
+                    var syncLinesPastLdc_result = obj || {};
+                    syncLinesPastLdc_result.by_tranInternalid = [];
                     syncLinesPastLdc_result.responseList = [];
-                    var groupedByInternalId = groupBy(obj, "transactioninternalid");
 
-                    for(var tranInternalId in groupedByInternalId)
-                    {
-                            log.debug("groupedByInternalId", groupedByInternalId);
+                    log.debug("obj", obj);
 
-                            var requestData = preparePastLdcSyncData(groupedByInternalId[tranInternalId])
+                    var rawResp = callPastLdcUrl(obj)
 
-                            var rawResp = callPastLdcUrl(requestData)
+                    syncLinesPastLdc_result.responseList.push(rawResp);
 
-                            syncLinesPastLdc_result[tranInternalId] = (rawResp);
-                            syncLinesPastLdc_result.responseList.push(rawResp);
-                    }
-
-                    log.debug("syncLinesPastLdc", syncLinesPastLdc)
+                    log.debug("syncLinesPastLdc_result", syncLinesPastLdc_result)
 
                     return syncLinesPastLdc_result;
             }
 
-            function preparePastLdcSyncData(obj)
-            {
-
-            }
 
             function updateLinesPastLdc(recObj, obj)
             {
@@ -2206,6 +2369,204 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     updateLinesPastLdc.orderedByLineId = orderedByLineId;
                     log.debug("updateLinesPastLdc", updateLinesPastLdc)
                     return updateLinesPastLdc;
+            }
+
+            function prepareOrderPayload(objByInternalid)
+            {
+                    var singleOrderPayload = {};
+
+
+
+
+                    for(var internalid in objByInternalid)
+                    {
+                            var detail = objByInternalid[internalid];
+                            if(detail && detail.length > 0)
+                            {
+
+                                    log.debug("prepareOrderPayload detail", detail);
+                                    singleOrderPayload =
+                                        {
+                                                // ===========================
+                                                // Order Header
+                                                // ===========================
+                                                "OrderHeader": {
+                                                        "millOrderNumber":     detail[0].custcol_anc_millordernum || "",   // Mill / ERP master order
+                                                        "purchaseOrderNumber": detail[0].otherrefnum || "",  // Customer’s PO reference
+                                                        "orderStatus":         "New",      // New | Amended | Cancelled | Completed
+                                                        "version":             1,          // Document version (1 = first issue) //TODO
+
+                                                        /* ---------- Buyer Party ---------- */
+                                                        "buyerParty": {
+                                                                //TODO list of possible ways to find the buyer
+                                                                "partyIdentifiers": [
+                                                                        { "partyIdentifierType": "Internal", "value": detail[0].ent_entitytitle },
+                                                                        { "partyIdentifierType": "GLN",      "value": detail[0].ent_externalid } //TODO
+                                                                ],
+                                                                "nameAddress": {
+                                                                        "name1":      detail[0].addr1,
+                                                                        "address1":   detail[0].addr1,
+                                                                        "city":       detail[0].city,
+                                                                        "region":     detail[0].state,
+                                                                        "postalCode": detail[0].zip,
+                                                                        "country":    detail[0].country
+
+                                                                },
+                                                                //TODO list array
+                                                                "contacts": [
+                                                                        {
+                                                                                "contactType": detail[0].ent_category,
+                                                                                "contactName": detail[0].ent_fullname,
+                                                                                "email":       detail[0].ent_email
+                                                                        }
+                                                                ],
+                                                                //TODO list array
+                                                                "notes": [
+                                                                        { "noteType": "Shipping", "note": "Credit check before shipping" }
+                                                                ]
+                                                        },
+
+                                                        "isInternal":       false,     // true = internal transfer (no invoice)
+                                                        "orderPurpose":     "Customer",// Customer | Customer Cull | Stock | Stock Cull
+                                                        //TODO list array
+                                                        "orderHeaderNotes": [
+                                                                { "noteType": "Planner", "note": "Urgent order – please expedite delivery." }
+                                                        ]
+                                                },
+
+                                                // ===========================
+                                                // Order Line Items
+                                                // ===========================
+
+                                        }
+                            }
+
+                            //safe to be inside the loop
+                            singleOrderPayload["lineItems"] = [];
+                            singleOrderPayload = buildLineItems(singleOrderPayload, detail);
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    // for(var internalid in objByInternalid)
+                    // {
+                    //     singleOrderPayload.OrderHeader = {
+                    //         millOrderNumber : "",
+                    //         purchaseOrderNumber: "",
+                    //         orderStatus : "NEW",
+                    //         version : 1,
+                    //         buyerParty : {
+                    //             partyIdentifiers
+                    //         }
+                    //     }
+                    //
+                    //     // singleOrderPayload.OrderHeader.buyerParty
+                    //
+                    //     ;
+                    // }
+
+                    log.debug("singleOrderPayload", singleOrderPayload)
+                    return singleOrderPayload;
+            }
+
+            function buildLineItems(singleOrderPayload, detail)
+            {
+                    for(var a = 0 ; a < detail.length ; a++)
+                    {
+                            var arrayElem = [
+                                    {
+                                            "millOrderLineItemNumber":      detail[a].custcol_anc_millordernum,
+                                            "purchaseOrderLineItemNumber":  detail[a].linesequencenumber,
+                                            "lineItemStatusType":          "New //TODO",
+
+                                            "product": {
+                                                    "sku":          detail[a].item_fullname,
+                                                    "grade":        detail[a].item_grade,
+                                                    "rollWidth":    { "value": detail[a].custitem_anc_rollwidth, "uom": "mm //TODO" },
+                                                    "rollDiameter": { "value": detail[a].custitem_anc_rolldiameter, "uom": "mm //TODO" },
+                                                    "core":         detail[a].custitem_anc_rollcore,
+                                                    "wrapType":     detail[a].item_rollwraptype,
+                                                    "rollPerPack":  detail[a].item_rollperpack
+                                            },
+
+                                            "labelMark": "WALGREENS //TODO",
+                                            "quantity":  { "value": detail[a].custcol_anc_orderweight || detail[a].quantity, "uom": "MetricTon //TODO" },
+
+                                            "orderItemNotes": [
+                                                    { "noteType": "//TODO Packaging", "note": "//TODO Deliver in moisture-resistant packaging." }
+                                            ],
+
+                                            /* ---------- mill shipment plan ---------- */
+                                            "shipmentSchedule": [
+                                                    {
+                                                            "shipmentRequestedDate": detail[a].custcol_anc_shipdate ,
+                                                            "quantity":             { "value": "50 //TODO", "uom": "MetricTon //TODO" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General //TODO", "note": "First half of order //TODO" }
+                                                            ]
+                                                    },
+                                                    {
+                                                            "shipmentRequestedDate": "2025-07-15 //TODO",
+                                                            "quantity":             { "value": "50 //TODO", "uom": "MetricTon //TODO" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General //TODO", "note": "Second half of order //TODO" }
+                                                            ]
+                                                    }
+                                            ]
+                                    },
+
+                                    /* ---------- second line ---------- */
+                                    {
+                                            "millOrderLineItemNumber":      2,
+                                            "purchaseOrderLineItemNumber":  2,
+                                            "lineItemStatusType":          "New",
+
+                                            "product": {
+                                                    "sku":          "NPB66HT-1000-0800-NSTA-BB-RPP2",
+                                                    "grade":        "NPB66HT",
+                                                    "rollWidth":    { "value": 1000, "uom": "mm" },
+                                                    "rollDiameter": { "value": 800,  "uom": "mm" },
+                                                    "core":         "NSTA",
+                                                    "wrapType":     "BB",
+                                                    "rollPerPack":  2
+                                            },
+
+                                            "labelMark": "LIBERTY TIMES",
+                                            "quantity":  { "value": 6, "uom": "Roll" },
+
+                                            "orderItemNotes": [
+                                                    { "noteType": "Handling", "note": "Pack rolls securely to prevent damage." }
+                                            ],
+
+                                            "shipmentSchedule": [
+                                                    {
+                                                            "shipmentRequestedDate": "2025-07-15",
+                                                            "quantity":             { "value": 6, "uom": "Roll" },
+                                                            "shipmentNotes": [
+                                                                    { "noteType": "General", "note": "Single shipment for this item" }
+                                                            ]
+                                                    }
+                                            ]
+                                    }
+                            ]
+
+                            singleOrderPayload["lineItems"].push(arrayElem);
+                    }
+
+
+                    return singleOrderPayload;
             }
 
 
@@ -2574,7 +2935,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     getEquipmentList,
                     searchConsignee_id,
                     searchCustomer_id,
-                    computeLoadUtilization
+                    computeLoadUtilization,
+                    prepareOrderPayload
             }
 
     });

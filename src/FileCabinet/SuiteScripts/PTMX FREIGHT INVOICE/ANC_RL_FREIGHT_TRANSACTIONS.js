@@ -282,7 +282,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "entity",
                             value : carrierInternalid
                         });
-                        if(carrierInternalid != currentEntity)
+                        if(carrierInternalid && (carrierInternalid != currentEntity))
                         {
                             poRecObj.setValue({
                                 fieldId : "entity",
@@ -298,10 +298,17 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         but should be all to ANS going forward
                         rod warned that they need to make sure ANS is applied to freight vendors now that im forcing ANS as subsidiary
                         */
-                        poRecObj.setValue({
+                        var currSubsidiary = poRecObj.getValue({
                             fieldId : "subsidiary",
-                            value : 5
                         })
+
+                        if(Number(currSubsidiary) != 5)
+                        {
+                            poRecObj.setValue({
+                                fieldId : "subsidiary",
+                                value : 5
+                            })
+                        }
 
                         if(targets.targetCons)
                         {
