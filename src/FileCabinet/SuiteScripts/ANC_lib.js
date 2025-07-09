@@ -1307,7 +1307,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return fitmentResponse;
             }
 
-            function groupOrderLinesForShipmentGeneration(tranInternalId)
+            function groupOrderLinesForShipmentGeneration(tranInternalId, tranlineUniquekey)
             {
                     // tranInternalId = tranInternalId.concat(61265756);
                     var filters = [
@@ -1323,6 +1323,19 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                             // filters.push(["internalid","anyof",[tranInternalId,61250544]])
                             filters.push(["internalid","anyof",tranInternalId])
                             // filters.push(["internalid","anyof",[tranInternalId]])
+                    }
+
+                    if(tranlineUniquekey)
+                    {
+
+                            var tranlineUniquekeyQuotedCSV_array = tranlineUniquekey.map(function(elem){
+                                    return `'${elem}'`
+                            })
+
+                            var tranlineUniquekeyQuotedCSV = tranlineUniquekeyQuotedCSV_array.join(",");
+
+                            filters.push("AND")
+                            filters.push([`formulanumeric: CASE WHEN {lineuniquekey} IN (${tranlineUniquekeyQuotedCSV}) THEN 1 ELSE 0 END`,"equalto","1"])
                     }
                     // if(globalrefs.tranBodyVals.location)
                     // {
@@ -1503,6 +1516,111 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     log.debug("srGroupedByDeliveryDate", srGroupedByDeliveryDate)
 
                     return srGroupedByDeliveryDate
+            }
+
+            function getShipmentsAndOrders(shipmentInput)
+            {
+                    var respObj = {};
+
+                    log.debug("shipmentInput", shipmentInput)
+                    if(typeof shipmentInput != "object")
+                    {
+                            shipmentInput = JSON.parse(shipmentInput);
+                    }
+
+                    var shipmentInputQuoted = shipmentInput.shipmentIds.map(function(elem){
+                            return `'${elem}'`;
+                    })
+                    log.debug("shipmentInputQuoted", shipmentInputQuoted)
+
+                    var shipmentInputCSVSTR = shipmentInputQuoted.join(",")
+                    log.debug("shipmentInputCSVSTR", shipmentInputCSVSTR)
+                    try
+                    {
+                            respObj.shipmentAndOrders = []
+                            if(shipmentInput && shipmentInput.shipmentIds)
+                            {
+                                    var sql = `SELECT
+                    BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
+                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
+                    BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
+                    BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
+                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_relatedtransaction) AS custcol_anc_relatedtransaction,
+                    BUILTIN_RESULT.TYPE_INTEGER(transactionLine.uniquekey) AS uniquekey,
+                    BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_relatedlineuniquekey) AS custcol_anc_relatedlineuniquekey
+                    FROM
+                    TRANSACTION,
+                        transactionLine
+                    WHERE
+                    TRANSACTION.ID = transactionLine.TRANSACTION
+                    AND ((NVL(transactionLine.mainline, 'F') = 'F' AND TRANSACTION.TYPE IN ('CuTrSale108')))
+                      AND TRANSACTION.ID IN (${shipmentInputCSVSTR})
+                    `;
+
+                                    log.debug("sql", sql);
+                                    const sqlResults_shipmentLines = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                                    log.debug("sqlResults_shipmentLines", sqlResults_shipmentLines);
+                                    respObj.sqlResults_shipmentLines = sqlResults_shipmentLines;
+
+                                    var sqlResults_shipmentLinesCondition = "";
+                                    var sqlResults_shipmentLines_asFilters = respObj.sqlResults_shipmentLines.map(function(res){
+
+                                            if(sqlResults_shipmentLinesCondition)
+                                            {
+                                                    sqlResults_shipmentLinesCondition += ` OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                            }
+                                            else
+                                            {
+                                                    sqlResults_shipmentLinesCondition += `UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                            }
+
+                                            return `OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+
+                                    })
+
+                                    log.debug("sqlResults_shipmentLinesCondition", sqlResults_shipmentLinesCondition);
+
+
+                                    if(shipmentInput && shipmentInput.shipmentIds)
+                                    {
+                                            var sql = `SELECT
+                                       BUILTIN_RESULT.TYPE_DATE(TRANSACTION.trandate) AS trandate,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.memo) AS memo,
+                                       BUILTIN_RESULT.TYPE_INTEGER(TRANSACTION.entity) AS entity,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.tranid) AS tranid,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.trandisplayname) AS trandisplayname,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.TYPE) AS TYPE,
+                                       BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_relatedshipments) AS custcol_anc_relatedshipments,
+                                       BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_relatedtransaction) AS custcol_anc_relatedtransaction,
+                                       BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_relatedlineuniquekey) AS custcol_anc_relatedlineuniquekey,
+                                       BUILTIN_RESULT.TYPE_STRING(transactionLine.uniquekey) AS lineuniquekey
+                                   FROM
+                                       TRANSACTION,
+                                       transactionLine
+                                   WHERE
+                                       TRANSACTION.ID = transactionLine.TRANSACTION
+                                     AND ((NVL(transactionLine.mainline, 'F') = 'F' AND TRANSACTION.TYPE IN ('SalesOrd') AND ( ${sqlResults_shipmentLinesCondition})))
+                        `;
+
+                                            log.debug("sql", sql);
+                                            const sqlResults_shipmentLines = query.runSuiteQL({ query: sql }).asMappedResults();
+
+                                            log.debug("sqlResults_shipmentLines", sqlResults_shipmentLines);
+                                            respObj.lineuniquekeys = sqlResults_shipmentLines.map(function(elem){
+                                                    return elem.lineuniquekey
+                                            })
+                                            respObj.sqlResults_shipmentLines = sqlResults_shipmentLines;
+                                    }
+                            }
+                    }
+                    catch(e)
+                    {
+                            log.error("ERROR in function getShipmentsAndOrders")
+                    }
+                    return respObj;
             }
 
             var getResults = function getResults(set) {
@@ -2936,7 +3054,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     searchConsignee_id,
                     searchCustomer_id,
                     computeLoadUtilization,
-                    prepareOrderPayload
+                    prepareOrderPayload,
+                    getShipmentsAndOrders
             }
 
     });

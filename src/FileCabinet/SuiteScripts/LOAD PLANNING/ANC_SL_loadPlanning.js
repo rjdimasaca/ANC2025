@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType Suitelet
  */
-define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/task', 'N/ui/serverWidget'],
+define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/task', 'N/ui/serverWidget'],
     /**
      * @param{file} file
      * @param{https} https
@@ -13,7 +13,7 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
      * @param{task} task
      * @param{serverWidget} serverWidget
      */
-    (file, https, query, record, runtime, search, task, serverWidget) => {
+    (ANC_lib, file, https, query, record, runtime, search, task, serverWidget) => {
         /**
          * Defines the Suitelet script trigger point.
          * @param {Object} scriptContext
@@ -45,9 +45,28 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
         {
             var shipmentInput = getShipmentInputs(scriptContext);
 
-            var shipmentsAndOrders = getShipmentsAndOrders(scriptContext);
+            var taskId = task.create({
+                taskType : task.TaskType.MAP_REDUCE,
+                scriptId : "customscript_anc_mr_fitment",
+                deploymentId : "customdeploy_anc_mr_fitment",
+                params : {
+                    custscript_anc_mr_fitment_ids :shipmentInput
+                }
 
-            var shipmentsAndOrderlines = getShipmentsAndOrderlines(scriptContext);
+            })
+
+            log.debug("taskId", taskId);
+            var jobId = taskId.submit();
+            log.debug("jobId", jobId);
+
+            var shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentInput);
+
+
+            var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(null,shipmentsAndOrders.lineuniquekeys)
+
+            //respObj.sqlResults_shipmentLines
+
+            // var shipmentsAndOrderlines = getShipmentsAndOrderlines(shipmentsAndOrders);
         }
 
         function getShipmentInputs(scriptContext)
@@ -58,21 +77,53 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
                 log.debug("scriptContext.request", scriptContext.request)
                 log.debug("scriptContext.request.parameters", scriptContext.request.parameters);
 
-                var sublist1Count = scriptContext.request.getSublistCount({
-                    id : "custpage_subtab_lp_sublist1label"
+                var sublist1Count = scriptContext.request.getLineCount({
+                    group : "custpage_subtab_lp_sublist1"
                 });
 
                 log.debug("sublist1Count", sublist1Count)
+                var shipmentIds = [];
                 for(var a = 0 ; a < sublist1Count ; a++)
                 {
                     var sublist1_cbVal = scriptContext.request.getSublistValue({
-                        id : "custpage_subtab_lp_sublist1label",
-                        fieldId : "custpage_fld_lp_select",
+                        group : "custpage_subtab_lp_sublist1",
+                        name : "custpage_fld_lp_select",
                         line : a
                     })
                     log.debug("sublist1_cbVal", sublist1_cbVal);
 
+                    var sublist1_shipmentVal = scriptContext.request.getSublistValue({
+                        group : "custpage_subtab_lp_sublist1",
+                        name : "custpage_fld_lp_shipment1",
+                        line : a
+                    })
+                    log.debug("sublist1_cbVal", sublist1_cbVal);
+
+                    if(sublist1_cbVal && sublist1_cbVal != "F")
+                    {
+                        shipmentIds.push(sublist1_shipmentVal)
+                    }
                 }
+
+                log.debug("shipmentIds", shipmentIds)
+                //
+                // var sublist2Count = scriptContext.request.getLineCount({
+                //     id : "custpage_subtab_lp_sublist2label"
+                // });
+                //
+                // log.debug("sublist2Count", sublist2Count)
+                // for(var a = 0 ; a < sublist2Count ; a++)
+                // {
+                //     var sublist2_cbVal = scriptContext.request.getSublistValue({
+                //         id : "custpage_subtab_lp_sublist2label",
+                //         fieldId : "custpage_fld_lp_select",
+                //         line : a
+                //     })
+                //     log.debug("sublist2_cbVal", sublist2_cbVal);
+                //
+                // }
+
+                respObj.shipmentIds = shipmentIds;
             }
             catch(e)
             {
@@ -81,19 +132,7 @@ define(['N/file', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/
             return respObj;
         }
 
-        function getShipmentsAndOrders(scriptContext)
-        {
-            var respObj = {};
-            try
-            {
 
-            }
-            catch(e)
-            {
-                log.error("ERROR in function getShipmentsAndOrders")
-            }
-            return respObj;
-        }
 
         function getShipmentsAndOrderlines(scriptContext)
         {
