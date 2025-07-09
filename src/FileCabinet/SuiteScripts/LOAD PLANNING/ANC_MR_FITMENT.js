@@ -7,15 +7,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
 
         const TEMPORARY_SHIPMENT_ITEM = 188748;
 
-        const getInputData = (inputContext) => {
-            const shipmentInput = JSON.parse(runtime.getCurrentScript().getParameter({
+        const getInputData = () => {
+            const rawInput = runtime.getCurrentScript().getParameter({
                 name: 'custscript_anc_mr_fitment_ids'
-            }) || '{}');
+            });
+            const shipmentLineKeys = JSON.parse(rawInput || '{}');
 
-            const shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentInput);
-            const srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(null, shipmentsAndOrders.lineuniquekeys);
+            const shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentLineKeys);
+            const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, shipmentsAndOrders.lineuniquekeys);
 
-            return Object.values(srGroupedByDeliveryDate);
+            return Object.values(grouped);
         };
 
         const map = (context) => {
@@ -24,84 +25,70 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
                 const shipmentLineIdTracker = {};
                 const equipmentList = ANC_lib.getEquipmentList();
 
-                const groupList_bylist = shipmentGroup.list || [];
-                const groupByLineUniqueKey = ANC_lib.groupBy(groupList_bylist, 'line_uniquekey');
+                const groupList = shipmentGroup.list || [];
+                const groupByLineKey = ANC_lib.groupBy(groupList, 'line_uniquekey');
 
-                const fitmentResponse = ANC_lib.getFitmentResponse(groupList_bylist, shipmentLineIdTracker);
-                const fitmentResponseList = fitmentResponse.list || [];
+                const fitmentResponse = ANC_lib.getFitmentResponse(groupList, shipmentLineIdTracker);
+                const shipments = fitmentResponse.list || [];
 
-                for (const fitment of fitmentResponseList) {
-                    const body = fitment.body ? JSON.parse(fitment.body) : { shipments: [] };
+                for (const fitment of shipments) {
+                    const responseBody = fitment.body ? JSON.parse(fitment.body) : { shipments: [] };
 
-                    for (const shipmentData of body.shipments) {
-                        const shipmentRec = record.create({
-                            type: 'customsale_anc_shipment',
-                            isDynamic: true
-                        });
+                    for (const shipment of responseBody.shipments) {
+                        const rec = record.create({ type: 'customsale_anc_shipment', isDynamic: true });
+                        rec.setValue({ fieldId: 'memo', value: '✅✅✅' });
 
-                        shipmentRec.setValue({ fieldId: 'memo', value: '✅✅✅' });
-
+                        let entity, location, consignee, deliveryDate, shipDate, equipment;
                         let totalWeight = 0;
-                        let entity = null, location = null, deliveryDate = null, shipDate = null, equipment = null, consignee = null;
 
-
-                        for (const item of shipmentData.shipmentItems) {
-                            const itemId = item.itemId;
-                            const nb = item.nb;
-                            const resLine = (groupByLineUniqueKey[itemId] || [])[0];
-                            if (!resLine) continue;
-
-                            log.debug("resLine", resLine);
+                        for (const item of shipment.shipmentItems) {
+                            const lineKey = item.itemId;
+                            const qty = item.nb;
+                            const line = (groupByLineKey[lineKey] || [])[0];
+                            if (!line || !qty) continue;
 
                             if (!entity) {
-                                entity = resLine.entity || shipmentsAndOrders.entity;
-                                location = resLine.line_location;
-                                deliveryDate = resLine.line_deliverydate;
-                                shipDate = resLine.line_shipdate;
-                                equipment = resLine.line_equipment;
-                                consignee = resLine.line_consignee;
+                                entity = line.entity;
+                                location = line.line_location;
+                                consignee = line.line_consignee;
+                                deliveryDate = line.line_deliverydate;
+                                shipDate = line.line_shipdate;
+                                equipment = line.line_equipment;
                             }
 
-                            if (entity) shipmentRec.setValue({ fieldId: 'entity', value: entity });
-                            if (location) shipmentRec.setValue({ fieldId: 'location', value: location });
-                            if (consignee) shipmentRec.setValue({ fieldId: 'custbody_consignee', value: consignee });
-                            if (deliveryDate) shipmentRec.setText({ fieldId: 'custbody_anc_deliverydate', text: deliveryDate });
-                            if (shipDate) shipmentRec.setText({ fieldId: 'custbody_anc_shipdate', text: shipDate });
-                            if (equipment) shipmentRec.setValue({ fieldId: 'custbody_anc_equipment', value: equipment });
-
-
-                            const lineWeight = nb * (shipmentLineIdTracker[itemId]?.weight || 1);
+                            const lineWeight = qty * (shipmentLineIdTracker[lineKey]?.weight || 1);
                             totalWeight += lineWeight;
 
-                            shipmentRec.selectNewLine({ sublistId: 'item' });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: TEMPORARY_SHIPMENT_ITEM });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: nb });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: 0 });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_actualitemtobeshipped', value: resLine.line_item });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_consignee', value: consignee });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_relatedtransaction', value: resLine.internalid });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_relatedlineuniquekey', value: resLine.line_uniquekey });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_shipment_linetotalweight', value: resLine.line_item_basis_weight });
-                            shipmentRec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_equipment', value: resLine.line_equipment });
-                            shipmentRec.commitLine({ sublistId: 'item' });
+                            rec.selectNewLine({ sublistId: 'item' });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'item', value: TEMPORARY_SHIPMENT_ITEM });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'quantity', value: qty });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'rate', value: 0 });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_actualitemtobeshipped', value: line.line_item });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_consignee', value: consignee });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_relatedtransaction', value: line.internalid });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_relatedlineuniquekey', value: line.line_uniquekey });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_shipment_linetotalweight', value: line.line_item_basis_weight });
+                            rec.setCurrentSublistValue({ sublistId: 'item', fieldId: 'custcol_anc_equipment', value: line.line_equipment });
+                            rec.commitLine({ sublistId: 'item' });
                         }
 
                         const utilization = ANC_lib.computeLoadUtilization(equipmentList, { line_equipment: equipment }, totalWeight);
 
+                        if (entity) rec.setValue({ fieldId: 'entity', value: entity });
+                        if (location) rec.setValue({ fieldId: 'location', value: location });
+                        if (consignee) rec.setValue({ fieldId: 'custbody_consignee', value: consignee });
+                        if (deliveryDate) rec.setText({ fieldId: 'custbody_anc_deliverydate', text: deliveryDate });
+                        if (shipDate) rec.setText({ fieldId: 'custbody_anc_shipdate', text: shipDate });
+                        if (equipment) rec.setValue({ fieldId: 'custbody_anc_equipment', value: equipment });
+                        rec.setValue({ fieldId: 'custbody_anc_loadingefficiency', value: utilization.shipmentUtilRate });
 
-
-                        shipmentRec.setValue({ fieldId: 'custbody_anc_loadingefficiency', value: utilization.shipmentUtilRate });
-
-                        const shipmentId = shipmentRec.save({ ignoreMandatoryFields: true });
-                        log.debug('Created shipment', shipmentId);
+                        const id = rec.save({ ignoreMandatoryFields: true });
+                        log.audit('Rebuilt shipment', id);
                     }
                 }
+            } catch (e) {
+                log.error('ERROR in function map', e);
             }
-            catch(e)
-            {
-                log.error("ERROR in function map", e)
-            }
-
         };
 
         const reduce = (context) => {};
