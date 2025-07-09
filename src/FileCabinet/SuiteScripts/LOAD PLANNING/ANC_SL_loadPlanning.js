@@ -48,7 +48,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/https', 'N/query', 'N/record', 
             var taskId = task.create({
                 taskType : task.TaskType.MAP_REDUCE,
                 scriptId : "customscript_anc_mr_fitment",
-                deploymentId : "customdeploy_anc_mr_fitment",
+                // deploymentId : "customdeploy_anc_mr_fitment",
                 params : {
                     custscript_anc_mr_fitment_ids :shipmentInput
                 }
@@ -62,7 +62,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/https', 'N/query', 'N/record', 
             var shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentInput);
 
 
-            var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration(null,shipmentsAndOrders.lineuniquekeys)
+
+            // const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, shipmentsAndOrders.lineuniquekeys, );
+            const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, null, shipmentsAndOrders.lineuniquekeys);
 
             //respObj.sqlResults_shipmentLines
 

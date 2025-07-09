@@ -1307,124 +1307,237 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                     return fitmentResponse;
             }
 
-            function groupOrderLinesForShipmentGeneration(tranInternalId, tranlineUniquekey)
+            function formatAsFilters(shipmentUniqueKeys)
             {
+
+                    log.debug("shipmentUniqueKeys", shipmentUniqueKeys);
+                    var tranlineUniquekeyQuotedCSV_array = shipmentUniqueKeys.map(function(elem){
+                            return `'${elem}'`
+                    })
+
+                    var tranlineUniquekeyQuotedCSV = tranlineUniquekeyQuotedCSV_array.join(",");
+
+                    return tranlineUniquekeyQuotedCSV;
+            }
+
+            function groupOrderLinesForShipmentGeneration(tranInternalId, tranlineUniquekey, shipmentUniqueKeys)
+            {
+                    var columns = [];
                     // tranInternalId = tranInternalId.concat(61265756);
-                    var filters = [
-                            ["type","anyof","SalesOrd"],
-                            "AND",
-                            ["mainline","is","F"],
-                            "AND",
-                            ["taxline","is","F"],
-                    ];
-                    if(tranInternalId)
-                    {
-                            filters.push("AND")
-                            // filters.push(["internalid","anyof",[tranInternalId,61250544]])
-                            filters.push(["internalid","anyof",tranInternalId])
-                            // filters.push(["internalid","anyof",[tranInternalId]])
-                    }
-
-                    if(tranlineUniquekey)
+                    if(shipmentUniqueKeys)
                     {
 
-                            var tranlineUniquekeyQuotedCSV_array = tranlineUniquekey.map(function(elem){
-                                    return `'${elem}'`
-                            })
+                            var shipmentUniqueKeys = formatAsFilters(shipmentUniqueKeys)
 
-                            var tranlineUniquekeyQuotedCSV = tranlineUniquekeyQuotedCSV_array.join(",");
+                            var filters = [
+                                    ["mainline","is","F"],
+                                    "AND",
+                                    ["taxline","is","F"],
+                            ];
+                            if(tranInternalId)
+                            {
+                                    // filters.push(["internalid","anyof",[tranInternalId,61250544]])
+                                    // filters.push(["internalid","anyof",[tranInternalId]])
+                            }
+                            if(shipmentUniqueKeys)
+                            {
+                                    filters.push("AND")
+                                    filters.push([`formulanumeric: CASE WHEN {lineuniquekey} IN (${shipmentUniqueKeys}) THEN 1 ELSE 0 END`,"equalto","1"])
 
-                            filters.push("AND")
-                            filters.push([`formulanumeric: CASE WHEN {lineuniquekey} IN (${tranlineUniquekeyQuotedCSV}) THEN 1 ELSE 0 END`,"equalto","1"])
+                            }
+
+                            if(tranlineUniquekey)
+                            {
+
+                                    var tranlineUniquekeyQuotedCSV_array = tranlineUniquekey.map(function(elem){
+                                            return `'${elem}'`
+                                    })
+
+                                    var tranlineUniquekeyQuotedCSV = tranlineUniquekeyQuotedCSV_array.join(",");
+
+                                    filters.push("AND")
+                                    filters.push([`formulanumeric: CASE WHEN {lineuniquekey} IN (${tranlineUniquekeyQuotedCSV}) THEN 1 ELSE 0 END`,"equalto","1"])
+                            }
+
+                            log.debug("groupOrderLinesForShipmentGeneration shipmentUniqueKeys=T filters", filters)
+
+                            columns = [
+                                    search.createColumn({name: "internalid", label: "internalid"}),
+                                    search.createColumn({name: "statusref", label: "status"}),
+                                    search.createColumn({name: "mainname", label: "entity"}),
+                                    search.createColumn({name: "item", label: "line_item"}),
+                                    search.createColumn({
+                                            name: "parent",
+                                            join: "item",
+                                            label: "line_item_parent"
+                                    }),
+                                    search.createColumn({name: "quantity", label: "line_quantity"}),
+                                    search.createColumn({name: "location", label: "line_location"}),
+                                    search.createColumn({name: "line", label: "line_id"}),
+                                    search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
+                                    search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
+                                    search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
+                                    search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
+                                    //TODO you dont need it as result, only as filter, you need to join to line
+                                    // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
+                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
+                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
+                                    search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
+                                    search.createColumn({name: "custbody_anc_shipdate", label: "line_shipdate"}), //for rebuildable loads, use shipment record
+                                    search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                                    search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
+                                    search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
+                                    search.createColumn({
+                                            name: "custrecord_anc_lane_originwarehousecntry",
+                                            join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                            label: "lane_originloc_country"
+                                    }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
+                                    // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
+                                    search.createColumn({name: "custbody_anc_equipment", label: "line_equipment"}),
+                                    search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
+                                    search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
+                                    search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
+                                    search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
+                                    search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
+                                    search.createColumn({
+                                            name: "custitem_anc_rolldiameter",
+                                            join: "item",
+                                            label: "line_item_rolldiameter"
+                                    }),
+                                    search.createColumn({
+                                            name: "custitem_anc_rollwidth",
+                                            join: "item",
+                                            label: "line_item_rollwidth"
+                                    }),
+                                    search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
+                                    search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
+                                    search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
+                                    search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
+                                    search.createColumn({name: "custrecord_alberta_ns_city", join:"custbody_consignee", label: "custrecord_anc_lane_destinationcity"}), // no lane here if shipments
+                                    search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
+                                    search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
+
+                                    search.createColumn({name: "custcol_anc_relatedtransaction", label: "custcol_anc_relatedtransaction"}),
+                                    search.createColumn({name: "custcol_anc_relatedlineuniquekey", label: "custcol_anc_relatedlineuniquekey"}),
+                            ]
                     }
-                    // if(globalrefs.tranBodyVals.location)
-                    // {
-                    //     filters.push("AND")
-                    //     filters.push(["location","anyof",globalrefs.tranBodyVals.location])
-                    // }
-                    // if(globalrefs.tranItemVals.deliverydate)
-                    // {
-                    //     filters.push("AND")
-                    //     filters.push(["trandate","on",globalrefs.tranItemVals.deliverydate])
-                    // }
-                    // if(globalrefs.tranItemVals.destinationid)
-                    // {
-                    //     filters.push("AND")
-                    //     filters.push(["line.cseg_anc_dstnation","anyof",globalrefs.tranItemVals.destinationid])
-                    // }
+                    else
+                    {
+                            var filters = [
+                                    ["mainline","is","F"],
+                                    "AND",
+                                    ["taxline","is","F"],
+                            ];
+                            if(tranInternalId)
+                            {
+                                    filters.push("AND")
+                                    // filters.push(["internalid","anyof",[tranInternalId,61250544]])
+                                    filters.push(["internalid","anyof",tranInternalId])
+                                    // filters.push(["internalid","anyof",[tranInternalId]])
+                            }
 
-                    log.debug("filters", filters)
+                            if(tranlineUniquekey)
+                            {
+
+                                    var tranlineUniquekeyQuotedCSV_array = tranlineUniquekey.map(function(elem){
+                                            return `'${elem}'`
+                                    })
+
+                                    var tranlineUniquekeyQuotedCSV = tranlineUniquekeyQuotedCSV_array.join(",");
+
+                                    filters.push("AND")
+                                    filters.push([`formulanumeric: CASE WHEN {lineuniquekey} IN (${tranlineUniquekeyQuotedCSV}) THEN 1 ELSE 0 END`,"equalto","1"])
+                            }
+
+                            log.debug("groupOrderLinesForShipmentGeneration shipmentUniqueKeys=F filters", filters)
+
+                            columns = [
+                                    search.createColumn({name: "internalid", label: "internalid"}),
+                                    search.createColumn({name: "statusref", label: "status"}),
+                                    search.createColumn({name: "mainname", label: "entity"}),
+                                    search.createColumn({name: "item", label: "line_item"}),
+                                    search.createColumn({
+                                            name: "parent",
+                                            join: "item",
+                                            label: "line_item_parent"
+                                    }),
+                                    search.createColumn({name: "quantity", label: "line_quantity"}),
+                                    search.createColumn({name: "location", label: "line_location"}),
+                                    search.createColumn({name: "line", label: "line_id"}),
+                                    search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
+                                    search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
+                                    search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
+                                    search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
+                                    //TODO you dont need it as result, only as filter, you need to join to line
+                                    // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
+                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
+                                    search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
+                                    search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
+                                    search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
+                                    search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
+                                    search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
+                                    search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
+                                    search.createColumn({
+                                            name: "custrecord_anc_lane_originwarehousecntry",
+                                            join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                            label: "lane_originloc_country"
+                                    }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
+                                    // search.createColumn({
+                                    //         name: "custrecord_anc_lane_originwarehousecntry",
+                                    //         join: "CUSTCOL_ANC_SHIPPINGLANE",
+                                    //         label: "lane_originloc_country"
+                                    // }),
+                                    // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
+                                    search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
+                                    search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
+                                    search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
+                                    search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
+                                    search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
+                                    search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
+                                    search.createColumn({
+                                            name: "custitem_anc_rolldiameter",
+                                            join: "item",
+                                            label: "line_item_rolldiameter"
+                                    }),
+                                    search.createColumn({
+                                            name: "custitem_anc_rollwidth",
+                                            join: "item",
+                                            label: "line_item_rollwidth"
+                                    }),
+                                    search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
+                                    search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
+                                    search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
+                                    search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
+                                    search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
+                                    search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
+                                    search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
+
+                                    search.createColumn({name: "custcol_anc_relatedtransaction", label: "custcol_anc_relatedtransaction"}),
+                                    search.createColumn({name: "custcol_anc_relatedlineuniquekey", label: "custcol_anc_relatedlineuniquekey"}),
+                            ]
+                    }
+
 
                     var salesorderSearchObj = search.create({
-                            type: "salesorder",
+                            type: "transaction",
                             filters: filters,
                             columns:
-                                [
-                                        search.createColumn({name: "internalid", label: "internalid"}),
-                                        search.createColumn({name: "statusref", label: "status"}),
-                                        search.createColumn({name: "mainname", label: "entity"}),
-                                        search.createColumn({name: "item", label: "line_item"}),
-                                        search.createColumn({
-                                                name: "parent",
-                                                join: "item",
-                                                label: "line_item_parent"
-                                        }),
-                                        search.createColumn({name: "quantity", label: "line_quantity"}),
-                                        search.createColumn({name: "location", label: "line_location"}),
-                                        search.createColumn({name: "line", label: "line_id"}),
-                                        search.createColumn({name: "linesequencenumber", label: "line_sequencenumber"}),
-                                        search.createColumn({name: "lineuniquekey", label: "line_uniquekey"}),
-                                        search.createColumn({name: "custcol_svb_vend_bill_lineno", label: "line_number"}),
-                                        search.createColumn({name: "custcol_010linememoinstruction", label: "line_memo"}),
-                                        //TODO you dont need it as result, only as filter, you need to join to line
-                                        // search.createColumn({name: "line.cseg_anc_dstnation", label: "line_memo"}),
-                                        search.createColumn({name: "custcol_anc_lxpert_loadreservedqty", label: "line_reservedqty"}),
-                                        search.createColumn({name: "custcol_anc_lxpert_loadreservedwt", label: "line_reservedweight"}),
-                                        search.createColumn({name: "custcol_anc_deliverydate", label: "line_deliverydate"}),
-                                        search.createColumn({name: "custcol_anc_shipdate", label: "line_shipdate"}),
-                                        search.createColumn({name: "custcol_consignee", label: "line_consignee"}),
-                                        search.createColumn({name: "custrecord_alberta_ns_country", join:"custcol_consignee", label: "line_consignee_country"}),
-                                        search.createColumn({name: "country", join : "custcol_anc_transitlocation", label: "line_crossdock_country"}),
-                                        search.createColumn({
-                                                name: "custrecord_anc_lane_originwarehousecntry",
-                                                join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                                label: "lane_originloc_country"
-                                        }),
-                                        // search.createColumn({
-                                        //         name: "custrecord_anc_lane_originwarehousecntry",
-                                        //         join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                        //         label: "lane_originloc_country"
-                                        // }),
-                                        // search.createColumn({
-                                        //         name: "custrecord_anc_lane_originwarehousecntry",
-                                        //         join: "CUSTCOL_ANC_SHIPPINGLANE",
-                                        //         label: "lane_originloc_country"
-                                        // }),
-                                        // search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}), // equipment is not meant to be here
-                                        search.createColumn({name: "custcol_anc_equipment", label: "line_equipment"}),
-                                        search.createColumn({name: "custrecord_anc_transportmode", join: "custcol_anc_equipment", label: "line_equipment_type"}),
-                                        search.createColumn({name: "custcol_anc_rollsperpack", label: "line_rollsperpack"}),
-                                        search.createColumn({name: "custcol_anc_transitoptmethod", label: "line_transitoptmethod"}),
-                                        search.createColumn({name: "custcol_anc_usecrossdock", label: "line_usecrossdock"}),
-                                        search.createColumn({name: "custitembasis_weight", join:"item", label: "line_item_basis_weight"}),
-                                        search.createColumn({
-                                                name: "custitem_anc_rolldiameter",
-                                                join: "item",
-                                                label: "line_item_rolldiameter"
-                                        }),
-                                        search.createColumn({
-                                                name: "custitem_anc_rollwidth",
-                                                join: "item",
-                                                label: "line_item_rollwidth"
-                                        }),
-                                        search.createColumn({name: "custrecord_anc_lane_cde", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_cde"}),
-                                        search.createColumn({name: "custrecord_anc_lane_lce", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_lce"}),
-                                        search.createColumn({name: "custrecord_anc_lane_ftte", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_ftte"}),
-                                        search.createColumn({name: "custrecord_anc_lane_originwarehousecity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_originwarehousecity"}),
-                                        search.createColumn({name: "custrecord_anc_lane_destinationcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_destinationcity"}),
-                                        search.createColumn({name: "custrecord_anc_lane_crossdockcity", join:"custcol_anc_shippinglane", label: "custrecord_anc_lane_crossdockcity"}),
-                                        search.createColumn({name: "custrecord_anc_crossdockeligible", join:"custcol_anc_shippinglane", label: "custrecord_anc_crossdockeligible"}),
-                                ]
+                                columns
                     });
                     var searchResultCount = salesorderSearchObj.runPaged().count;
                     log.debug("salesorderSearchObj result count",searchResultCount);
@@ -1566,20 +1679,41 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                     respObj.sqlResults_shipmentLines = sqlResults_shipmentLines;
 
                                     var sqlResults_shipmentLinesCondition = "";
+                                    // var sqlResults_shipmentLines_asFilters = respObj.sqlResults_shipmentLines.map(function(res){
+                                    //
+                                    //         if(sqlResults_shipmentLinesCondition)
+                                    //         {
+                                    //                 sqlResults_shipmentLinesCondition += ` OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                    //         }
+                                    //         else
+                                    //         {
+                                    //                 sqlResults_shipmentLinesCondition += `UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                    //         }
+                                    //
+                                    //         return `OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                    //
+                                    // })
+
+
+
                                     var sqlResults_shipmentLines_asFilters = respObj.sqlResults_shipmentLines.map(function(res){
 
                                             if(sqlResults_shipmentLinesCondition)
                                             {
-                                                    sqlResults_shipmentLinesCondition += ` OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                                    sqlResults_shipmentLinesCondition += ` OR UPPER(transactionLine.uniquekey) = '${res.uniquekey}'`
                                             }
                                             else
                                             {
-                                                    sqlResults_shipmentLinesCondition += `UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                                    sqlResults_shipmentLinesCondition += `UPPER(transactionLine.uniquekey) = '${res.uniquekey}'`
                                             }
 
-                                            return `OR UPPER(transactionLine.custcol_anc_relatedshipments) LIKE '%"SHIPMENTLINEUNIQUEKEY":"${res.uniquekey}"%'`
+                                            return `OR UPPER(transactionLine.uniquekey) = '${res.uniquekey}'`
 
                                     })
+
+
+
+
 
                                     log.debug("sqlResults_shipmentLinesCondition", sqlResults_shipmentLinesCondition);
 
@@ -1596,13 +1730,17 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                        BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_relatedshipments) AS custcol_anc_relatedshipments,
                                        BUILTIN_RESULT.TYPE_INTEGER(transactionLine.custcol_anc_relatedtransaction) AS custcol_anc_relatedtransaction,
                                        BUILTIN_RESULT.TYPE_STRING(transactionLine.custcol_anc_relatedlineuniquekey) AS custcol_anc_relatedlineuniquekey,
-                                       BUILTIN_RESULT.TYPE_STRING(transactionLine.uniquekey) AS lineuniquekey
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_anc_shipdate) AS line_shipdate,
+                                       BUILTIN_RESULT.TYPE_STRING(location) AS line_locationtext,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_consignee) AS custrecord_anc_lane_destinationcity,
+                                       BUILTIN_RESULT.TYPE_STRING(TRANSACTION.custbody_anc_equipment) AS line_equipmenttext,
+                                       BUILTIN_RESULT.TYPE_STRING(transactionLine.uniquekey) AS uniquekey,
                                    FROM
                                        TRANSACTION,
                                        transactionLine
                                    WHERE
                                        TRANSACTION.ID = transactionLine.TRANSACTION
-                                     AND ((NVL(transactionLine.mainline, 'F') = 'F' AND TRANSACTION.TYPE IN ('SalesOrd') AND ( ${sqlResults_shipmentLinesCondition})))
+                                     AND ((NVL(transactionLine.mainline, 'F') = 'F' AND TRANSACTION.TYPE IN ('CuTrSale108') AND ( ${sqlResults_shipmentLinesCondition})))
                         `;
 
                                             log.debug("sql", sql);
@@ -1610,7 +1748,7 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                                             log.debug("sqlResults_shipmentLines", sqlResults_shipmentLines);
                                             respObj.lineuniquekeys = sqlResults_shipmentLines.map(function(elem){
-                                                    return elem.lineuniquekey
+                                                    return elem.lineuniquekey || elem.uniquekey
                                             })
                                             respObj.sqlResults_shipmentLines = sqlResults_shipmentLines;
                                     }
