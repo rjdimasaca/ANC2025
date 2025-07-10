@@ -68,7 +68,8 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
             targetCons : "",
             targetEquip : "",
             targetEquipType : "",
-            legNum : ""
+            legNum : "",
+            targetConsCountry : ""
         };
         var NF_item = "";
         var integrationLogId = null;
@@ -172,8 +173,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         join: "custbody_consignee",
                         label: "Country"
                     })
+                    targets.custrecord_alberta_ns_countrytext = res.getText({
+                        name: "custrecord_alberta_ns_country",
+                        join: "custbody_consignee",
+                        label: "Country Text"
+                    })
                     return false;
                 })
+
 
                 if(!targets.custrecord_alberta_ns_ship_addrprovince || !targets.custrecord_alberta_ns_country)
                 {
@@ -189,6 +196,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                     log.debug("consigneeLookup", consigneeLookup)
                     targets.custrecord_alberta_ns_ship_addrprovince = consigneeLookup.custrecord_alberta_ns_ship_addrprovince
                     targets.custrecord_alberta_ns_country = consigneeLookup.custrecord_alberta_ns_country
+                    targets.custrecord_alberta_ns_countrytext = consigneeLookup.custrecord_alberta_ns_countrytext
                 }
 
                 targets.targetTaxcodeId =  ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
@@ -226,6 +234,9 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                         targets.targetTaxcodeId =  ANC_lib.FREIGHTINVOICE.TAXCODES.TAXCODE_NONTAXABLE82
                     }
                 }
+
+
+
 
                 log.debug("targets after taxcode", targets)
 
@@ -388,6 +399,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custbody_anc_integ_origamt",
                             value : requestBody.NetAmount,
                         })
+
+                        if(targets.custrecord_alberta_ns_countrytext)
+                        {
+                            poRecObj.setText({
+                                fieldId : "cseg_anc_mrkt_sgmt",
+                                value : targets.custrecord_alberta_ns_countrytext,
+                            })
+                        }
 
                         clearSublist(poRecObj, requestBody);
                         fillSublist(poRecObj, requestBody, lookupPo_result, true);
@@ -888,6 +907,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value : targets.targetCons
                         })
                     }
+
+                    if(targets.custrecord_alberta_ns_countrytext)
+                    {
+                        nsRecObj.setSublistText({
+                            sublistId : "item",
+                            fieldId : "cseg_anc_mrkt_sgmt",
+                            line : 0,
+                            value : targets.custrecord_alberta_ns_countrytext
+                        })
+                    }
                 }
 
                 if(requestBody.FuelSurcharge || requestBody.fuelSurcharge)
@@ -981,6 +1010,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             fieldId : "custcol_consignee",
                             line : 1,
                             value : targets.targetCons
+                        })
+                    }
+
+                    if(targets.custrecord_alberta_ns_countrytext)
+                    {
+                        nsRecObj.setSublistText({
+                            sublistId : "item",
+                            fieldId : "cseg_anc_mrkt_sgmt",
+                            line : 1,
+                            value : targets.custrecord_alberta_ns_countrytext
                         })
                     }
                 }
@@ -1135,6 +1174,16 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                                     fieldId : "custcol_consignee",
                                     line : targetLine,
                                     value : targets.targetCons
+                                })
+                            }
+
+                            if(targets.custrecord_alberta_ns_countrytext)
+                            {
+                                nsRecObj.setSublistText({
+                                    sublistId : "item",
+                                    fieldId : "cseg_anc_mrkt_sgmt",
+                                    line : targetLine,
+                                    value : targets.custrecord_alberta_ns_countrytext
                                 })
                             }
                         }
