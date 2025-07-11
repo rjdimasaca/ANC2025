@@ -50,21 +50,20 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/https', 'N/query', 'N/record', 
                 scriptId : "customscript_anc_mr_fitment",
                 // deploymentId : "customdeploy_anc_mr_fitment",
                 params : {
-                    custscript_anc_mr_fitment_ids :shipmentInput
+                    custscript_anc_mr_fitment_shipmentids :shipmentInput
                 }
-
             })
 
             log.debug("taskId", taskId);
             var jobId = taskId.submit();
             log.debug("jobId", jobId);
 
-            var shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentInput);
-
-
-
+            // var shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentInput);
+            //
+            //
+            //
             // const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, shipmentsAndOrders.lineuniquekeys, );
-            const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, null, shipmentsAndOrders.lineuniquekeys);
+            // const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, null, shipmentsAndOrders.lineuniquekeys);
 
             //respObj.sqlResults_shipmentLines
 

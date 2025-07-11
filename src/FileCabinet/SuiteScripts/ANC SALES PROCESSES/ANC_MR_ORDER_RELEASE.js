@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType MapReduceScript
  */
-define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
+define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/email', 'N/query', 'N/record', 'N/runtime', 'N/search', 'N/url'],
     /**
  * @param{file} file
  * @param{format} format
@@ -13,7 +13,7 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 
  * @param{search} search
  * @param{url} url
  */
-    (ANC_lib, file, format, https, query, record, runtime, search, url) => {
+    (ANC_lib, file, format, https, email, query, record, runtime, search, url) => {
         /**
          * Defines the function that is executed at the beginning of the map/reduce process and generates the input data.
          * @param {Object} inputContext
@@ -138,6 +138,10 @@ define(['/SuiteScripts/ANC_lib.js', 'N/file', 'N/format', 'N/https', 'N/query', 
 
                 log.debug("syncLinesPastLdcSyncResults", syncLinesPastLdcSyncResults);
                 // var updateLinesPastLdcResults = ANC_lib.updateLinesPastLdc(recObj, pastLdcLinesSqlResults);
+
+
+
+
             }
             catch(e)
             {

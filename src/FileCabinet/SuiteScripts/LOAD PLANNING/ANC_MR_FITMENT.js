@@ -8,15 +8,48 @@ define(['/SuiteScripts/ANC_lib.js', 'N/query', 'N/record', 'N/search', 'N/runtim
         const TEMPORARY_SHIPMENT_ITEM = 188748;
 
         const getInputData = () => {
-            const rawInput = runtime.getCurrentScript().getParameter({
-                name: 'custscript_anc_mr_fitment_ids'
+            log.debug("getInput Start");
+            var rawInput_shipments = runtime.getCurrentScript().getParameter({
+                name: 'custscript_anc_mr_fitment_shipmentids'
             });
-            const shipmentLineKeys = JSON.parse(rawInput || '{}');
+            log.debug("rawInput_shipments", rawInput_shipments);
+            var shipmentLineKeys = null;
+            if(rawInput_shipments)
+            {
+                shipmentLineKeys = JSON.parse(rawInput_shipments || '{}');
+            }
 
-            log.debug("rawInput", rawInput);
+
+
+
+            const rawInput_so = runtime.getCurrentScript().getParameter({
+                name: 'custscript_anc_mr_fitment_soids'
+            });
+            log.debug("rawInput_so", rawInput_so);
+            var soKeys = null;
+            if(rawInput_so)
+            {
+                soKeys = JSON.parse(rawInput_so || '{}');
+            }
+
+            const rawInput_soline = runtime.getCurrentScript().getParameter({
+                name: 'custscript_anc_mr_fitment_solineids'
+            });
+            log.debug("rawInput_soline", rawInput_soline);
+            var soLineKeys = null;
+            if(rawInput_soline)
+            {
+                soLineKeys = JSON.parse(rawInput_soline || '{}');
+            }
+
+            log.debug("rawInputs", {soKeys, soLineKeys, shipmentLineKeys});
             const shipmentsAndOrders = ANC_lib.getShipmentsAndOrders(shipmentLineKeys);
+            var shipmentLineUniqueKeys = shipmentsAndOrders && shipmentsAndOrders.lineuniquekeys ? shipmentsAndOrders.lineuniquekeys : null;
+
+            log.debug("shipmentLineUniqueKeys", shipmentLineUniqueKeys);
+
             // const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, shipmentsAndOrders.lineuniquekeys, );
-            const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(null, null, shipmentsAndOrders.lineuniquekeys);
+            const grouped = ANC_lib.groupOrderLinesForShipmentGeneration(soKeys, soLineKeys, shipmentLineUniqueKeys);
 
             log.debug("grouped", grouped);
 

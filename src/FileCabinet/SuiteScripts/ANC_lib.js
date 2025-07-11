@@ -7,9 +7,9 @@
 // for(var a = 0 ; a < arr.length ; a++)
 // {
 //     nlapiDeleteRecord(arr[a].getRecordType(), arr[a].getId())
-define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
+define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https', 'N/email'],
 
-    (query, record, runtime, search, https) => {
+    (query, record, runtime, search, https, email) => {
 
             const foo = () => {
 
@@ -1633,6 +1633,10 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
             function getShipmentsAndOrders(shipmentInput)
             {
+                    if(!shipmentInput)
+                    {
+                            return null;
+                    }
                     var respObj = {};
 
                     log.debug("shipmentInput", shipmentInput)
@@ -2582,12 +2586,14 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             function syncLinesPastLdc(obj)
             {
                     var syncLinesPastLdc_result = obj || {};
-                    syncLinesPastLdc_result.by_tranInternalid = [];
-                    syncLinesPastLdc_result.responseList = [];
 
                     log.debug("obj", obj);
 
                     var rawResp = callPastLdcUrl(obj)
+
+
+                    syncLinesPastLdc_result.by_tranInternalid = [];
+                    syncLinesPastLdc_result.responseList = [];
 
                     syncLinesPastLdc_result.responseList.push(rawResp);
 
@@ -2741,7 +2747,8 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
             {
                     for(var a = 0 ; a < detail.length ; a++)
                     {
-                            var arrayElem = [
+                            var arrayElem =
+                                // [
                                     {
                                             "millOrderLineItemNumber":      detail[a].custcol_anc_millordernum,
                                             "purchaseOrderLineItemNumber":  detail[a].linesequencenumber,
@@ -2781,42 +2788,42 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
                                                             ]
                                                     }
                                             ]
-                                    },
-
-                                    /* ---------- second line ---------- */
-                                    {
-                                            "millOrderLineItemNumber":      2,
-                                            "purchaseOrderLineItemNumber":  2,
-                                            "lineItemStatusType":          "New",
-
-                                            "product": {
-                                                    "sku":          "NPB66HT-1000-0800-NSTA-BB-RPP2",
-                                                    "grade":        "NPB66HT",
-                                                    "rollWidth":    { "value": 1000, "uom": "mm" },
-                                                    "rollDiameter": { "value": 800,  "uom": "mm" },
-                                                    "core":         "NSTA",
-                                                    "wrapType":     "BB",
-                                                    "rollPerPack":  2
-                                            },
-
-                                            "labelMark": "LIBERTY TIMES",
-                                            "quantity":  { "value": 6, "uom": "Roll" },
-
-                                            "orderItemNotes": [
-                                                    { "noteType": "Handling", "note": "Pack rolls securely to prevent damage." }
-                                            ],
-
-                                            "shipmentSchedule": [
-                                                    {
-                                                            "shipmentRequestedDate": "2025-07-15",
-                                                            "quantity":             { "value": 6, "uom": "Roll" },
-                                                            "shipmentNotes": [
-                                                                    { "noteType": "General", "note": "Single shipment for this item" }
-                                                            ]
-                                                    }
-                                            ]
                                     }
-                            ]
+
+                                    // /* ---------- second line ---------- */
+                                    // {
+                                    //         "millOrderLineItemNumber":      2,
+                                    //         "purchaseOrderLineItemNumber":  2,
+                                    //         "lineItemStatusType":          "New",
+                                    //
+                                    //         "product": {
+                                    //                 "sku":          "NPB66HT-1000-0800-NSTA-BB-RPP2",
+                                    //                 "grade":        "NPB66HT",
+                                    //                 "rollWidth":    { "value": 1000, "uom": "mm" },
+                                    //                 "rollDiameter": { "value": 800,  "uom": "mm" },
+                                    //                 "core":         "NSTA",
+                                    //                 "wrapType":     "BB",
+                                    //                 "rollPerPack":  2
+                                    //         },
+                                    //
+                                    //         "labelMark": "LIBERTY TIMES",
+                                    //         "quantity":  { "value": 6, "uom": "Roll" },
+                                    //
+                                    //         "orderItemNotes": [
+                                    //                 { "noteType": "Handling", "note": "Pack rolls securely to prevent damage." }
+                                    //         ],
+                                    //
+                                    //         "shipmentSchedule": [
+                                    //                 {
+                                    //                         "shipmentRequestedDate": "2025-07-15",
+                                    //                         "quantity":             { "value": 6, "uom": "Roll" },
+                                    //                         "shipmentNotes": [
+                                    //                                 { "noteType": "General", "note": "Single shipment for this item" }
+                                    //                         ]
+                                    //                 }
+                                    //         ]
+                                    // }
+                            // ]
 
                             singleOrderPayload["lineItems"].push(arrayElem);
                     }
@@ -2832,17 +2839,71 @@ define(['N/query', 'N/record', 'N/runtime', 'N/search', 'N/https'],
 
                     requestData = JSON.stringify(requestData);
 
-                    callPastLdcUrl_response = https.post({
-                            url: syncLinesPastLdcUrl,
-                            body: requestData,
-                            headers: {
-                                    "Authorization": "Bearer 67afba48c5e94f0689dc4f9cb18afed2",
-                                    "Content-Type": "application/json",
-                                    "accept": "*/*"
-                            }
+                    /*Endpoint base & docs
+
+                Base URL: https://netsuitetest.anchub.ca
+
+
+
+                Swagger UI: https://netsuitetest.anchub.ca/swagger/index.html
+
+                Full request / response models are visible in the UI.
+
+
+
+                Authorization
+
+                Add the following header to every request:
+
+                Authorization: Bearer iryj8ibMLTLKOZa1HtOcSixzkmNjt16OPKhLNiIUDno
+
+
+
+                What’s new in v2
+
+                Area       Change
+
+                Master-data       Four dedicated endpoints
+
+                POST /netsuite/customerupdate
+
+                POST /netsuite/consigneeupdate
+
+                POST /netsuite/carrierupdate
+
+                POST /netsuite/shipperupdate
+
+                Transactions       POST /netsuite/orderupdate (unchanged)
+
+                POST /netsuite/loadupdate (new)
+
+                Removed             Legacy /netsuite/partyupdate has been retired.
+
+                Swagger               Every route now shows a summary, description, sample payload, and response codes via Swashbuckle annotations.
+
+                Validation            DTOs include DataAnnotation rules (e.g., [Required], [EmailAddress]). Invalid requests return HTTP 400 with details.*/
+
+                    var rawResp = https.post({
+                        url: "https://netsuitetest.anchub.ca/netsuite/orderupdate",
+                        body: requestData,
+                        headers: {
+                            "Authorization": "Bearer iryj8ibMLTLKOZa1HtOcSixzkmNjt16OPKhLNiIUDno",
+                            "Content-Type": "application/json",
+                            "accept": "*/*"
+                        }
                     });
+                    log.debug("rawResp", rawResp);
+
+                    email.send({
+                            author: 108542,
+                            recipients: 108542,
+                            subject : "SO PAYLOAD FOR VLAD " + new Date(),
+                            body : "" + requestData
+                    })
 
                     log.debug("callPastLdcUrl callPastLdcUrl_response", callPastLdcUrl_response);
+
+                    callPastLdcUrl_response.rawResp = rawResp;
                     return callPastLdcUrl_response;
             }
 

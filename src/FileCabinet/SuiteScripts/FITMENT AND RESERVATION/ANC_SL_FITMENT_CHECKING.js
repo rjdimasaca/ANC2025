@@ -3,13 +3,17 @@
  * @NScriptType Suitelet
  * @NModuleScope SameAccount
  */
-define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
+
+/**
+ * no longer shows UI as of July 11 2025, it will be a full background process contrary to initial requests.
+ */
+define(['/SuiteScripts/ANC_lib.js', 'N/task', 'N/https', 'N/record', 'N/redirect', 'N/runtime', 'N/search', 'N/url', 'N/ui/serverWidget'],
     /**
      * @param{runtime} runtime
      * @param{search} search
      * @param{url} url
      */
-    (ANC_lib, https, record, redirect, runtime, search, url, uiSw) => {
+    (ANC_lib, task, https, record, redirect, runtime, search, url, uiSw) => {
 
         var globalrefs = {};
         var orderLineLimit = 0;
@@ -62,233 +66,24 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
                         hideNavBar: true
                     })
 
-                    form.clientScriptModulePath = './ANC_CS_FITMENT_AND_RESERVE.js'
+                    // form.clientScriptModulePath = './ANC_CS_FITMENT_AND_RESERVE.js'
+                    var fitmentJobObj = getInputDetails(scriptContext);
 
-                    form.addFieldGroup({
-                        id: "custpage_flgroup_source",
-                        label: "Basis"
-                    })
 
-                    var tranRefField = form.addField({
-                        label: "REF#",
-                        type: "select",
-                        id: "custpage_traninternalid",
-                        source: "salesorder",
-                        container: "custpage_flgroup_source"
-                    })
-                    tranRefField.defaultValue = scriptContext.request.parameters["traninternalid"]
-                    tranRefField.updateDisplayType({
-                        displayType: "inline"
+                    var jobId = form.addField({
+                        label : "Job Id",
+                        id : "custpage_fld_jobid",
+                        type : "text"
                     });
-                    globalrefs["tranRefField"] = tranRefField;
+                    jobId.defaultValue = fitmentJobObj.jobId
 
-
-                    var tranRecObj = record.load({
-                        type : "salesorder",
-                        id : scriptContext.request.parameters["traninternalid"]
+                    var jobDetails = form.addField({
+                        label : "Task Object",
+                        id : "custpage_fld_taskobj",
+                        type : "textarea"
                     });
-                    globalrefs.tranBodyVals = {};
-                    globalrefs.tranItemVals = {};
-                    globalrefs.tranBodyVals.trandate = tranRecObj.getText({
-                        fieldId : "trandate"
-                    })
-                    globalrefs.tranBodyVals.location = tranRecObj.getValue({
-                        fieldId : "location"
-                    })
-                    globalrefs.tranBodyVals.entity = tranRecObj.getValue({
-                        fieldId : "entity"
-                    })
-                    if(scriptContext.request.parameters["tranlinenum"])
-                    {
-                        var index = tranRecObj.findSublistLineWithValue({
-                            sublistId : "item",
-                            fieldId : "line",
-                            value : scriptContext.request.parameters["tranlinenum"]
-                        })
-                        globalrefs.tranItemVals.itemid = tranRecObj.getSublistValue({
-                            sublistId : "item",
-                            fieldId : "item",
-                            line : index
-                        })
-                        globalrefs.tranItemVals.quantity = tranRecObj.getSublistValue({
-                            sublistId : "item",
-                            fieldId : "quantity",
-                            line : index
-                        })
-                        globalrefs.tranItemVals.deliverydate = tranRecObj.getText({
-                            fieldId : "trandate"
-                        })
-                        globalrefs.tranItemVals.destination = tranRecObj.getSublistText({
-                            sublistId : "item",
-                            fieldId : "cseg_anc_dstnation",
-                            line : index
-                        })
-                        globalrefs.tranItemVals.destinationid = tranRecObj.getSublistValue({
-                            sublistId : "item",
-                            fieldId : "cseg_anc_dstnation",
-                            line : index
-                        })
-                    }
+                    jobDetails.defaultValue = fitmentJobObj.taskObj
 
-                    log.debug("globalrefs", globalrefs)
-
-                    //rest of the fields
-                    if(globalrefs.tranBodyVals.entity)
-                    {
-                        var entityField = form.addField({
-                            label : "Customer",
-                            type : "select",
-                            id : "custpage_trancustomer",
-                            source : "customer",
-                            container: "custpage_flgroup_source"
-                        }).updateDisplayType({
-                            displayType : "inline"
-                        })
-                        entityField.defaultValue = globalrefs.tranBodyVals.entity;
-                        globalrefs["entityField"] = entityField;
-                    }
-
-                    var trandateField = form.addField({
-                        label : "Date",
-                        type : "date",
-                        id : "custpage_trandate",
-                        source : "item",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        displayType : "inline"
-                    })
-                    trandateField.defaultValue = globalrefs.tranBodyVals.trandate;
-                    globalrefs["trandateField"] = trandateField;
-
-                    var tranlineseqField = form.addField({
-                        label : "LINE SEQUENCE",
-                        type : "integer",
-                        id : "custpage_tranlineseq",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        // displayType: "inline",
-                        displayType: "hidden"
-                    })
-                    // tranlineseqField.defaultValue = scriptContext.request.parameters["tranlinesequence"]
-                    globalrefs["tranlineseqField"] = tranlineseqField;
-
-                    var tranlinenumField = form.addField({
-                        label : "LINE#",
-                        type : "integer",
-                        id : "custpage_tranlinenum",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        // displayType: "inline",
-                        displayType: "hidden"
-                    })
-                    tranlinenumField.defaultValue = scriptContext.request.parameters["tranlinenum"]
-                    globalrefs["tranlinenumField"] = tranlinenumField;
-
-                    if(globalrefs.tranItemVals.itemid)
-                    {
-                        var tranlineitemField = form.addField({
-                            label : "LINE ITEM GRADE TO RESERVE",
-                            type : "select",
-                            id : "custpage_tranlineitem",
-                            source : "item",
-                            container: "custpage_flgroup_source"
-                        }).updateDisplayType({
-                            // displayType: "inline",
-                            displayType: "hidden"
-                        })
-                        tranlineitemField.defaultValue = globalrefs.tranItemVals.itemid;
-                        globalrefs["tranlineitemField"] = tranlineitemField;
-                    }
-
-
-                    var equipmentField = form.addField({
-                        label : "Equipment",
-                        type : "text",
-                        id : "custpage_equipment",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        // displayType : "inline"
-                        displayType : "hidden"
-                    })
-                    globalrefs["equipmentField"] = equipmentField;
-                    if(globalrefs.tranBodyVals.equipment)
-                    {
-                        equipmentField.defaultValue = globalrefs.tranBodyVals.equipment
-                    }
-
-                    if(globalrefs.tranBodyVals.location)
-                    {
-                        var tranlinelocField = form.addField({
-                            label : "LOCATION",
-                            type : "select",
-                            id : "custpage_tranlineloc",
-                            source : "location",
-                            container: "custpage_flgroup_source"
-                        }).updateDisplayType({
-                            displayType : "hidden"
-                        }).defaultValue = globalrefs.tranBodyVals.location
-                        globalrefs["tranlinelocField"] = tranlinelocField;
-                    }
-
-
-                    var tranlineqtyField = form.addField({
-                        label : "ORDER QUANTITY",
-                        type : "float",
-                        id : "custpage_tranlineqty",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        displayType : "hidden"
-                    }).defaultValue = globalrefs.tranItemVals.quantity
-                    globalrefs["tranlineqtyField"] = tranlineqtyField;
-
-                    // if(globalrefs.tranItemVals.deliverydate)
-                    // {
-                    //     var tranlinedeldateField = form.addField({
-                    //         label : "Delivery Date",
-                    //         type : "date",
-                    //         id : "custpage_tranlinedeldate",
-                    //         container: "custpage_flgroup_source"
-                    //     }).updateDisplayType({
-                    //         displayType : "inline"
-                    //     }).defaultValue = globalrefs.tranItemVals.deliverydate
-                    //     globalrefs["tranlinedeldateField"] = tranlinedeldateField;
-                    // }
-
-                    if(globalrefs.tranBodyVals.location)
-                    {
-                        var tranlineoriginField = form.addField({
-                            label : "ORIGIN",
-                            type : "select",
-                            id : "custpage_tranlineorigin",
-                            source : "location",
-                            container: "custpage_flgroup_source"
-                        }).updateDisplayType({
-                            displayType : "inline"
-                        }).defaultValue = globalrefs.tranBodyVals.location
-                        globalrefs["tranlineoriginField"] = tranlineoriginField;
-                    }
-
-                    // if(globalrefs.tranItemVals.destination)
-                    // {
-                    var tranlinedestField = form.addField({
-                        label : "DESTINATION",
-                        type : "text",
-                        id : "custpage_tranlinedest",
-                        container: "custpage_flgroup_source"
-                    }).updateDisplayType({
-                        displayType : "hidden"
-                    }).defaultValue = globalrefs.tranItemVals.destination
-                    globalrefs["tranlinedestField"] = tranlinedestField;
-                    // }
-
-                    // troubleShootTabs(form);
-
-
-                    fillSublist(scriptContext)
-
-                    form.addSubmitButton({
-                        label : "Save Fitment Check Results"
-                    })
 
                     scriptContext.response.writePage(form);
                 }
@@ -1018,6 +813,25 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/redirect', 'N/runt
         {
             try
             {
+                var taskObj = task.create({
+                    taskType : task.TaskType.MAP_REDUCE,
+                    scriptId : "customscript_anc_mr_fitment",
+                    // deploymentId : "customdeploy_anc_mr_fitment",
+                    params : {
+                        custscript_anc_mr_fitment_soids :[scriptContext.request.parameters["traninternalid"]]
+                    }
+                })
+
+                log.debug("taskObj", taskObj);
+                var jobId = taskObj.submit();
+                log.debug("jobId", {jobId, taskObj});
+
+                var fitmentJobObj = {jobId, taskObj};
+
+
+                return fitmentJobObj;
+
+
 
                 var srGroupedByDeliveryDate = ANC_lib.groupOrderLinesForShipmentGeneration([scriptContext.request.parameters["traninternalid"]])
 

@@ -518,6 +518,14 @@ define(['/SuiteScripts/ANC_lib.js', 'N/https', 'N/record', 'N/runtime', 'N/searc
                             value : requestBody.NetAmount,
                         })
 
+                        if(targets.custrecord_alberta_ns_countrytext)
+                        {
+                            poRecObj.setText({
+                                fieldId : "cseg_anc_mrkt_sgmt",
+                                value : targets.custrecord_alberta_ns_countrytext,
+                            })
+                        }
+
                         poRecObj.setValue({
                             fieldId : "externalid",
                             value :loadID,
